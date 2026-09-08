@@ -1,13 +1,17 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" title=" " alt="" coords="5,152,154,180"/>
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,222,154,250"/>
 <area shape="rect" id="Node000001" href="$d1/d9d/classvanetza_1_1security_1_1openssl_1_1BigNumber.html" title=" " alt="" coords="227,5,380,50"/>
-<area shape="poly" id="edge16_Node000000_Node000001" title=" " alt="" coords="102,140,146,99,200,60,229,48,225,52,203,65,149,103,106,143"/>
+<area shape="poly" id="edge16_Node000000_Node000001" title=" " alt="" coords="91,207,133,134,163,94,200,60,229,46,225,50,203,64,167,98,137,137,96,209"/>
 <area shape="rect" id="Node000002" href="$d3/d61/classvanetza_1_1security_1_1openssl_1_1BigNumberContext.html" title=" " alt="" coords="202,75,405,119"/>
-<area shape="poly" id="edge17_Node000000_Node000002" title=" " alt="" coords="140,145,231,118,227,122,142,150"/>
-<area shape="rect" id="Node000003" href="$d0/dd1/classvanetza_1_1security_1_1openssl_1_1Group.html" title=" " alt="" coords="233,144,374,189"/>
-<area shape="poly" id="edge18_Node000000_Node000003" title=" " alt="" coords="168,164,235,165,230,168,170,169"/>
-<area shape="rect" id="Node000004" href="$d2/d5b/classvanetza_1_1security_1_1openssl_1_1Point.html" title=" " alt="" coords="233,213,374,258"/>
-<area shape="poly" id="edge19_Node000000_Node000004" title=" " alt="" coords="141,183,235,213,230,215,141,188"/>
-<area shape="rect" id="Node000005" href="$d2/def/classvanetza_1_1security_1_1openssl_1_1Signature.html" title=" " alt="" coords="233,283,374,327"/>
-<area shape="poly" id="edge20_Node000000_Node000005" title=" " alt="" coords="105,189,149,229,203,268,235,285,230,285,200,273,146,233,103,194"/>
+<area shape="poly" id="edge17_Node000000_Node000002" title=" " alt="" coords="102,209,146,169,200,129,228,118,224,122,203,134,149,173,106,213"/>
+<area shape="rect" id="Node000003" href="$d4/d4f/classvanetza_1_1security_1_1openssl_1_1Bio.html" title=" " alt="" coords="233,144,374,189"/>
+<area shape="poly" id="edge18_Node000000_Node000003" title=" " alt="" coords="140,214,234,186,231,190,143,219"/>
+<area shape="rect" id="Node000004" href="$d9/dee/classvanetza_1_1security_1_1openssl_1_1EvpKey.html" title=" " alt="" coords="233,213,374,258"/>
+<area shape="poly" id="edge19_Node000000_Node000004" title=" " alt="" coords="168,233,235,234,231,237,170,238"/>
+<area shape="rect" id="Node000005" href="$d0/dd1/classvanetza_1_1security_1_1openssl_1_1Group.html" title=" " alt="" coords="233,283,374,327"/>
+<area shape="poly" id="edge20_Node000000_Node000005" title=" " alt="" coords="141,252,235,282,230,285,142,257"/>
+<area shape="rect" id="Node000006" href="$d2/d5b/classvanetza_1_1security_1_1openssl_1_1Point.html" title=" " alt="" coords="233,352,374,397"/>
+<area shape="poly" id="edge21_Node000000_Node000006" title=" " alt="" coords="104,258,149,299,203,337,236,354,230,355,200,342,146,303,104,263"/>
+<area shape="rect" id="Node000007" href="$d2/def/classvanetza_1_1security_1_1openssl_1_1Signature.html" title=" " alt="" coords="233,421,374,466"/>
+<area shape="poly" id="edge22_Node000000_Node000007" title=" " alt="" coords="94,261,137,334,167,373,203,407,235,426,230,426,200,411,163,377,133,337,92,266"/>
 </map>

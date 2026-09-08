@@ -6,7 +6,7 @@ var searchData=
   ['gbcgacheader_3',['GbcGacHeader',['../dc/dc6/structvanetza_1_1geonet_1_1detail_1_1GbcGacHeader.html',1,'vanetza::geonet::detail']]],
   ['gbcmemory_4',['GbcMemory',['../d1/d8e/classvanetza_1_1geonet_1_1GbcMemory.html',1,'vanetza::geonet']]],
   ['geobroadcastheader_5',['GeoBroadcastHeader',['../d1/db9/structvanetza_1_1geonet_1_1GeoBroadcastHeader.html',1,'vanetza::geonet']]],
-  ['geodeticposition_6',['GeodeticPosition',['../d0/da6/structvanetza_1_1geonet_1_1GeodeticPosition.html',1,'vanetza::geonet']]],
+  ['geodeticposition_6',['GeodeticPosition',['../de/d5a/structvanetza_1_1geodesy_1_1GeodeticPosition.html',1,'vanetza::geodesy::GeodeticPosition'],['../d0/da6/structvanetza_1_1geonet_1_1GeodeticPosition.html',1,'vanetza::geonet::GeodeticPosition']]],
   ['geounicastheader_7',['GeoUnicastHeader',['../d2/d16/structvanetza_1_1geonet_1_1GeoUnicastHeader.html',1,'vanetza::geonet']]],
   ['gradualstatemachine_8',['GradualStateMachine',['../df/dd9/classvanetza_1_1dcc_1_1GradualStateMachine.html',1,'vanetza::dcc']]],
   ['group_9',['Group',['../d0/dd1/classvanetza_1_1security_1_1openssl_1_1Group.html',1,'vanetza::security::openssl']]],

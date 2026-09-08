@@ -1,0 +1,4 @@
+var structVanetza__Security__Ieee1609HeaderInfoExtensions_1_1Vanetza__Security__Ieee1609HeaderInfoExtensions____content =
+[
+    [ "Vanetza_Security_Ieee1609HeaderInfoExtensions__Vanetza_Security_content_u", "d6/dd6/unionVanetza__Security__Ieee1609HeaderInfoExtensions_1_1Vanetza__Security__Ieee1609HeaderInfoExt265a660289e85ba7d63048602ecdec15.html", null ]
+];

@@ -1,0 +1,4 @@
+var structVanetza__Security__CertRequestExtension =
+[
+    [ "Vanetza_Security_CertRequestExtension__permissions", "d2/dbf/structVanetza__Security__CertRequestExtension_1_1Vanetza__Security__CertRequestExtension____permissions.html", "d2/dbf/structVanetza__Security__CertRequestExtension_1_1Vanetza__Security__CertRequestExtension____permissions" ]
+];

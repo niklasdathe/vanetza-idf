@@ -9,6 +9,9 @@ var searchData=
   ['repetitiondispatcher_6',['RepetitionDispatcher',['../dc/ddc/classvanetza_1_1geonet_1_1RepetitionDispatcher.html',1,'vanetza::geonet']]],
   ['requestinterface_7',['RequestInterface',['../d1/df3/classvanetza_1_1btp_1_1RequestInterface.html',1,'vanetza::btp::RequestInterface'],['../db/d5b/classvanetza_1_1dcc_1_1RequestInterface.html',1,'vanetza::dcc::RequestInterface']]],
   ['restrictive_8',['Restrictive',['../de/d46/classvanetza_1_1dcc_1_1Restrictive.html',1,'vanetza::dcc']]],
-  ['router_9',['Router',['../d9/d48/classvanetza_1_1geonet_1_1Router.html',1,'vanetza::geonet']]],
-  ['runtime_10',['Runtime',['../de/d11/classvanetza_1_1Runtime.html',1,'vanetza']]]
+  ['revocationlookup_9',['RevocationLookup',['../d7/d5b/classvanetza_1_1security_1_1v3_1_1RevocationLookup.html',1,'vanetza::security::v3']]],
+  ['revocationmemorylookup_10',['RevocationMemoryLookup',['../d2/d3d/classvanetza_1_1security_1_1v3_1_1RevocationMemoryLookup.html',1,'vanetza::security::v3']]],
+  ['router_11',['Router',['../d9/d48/classvanetza_1_1geonet_1_1Router.html',1,'vanetza::geonet']]],
+  ['rtcmem_12',['Rtcmem',['../d4/d30/classvanetza_1_1asn1_1_1Rtcmem.html',1,'vanetza::asn1']]],
+  ['runtime_13',['Runtime',['../de/d11/classvanetza_1_1Runtime.html',1,'vanetza']]]
 ];

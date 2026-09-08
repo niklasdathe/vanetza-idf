@@ -25,5 +25,6 @@ var searchData=
   ['hookregistry_22',['HookRegistry',['../dd/d5e/classvanetza_1_1HookRegistry.html',1,'vanetza']]],
   ['hookregistry_3c_20const_20vanetza_3a_3adcc_3a_3alimeric_20_2a_2c_20clock_3a_3atime_5fpoint_20_3e_23',['HookRegistry&lt; const vanetza::dcc::Limeric *, Clock::time_point &gt;',['../dd/d5e/classvanetza_1_1HookRegistry.html',1,'vanetza']]],
   ['hookregistry_3c_20const_20vanetza_3a_3ageonet_3a_3acbraggregator_20_26_20_3e_24',['HookRegistry&lt; const vanetza::geonet::CbrAggregator &amp; &gt;',['../dd/d5e/classvanetza_1_1HookRegistry.html',1,'vanetza']]],
-  ['hookregistry_3c_20vanetza_3a_3adcc_3a_3achannelload_20_3e_25',['HookRegistry&lt; vanetza::dcc::ChannelLoad &gt;',['../dd/d5e/classvanetza_1_1HookRegistry.html',1,'vanetza']]]
+  ['hookregistry_3c_20vanetza_3a_3adcc_3a_3achannelload_20_3e_25',['HookRegistry&lt; vanetza::dcc::ChannelLoad &gt;',['../dd/d5e/classvanetza_1_1HookRegistry.html',1,'vanetza']]],
+  ['hybridcertificatevalidator_26',['HybridCertificateValidator',['../d6/d1e/classvanetza_1_1security_1_1pqc_1_1HybridCertificateValidator.html',1,'vanetza::security::pqc']]]
 ];

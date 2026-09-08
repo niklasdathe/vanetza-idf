@@ -7,6 +7,7 @@ var dir_edefd300a084f7114123c5e0d2ea07a3 =
     [ "common", "dir_2d6685d782a795e372ebfb3337bfbcbc.html", "dir_2d6685d782a795e372ebfb3337bfbcbc" ],
     [ "dcc", "dir_9ccc8a18135134cf87681c1754d588df.html", "dir_9ccc8a18135134cf87681c1754d588df" ],
     [ "facilities", "dir_1964f9f2074b1f2dad9205cbe61245ad.html", "dir_1964f9f2074b1f2dad9205cbe61245ad" ],
+    [ "geodesy", "dir_1b30086fccf5cb3987a900f1f76c5aae.html", "dir_1b30086fccf5cb3987a900f1f76c5aae" ],
     [ "geonet", "dir_b0af8d58c5e1a50def071c5615044c4f.html", "dir_b0af8d58c5e1a50def071c5615044c4f" ],
     [ "gnss", "dir_49fb97734d53c24be7bd943288e98f7c.html", "dir_49fb97734d53c24be7bd943288e98f7c" ],
     [ "net", "dir_1e9006f1c48aaaedd042dda5201c799b.html", "dir_1e9006f1c48aaaedd042dda5201c799b" ],

@@ -1,0 +1,4 @@
+var structVanetza__Security__CertRequestExtension_1_1Vanetza__Security__CertRequestExtension____permissions =
+[
+    [ "Vanetza_Security_CertRequestExtension__Vanetza_Security_permissions_u", "df/df5/unionVanetza__Security__CertRequestExtension_1_1Vanetza__Security__CertRequestExtension____permi618fe7d781e60aaa6a097926b86e31c2.html", null ]
+];

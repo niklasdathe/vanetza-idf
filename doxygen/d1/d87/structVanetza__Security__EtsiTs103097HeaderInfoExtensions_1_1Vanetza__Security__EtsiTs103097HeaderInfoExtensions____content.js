@@ -1,0 +1,4 @@
+var structVanetza__Security__EtsiTs103097HeaderInfoExtensions_1_1Vanetza__Security__EtsiTs103097HeaderInfoExtensions____content =
+[
+    [ "Vanetza_Security_EtsiTs103097HeaderInfoExtensions__Vanetza_Security_content_u", "d1/d4a/unionVanetza__Security__EtsiTs103097HeaderInfoExtensions_1_1Vanetza__Security__EtsiTs103097Headeb7fff4c858663b1aab687b1b765a5633.html", null ]
+];

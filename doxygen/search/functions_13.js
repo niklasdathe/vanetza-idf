@@ -8,5 +8,7 @@ var searchData=
   ['update_5fposition_5',['update_position',['../d9/d48/classvanetza_1_1geonet_1_1Router.html#aad10a1cb9845f31ac78cdf81a628d72d',1,'vanetza::geonet::Router']]],
   ['update_5fposition_5fvector_6',['update_position_vector',['../d7/d6e/classvanetza_1_1geonet_1_1LocationTableEntry.html#a6da1e92ad3c1cd52d3e8355540dbd780',1,'vanetza::geonet::LocationTableEntry']]],
   ['update_5frate_7',['update_rate',['../d2/d42/classvanetza_1_1geonet_1_1PositionUpdater.html#a017a61e262fec092e20c89e67cf0044d',1,'vanetza::geonet::PositionUpdater']]],
-  ['user_5fpriority_8',['user_priority',['../d6/d0c/structvanetza_1_1access_1_1ieee802_1_1dot11_1_1QosControl.html#ab0223ec02db1f7e98c62d47f1336c218',1,'vanetza::access::ieee802::dot11::QosControl']]]
+  ['use_5fcertificate_5fcache_8',['use_certificate_cache',['../d7/db6/classvanetza_1_1security_1_1DummyVerifyService.html#a9cb1b89a8e8941be48ff6c974defdf8a',1,'vanetza::security::DummyVerifyService']]],
+  ['use_5fcountry_5fdatabase_9',['use_country_database',['../de/d22/classvanetza_1_1security_1_1v3_1_1DefaultLocationChecker.html#af78c2cac1d9939c86cc9dfc215459ce1',1,'vanetza::security::v3::DefaultLocationChecker']]],
+  ['user_5fpriority_10',['user_priority',['../d6/d0c/structvanetza_1_1access_1_1ieee802_1_1dot11_1_1QosControl.html#ab0223ec02db1f7e98c62d47f1336c218',1,'vanetza::access::ieee802::dot11::QosControl']]]
 ];

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Certify PQC - Vanetza - Your open-source ETSI C-ITS protocol stack</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link href="../../css/extra.css" rel="stylesheet" />
+        <link href="../../css/tango.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Certify PQC";
+        var mkdocs_page_input_path = "tools/certify-pqc.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]--> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+<div class="logo">
+    <img src="../../img/logo.png" alt="Vanetza - Your open-source ETSI C-ITS protocol stack" />
+</div>
+<div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Overview</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../..#project-layout">Project layout</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../..#deployments">Deployments</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../api/">API Documentation</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../how-to-build/">How to build</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../how-to-build/#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../how-to-build/#compilation">Compilation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../how-to-build/#unit-tests">Unit tests</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../how-to-build/#integrating-vanetza">Integrating Vanetza</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Recipes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../recipes/arm64-build/">Building for generic ARM64 device</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/arm64-build/#cross-compiler">Cross-compiler</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/arm64-build/#vanetza-build-dependencies">Vanetza build dependencies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/arm64-build/#compile-vanetza">Compile Vanetza</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../recipes/autotalks-sdk-build/">Building for Autotalks devices</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/autotalks-sdk-build/#autotalks-sdk">Autotalks SDK</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../../recipes/autotalks-sdk-build/#code-corrections">Code corrections</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/autotalks-sdk-build/#vanetza-build-dependencies">Vanetza build dependencies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/autotalks-sdk-build/#compile-vanetza">Compile Vanetza</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../../recipes/autotalks-sdk-build/#compiling-for-craton">Compiling for Craton</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../../recipes/autotalks-sdk-build/#compiling-for-secton">Compiling for Secton</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../recipes/cohda-sdk-build/">Building for Cohda MK5</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cohda-sdk-build/#cohda-sdk">Cohda SDK</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cohda-sdk-build/#vanetza-build-dependencies">Vanetza build dependencies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cohda-sdk-build/#compile-vanetza">Compile Vanetza</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cohda-sdk-build/#deployment">Deployment</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../recipes/cross-compile-dependencies/">Cross-Compilation of Dependencies</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cross-compile-dependencies/#boost">Boost</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cross-compile-dependencies/#crypto">Crypto++</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cross-compile-dependencies/#geographiclib">GeographicLib</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../recipes/cube-evk-build/">Building for cube:evk</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cube-evk-build/#configuration">Configuration</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../../recipes/cube-evk-build/#v2x-radio-configuration-c-v2x-or-dsrc">V2X Radio Configuration - C-V2X or DSRC</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../../recipes/cube-evk-build/#connect-to-your-local-wifi">Connect to your local WiFi</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cube-evk-build/#building-and-running-socktap-for-wireless-remote-radio-mode">Building and Running Socktap for Wireless Remote Radio Mode</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/cube-evk-build/#building-and-running-socktap-on-the-cubeevk">Building and Running Socktap on the cube:evk</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../recipes/generate-asn1/">Generate code from ASN.1</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/generate-asn1/#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../recipes/generate-asn1/#generate-asn1-code">Generate ASN.1 code</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tools</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../benchmark/">Benchmark</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../benchmark/#installation">Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../benchmark/#running">Running</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../benchmark/#acknowledgement">Acknowledgement</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../certify/">Certify</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../certify/#installation">Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../certify/#pki-setup">PKI Setup</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../certify/#generating-keys">Generating Keys</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../certify/#generating-root-certificates">Generating Root Certificates</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../certify/#generating-authorization-authorities">Generating Authorization Authorities</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../certify/#generating-authorization-tickets">Generating Authorization Tickets</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../certify/#other-options">Other Options</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../certify/#acknowledgement">Acknowledgement</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Certify PQC</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#generate-a-chain">Generate a Chain</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#ecc-only-v3-chain">ECC-Only V3 Chain</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#inspect-and-verify">Inspect and Verify</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../fuzz-harness/">fuzz-harness</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../fuzz-harness/#requirements">Requirements</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../fuzz-harness/#usage">Usage</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../fuzz-harness/#analyse">Analyse</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../socktap/">Socktap</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../socktap/#link-layer">Link layer</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#ethernet">Ethernet</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#cube-evk">CUBE-EVK</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#cohda">Cohda</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#autotalks">Autotalks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#udp">UDP</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#tcp">TCP</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#rpc">RPC</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="../socktap/#command-line-flags">Command line flags</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../socktap/#positioning">Positioning</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../socktap/#applications">Applications</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../socktap/#hybrid-pqc-certificate-validation">Hybrid-PQC Certificate Validation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../socktap/#building-and-running">Building and Running</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#build-options">Build options</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="../socktap/#first-steps">First steps</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../socktap/#acknowledgement">Acknowledgement</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../legal/">Legal Notice</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="../../legal/#contact">Contact</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="../../legal/#privacy-statement">Privacy Statement</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Vanetza - Your open-source ETSI C-ITS protocol stack</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tools</li>
+      <li class="breadcrumb-item active">Certify PQC</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/riebl/vanetza/edit/master/docs/tools/certify-pqc.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="certify-pqc">Certify PQC</h1>
+<p><code>certify-pqc</code> creates and checks experimental V3 certificate chains. It is a
+separate executable so enabling PQC does not change existing <code>certify</code> commands
+or their V2 output.</p>
+<p>Certificate generation accepts <code>--profile ecc</code> or <code>--profile hybrid</code>. The
+default is <code>hybrid</code>. The ECC profile exists to test interoperability against a
+classical-only V3 chain within the experimental ASN.1 profile, encoded without
+the alternative-key and signature fields.</p>
+<p>Build it with both options enabled:</p>
+<pre class="codehilite"><code class="language-shell">cmake -S . -B build-pqc -DVANETZA_WITH_PQC=ON -DBUILD_CERTIFY=ON
+cmake --build build-pqc --target certify certify-pqc
+</code></pre>
+
+<h2 id="generate-a-chain">Generate a Chain</h2>
+<p>Use the existing tool for ECC keys:</p>
+<pre class="codehilite"><code class="language-shell">build-pqc/bin/certify generate-key root.key
+build-pqc/bin/certify generate-key aa.key
+build-pqc/bin/certify generate-key ticket.key
+</code></pre>
+
+<p>Generate FN-DSA key pairs for the authorities. The command appends
+<code>.pqc.key</code> and <code>.pqc.pub</code> to each base path automatically:</p>
+<pre class="codehilite"><code class="language-shell">build-pqc/bin/certify-pqc generate-key root
+build-pqc/bin/certify-pqc generate-key aa
+</code></pre>
+
+<p>Generate the Root, AA, and AT in that order:</p>
+<pre class="codehilite"><code class="language-shell">build-pqc/bin/certify-pqc generate-root \
+  --profile hybrid \
+  --output root.cert \
+  --subject-key root.key \
+  --subject-pqc-key root
+
+build-pqc/bin/certify-pqc generate-aa \
+  --profile hybrid \
+  --output aa.cert \
+  --sign-key root.key \
+  --sign-cert root.cert \
+  --sign-pqc-key root \
+  --subject-key aa.key \
+  --subject-pqc-key aa
+
+build-pqc/bin/certify-pqc generate-ticket \
+  --profile hybrid \
+  --output ticket.cert \
+  --sign-key aa.key \
+  --sign-cert aa.cert \
+  --sign-pqc-key aa \
+  --subject-key ticket.key
+</code></pre>
+
+<p>Root and AA certificates contain an FN-DSA public key and signature. The AT
+contains the FN-DSA signature but no FN-DSA public key.</p>
+<p>When <code>--aid</code> is omitted, authority certificates retain the established V3
+issue-permission defaults for CA, DEN, CP, GN management, and IPv6 routing,
+including their SSP ranges. Tickets default to CA and DEN application
+permissions. The AA also carries its subject ECC key as the public encryption
+key, matching the existing V3 certificate-generation behavior.</p>
+<p>The existing <code>certify generate-key</code> command writes PKCS#8 DER. The generated
+<code>.key</code> files are used directly as subject and issuer ECC keys by
+<code>certify-pqc</code>.</p>
+<h3 id="ecc-only-v3-chain">ECC-Only V3 Chain</h3>
+<p>Use the same ECC keys without generating FN-DSA keys:</p>
+<pre class="codehilite"><code class="language-shell">build-pqc/bin/certify-pqc generate-root \
+  --profile ecc --output root.cert --subject-key root.key
+
+build-pqc/bin/certify-pqc generate-aa \
+  --profile ecc --output aa.cert \
+  --sign-key root.key --sign-cert root.cert --subject-key aa.key
+
+build-pqc/bin/certify-pqc generate-ticket \
+  --profile ecc --output ticket.cert \
+  --sign-key aa.key --sign-cert aa.cert --subject-key ticket.key
+</code></pre>
+
+<p>These certificates contain only the standard ECC verification keys and
+signatures, but they are still encoded with the experimental ASN.1 profile.
+They are intended for ECC/hybrid comparisons between PQC-capable builds. They
+are not interchangeable with credentials encoded by a strict build because
+the profiles have different OER extension preambles.</p>
+<h2 id="inspect-and-verify">Inspect and Verify</h2>
+<pre class="codehilite"><code class="language-shell">build-pqc/bin/certify-pqc show ticket.cert
+
+build-pqc/bin/certify-pqc verify-chain \
+  --profile hybrid \
+  --root root.cert \
+  --aa aa.cert \
+  --ticket ticket.cert \
+  --aid 36
+</code></pre>
+
+<p><code>verify-chain</code> performs existing V3 certificate policy checks, verifies every
+outer ECC signature, requires the expected hybrid material, and verifies every
+inner FN-DSA signature.</p>
+<p>The optional <code>--aid</code> selects the ITS-AID checked against the chain&rsquo;s
+permissions and defaults to Cooperative Awareness (<code>36</code>). Use the same AID
+when generating and verifying a chain with custom permissions.</p>
+<p>Use <code>--profile ecc</code> to verify an ECC-only V3 chain. This additionally rejects
+the chain if any alternative PQC material is present.</p>
+<p>Use <code>certify-pqc COMMAND --help</code> to see optional subject names, validity, and
+ITS-AID arguments.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../certify/" class="btn btn-neutral float-left" title="Certify"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../fuzz-harness/" class="btn btn-neutral float-right" title="fuzz-harness">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/riebl/vanetza" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../certify/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../fuzz-harness/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../js/extra.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

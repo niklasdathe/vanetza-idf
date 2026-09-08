@@ -1,3 +1,13 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$d1/d1a/structvanetza_1_1detail_1_1EndianConverter.html" title=" " alt="" coords="5,5,240,50"/>
+<area shape="rect" id="Node000000" href="$d2/d13/classvanetza_1_1dcc_1_1TransmitRateFeedback.html" title=" " alt="" coords="5,40,204,85"/>
+<area shape="rect" id="Node000001" href="$de/d9c/classvanetza_1_1dcc_1_1TransmitRateControl.html" title=" " alt="" coords="252,75,450,119"/>
+<area shape="poly" id="edge88_Node000000_Node000001" title=" " alt="" coords="219,76,254,82,249,84,219,81"/>
+<area shape="rect" id="Node000002" href="$d1/d1c/classvanetza_1_1dcc_1_1BurstyTransmitRateControl.html" title=" " alt="" coords="501,5,711,50"/>
+<area shape="poly" id="edge89_Node000001_Node000002" title=" " alt="" coords="450,67,519,51,524,50,451,73"/>
+<area shape="rect" id="Node000003" href="$df/d62/classvanetza_1_1dcc_1_1LimericTransmitRateControl.html" title=" " alt="" coords="498,75,714,119"/>
+<area shape="poly" id="edge90_Node000001_Node000003" title=" " alt="" coords="466,94,500,97,495,97,466,100"/>
+<area shape="rect" id="Node000004" href="$dc/d2b/classvanetza_1_1dcc_1_1SingleReactiveTransmitRateControl.html" title=" " alt="" coords="502,144,710,189"/>
+<area shape="poly" id="edge91_Node000001_Node000004" title=" " alt="" coords="451,121,524,143,519,143,450,127"/>
+<area shape="rect" id="Node000005" href="$dd/dbf/classvanetza_1_1dcc_1_1TransmitRateThrottle.html" title=" " alt="" coords="5,109,204,154"/>
+<area shape="poly" id="edge92_Node000005_Node000001" title=" " alt="" coords="219,113,254,110,249,112,220,118"/>
 </map>

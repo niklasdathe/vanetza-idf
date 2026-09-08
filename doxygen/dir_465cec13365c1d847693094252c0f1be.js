@@ -30,7 +30,7 @@ var dir_465cec13365c1d847693094252c0f1be =
     [ "payload.hpp", "d4/d3d/payload_8hpp_source.html", null ],
     [ "persistence.cpp", "dd/de6/v2_2persistence_8cpp_source.html", null ],
     [ "persistence.hpp", "d5/d2c/v2_2persistence_8hpp_source.html", null ],
-    [ "public_key.cpp", "de/d8b/public__key_8cpp_source.html", null ],
+    [ "public_key.cpp", "d7/d9b/v2_2public__key_8cpp_source.html", null ],
     [ "public_key.hpp", "db/dad/v2_2public__key_8hpp_source.html", null ],
     [ "recipient_info.cpp", "de/dfe/recipient__info_8cpp_source.html", null ],
     [ "recipient_info.hpp", "d2/d10/recipient__info_8hpp_source.html", null ],

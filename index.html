@@ -181,6 +181,18 @@
     </li>
     </ul>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="tools/certify-pqc/">Certify PQC</a>
+    <ul>
+    <li class="toctree-l2"><a class="reference internal" href="tools/certify-pqc/#generate-a-chain">Generate a Chain</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="tools/certify-pqc/#ecc-only-v3-chain">ECC-Only V3 Chain</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="tools/certify-pqc/#inspect-and-verify">Inspect and Verify</a>
+    </li>
+    </ul>
+                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="tools/fuzz-harness/">fuzz-harness</a>
     <ul>
     <li class="toctree-l2"><a class="reference internal" href="tools/fuzz-harness/#requirements">Requirements</a>
@@ -220,6 +232,8 @@
     <li class="toctree-l2"><a class="reference internal" href="tools/socktap/#positioning">Positioning</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="tools/socktap/#applications">Applications</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="tools/socktap/#hybrid-pqc-certificate-validation">Hybrid-PQC Certificate Validation</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="tools/socktap/#building-and-running">Building and Running</a>
         <ul>
@@ -372,6 +386,11 @@ You can the run those tests in your build directory by executing <code>ctest</co
 <td><code>BUILD_CERTIFY</code></td>
 </tr>
 <tr>
+<td>certify-pqc</td>
+<td>Experimental utility for generating and validating ECC/FN-DSA V3 certificate chains</td>
+<td><code>BUILD_CERTIFY</code>, <code>VANETZA_WITH_PQC</code></td>
+</tr>
+<tr>
 <td>socktap</td>
 <td>Example application using most of the Vanetza stack operating on sockets, i.e. either Linux packet sockets or optionally Cohda LLC sockets</td>
 <td><code>BUILD_SOCKTAP</code></td>
@@ -443,5 +462,5 @@ Please write an e-mail to <a href="mailto:raphael@riebl.net">raphael@riebl.net</
 
 <!--
 MkDocs version : 1.6.1
-Build Date UTC : 2026-02-16 11:44:11.413364+00:00
+Build Date UTC : 2026-09-08 10:13:26.019388+00:00
 -->

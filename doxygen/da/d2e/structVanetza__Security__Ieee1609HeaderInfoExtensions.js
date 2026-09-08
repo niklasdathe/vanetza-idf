@@ -1,0 +1,4 @@
+var structVanetza__Security__Ieee1609HeaderInfoExtensions =
+[
+    [ "Vanetza_Security_Ieee1609HeaderInfoExtensions__content", "d5/d7e/structVanetza__Security__Ieee1609HeaderInfoExtensions_1_1Vanetza__Security__Ieee1609HeaderInfoExtensions____content.html", "d5/d7e/structVanetza__Security__Ieee1609HeaderInfoExtensions_1_1Vanetza__Security__Ieee1609HeaderInfoExtensions____content" ]
+];

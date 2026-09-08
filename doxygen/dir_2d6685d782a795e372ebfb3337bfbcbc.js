@@ -18,8 +18,6 @@ var dir_2d6685d782a795e372ebfb3337bfbcbc =
     [ "byte_view.hpp", "d5/de1/byte__view_8hpp_source.html", null ],
     [ "clock.cpp", "da/d8a/clock_8cpp_source.html", null ],
     [ "clock.hpp", "db/d21/clock_8hpp_source.html", null ],
-    [ "clock_tm.cpp", "d4/d0b/clock__tm_8cpp_source.html", null ],
-    [ "clock_tm.hpp", "d7/dfa/clock__tm_8hpp_source.html", null ],
     [ "confident_quantity.hpp", "dd/d38/confident__quantity_8hpp_source.html", null ],
     [ "factory.hpp", "dc/d2d/factory_8hpp_source.html", null ],
     [ "hook.hpp", "d6/d53/hook_8hpp_source.html", null ],
