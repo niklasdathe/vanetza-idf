@@ -35,7 +35,8 @@ def main():
     if not (build / 'ItsSecurity_TestCases.o').is_file():
         raise SystemExit('Build the official AtsSecurity suite separately first')
     ports = root / 'ccsrc/Ports/LibIts_ports'
-    includes = {build, titan / 'include', ports / 'GN_ports', ports / 'CAM_ports', ports / 'DENM_ports'}
+    includes = {build, titan / 'include', ports / 'GN_ports', ports / 'CAM_ports', ports / 'DENM_ports',
+                Path(__file__).resolve().parents[1] / 'include'}  # vanetza_idf/its_time.hpp (header-only)
     for parent in (root / 'ccsrc', root / 'titan-test-system-framework/ccsrc'):
         includes.update(p.parent for p in parent.rglob('*.hh'))
     compile_flags = ['g++', '-std=c++17', '-g', '-O0', '-DTITAN_RUNTIME_2', '-D_NO_SOFTLINKS_',

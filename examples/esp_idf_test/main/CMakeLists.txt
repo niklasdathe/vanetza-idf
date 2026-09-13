@@ -1,5 +1,5 @@
 set(_tests "../../../ports/esp_idf/tests")
-idf_component_register(SRCS "main.cpp" "hil_server.cpp" "${_tests}/test_main.cpp" "${_tests}/hil_sut.cpp"
+idf_component_register(SRCS "main.cpp" "hil_server.cpp" "${_tests}/test_main.cpp" "${_tests}/test_its_time.cpp" "${_tests}/hil_sut.cpp"
     REQUIRES vanetza-idf esp_driver_usb_serial_jtag)
 if(CONFIG_VANETZA_IDF_NETWORK)
     target_sources(${COMPONENT_LIB} PRIVATE "${_tests}/test_management.cpp")

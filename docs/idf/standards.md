@@ -48,6 +48,15 @@ status. Those are distinct from the **AL_DATA** example in EN 303 797. This
 library uses the latter and does not claim to implement the former by renaming
 fields. BLE/USB serialization is outside either ETSI service primitive.
 
+Comment convention of the port headers: every type, primitive binding and
+public function that represents a standardised object carries the standard,
+edition and clause or table it comes from in the comment immediately above it;
+members and helpers of such a type (accessors, bookkeeping, overrides of an
+upstream interface, `using` aliases of another header's types) are covered by
+the comment of the type or of the header they alias, and implementation
+details (private members, `Impl` classes) carry none. The same convention
+applies to the pre-existing `stack.hpp`/`access.hpp`.
+
 The SN/SF/MN/MF/MI bindings are C++ representations of the primitives named
 above. Their subscribers, providers and sinks may live in the same task, in
 another task or process, or on another device; the library defines no transport

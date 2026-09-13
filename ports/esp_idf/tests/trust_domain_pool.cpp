@@ -14,6 +14,7 @@
 // the start within five minutes of the current time). This is not a PKI.
 #include "test_backend.hpp"
 #include "test_trust_domain.hpp"
+#include <vanetza_idf/its_time.hpp>
 #include <vanetza/common/clock.hpp>
 #include <vanetza/security/v3/certificate.hpp>
 #include <chrono>
@@ -27,13 +28,9 @@ namespace {
 using namespace vanetza;
 using vanetza::security::v3::Certificate;
 
-// ITS time (TAI seconds since 2004-01-01T00:00:00Z): UTC plus the leap seconds
-// inserted since 2004 (2005-12, 2008-12, 2012-06, 2015-06, 2016-12).
+// ITS time (TAI since 2004-01-01T00:00:00Z) from the library's tested conversion.
 Clock::time_point its_now() {
-    const auto unix_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    constexpr long long epoch_2004 = 1072915200; // 2004-01-01T00:00:00Z in Unix seconds
-    return Clock::time_point(std::chrono::seconds(unix_seconds - epoch_2004 + 5));
+    return Clock::time_point(vanetza_idf::its_time::since_epoch(std::chrono::system_clock::now()));
 }
 
 bool write(const std::string& path, const ByteBuffer& bytes) {

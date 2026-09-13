@@ -15,13 +15,13 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 629 checks | Security entity, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 806 checks; security off 117; access-only 55; Linux Release 629 |
-| ESP32-C5 component execution, security on (COM11) | PASS, 503 checks | PSA Crypto backend of mbedTLS 4.1.0; `CONFIG_VANETZA_IDF_PKI=y`; see [security-device-03](evidence/security-device-03/result.json) and the heap note below |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 663 checks | Security entity, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 840 checks; security off 150; access-only 88; Linux Release 663 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 537 checks | PSA Crypto backend of mbedTLS 4.1.0; `CONFIG_VANETZA_IDF_PKI=y`; [security-device-05](evidence/security-device-05/result.json) (earlier 503-check runs: -03 COM11, -04 COM20); heap note below |
 | ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
 | Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below |
 | Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below |
-| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-05](evidence/btp-host-05/result.json) |
-| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-02](evidence/geonetworking-host-02/result.json): no regression |
+| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-06](evidence/btp-host-06/result.json) (earlier -05) |
+| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-03](evidence/geonetworking-host-03/result.json) (earlier -02): no regression |
 | Security ATS receiving side, PKI ATS | Not executed | SN-DECAP verification does not exist (GAP-SEC-001); the TS 102 941 core has no transport (GAP-PKI-001) |
 | Complete facilities ATS | Not executed | Full services remain incomplete |
 
@@ -211,7 +211,7 @@ form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
 The host tests run the same backend against OpenSSL as an oracle (signature
 cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
 known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
-build (806 checks); the device runs the PSA path natively (503 checks, the
+build (840 checks); the device runs the PSA path natively (537 checks, the
 difference being the OpenSSL-only oracle tests).
 
 **Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
@@ -235,21 +235,31 @@ segfaulted in that test: the entity was destroyed after the subscriber it
 notifies on DEREG had gone out of scope (a use-after-scope in the *test*, not
 the library), fixed by scoping the entity's lifetime explicitly.
 
-**Upstream Vanetza changes (additive only).** `SignRequest::context_information`
+**Upstream Vanetza changes.** Three additive ones: `SignRequest::context_information`
 and `DataRequest::security_context` carry the SN-ENCAP context information from
 BTP/GN request to the security entity (`Router::encap_packet` gained the
 parameter); `Router::flush_forwarding_buffers()` is public so the GN core can
-drop buffered packets carrying the old identifier on PREPARE. Nothing else in
-`vanetza/` changed. One upstream bug was found and worked around in the tests
-rather than patched: `v3::SecuredMessage::get_inline_p2pcd_request()` widens
-each 3-octet `HashedId3` through an 8-octet conversion and truncates the wrong
-end, so `test_signing_profiles` reads the ASN.1 field directly.
+drop buffered packets carrying the old identifier on PREPARE. One corrective
+one (decided 2026-09-14): `v3::SecuredMessage::get_inline_p2pcd_request()`
+widened each 3-octet `HashedId3` through an 8-octet conversion and truncated
+the wrong end; it now uses `create_hashed_id3()` and `test_signing_profiles`
+checks the accessor against the raw ASN.1 field. Nothing else in `vanetza/`
+changed; all four are listed in the thesis's `adapted-code.yaml`.
+
+**ITS time base.** `vanetza_idf/its_time.hpp` converts wall-clock (Unix) time
+to TAI microseconds since the ITS epoch with the five leap seconds inserted since
+2004, as TS 102 894-2 V2.4.1 `TimestampIts` and the IEEE 1609.2 `Time64`/`Time32`
+definitions require; `test_its_time` uses the CDD's own example
+(2007-01-01T00:00:00Z = 94 694 401 000 ms) and the "5 s ahead of UTC" statement
+as vectors and shows that upstream `Clock::at()` is 5 s behind (it subtracts
+the epoch in UTC). The Security adapter and `vidf_test_pool` use the helper; the
+framework's `base_time` is UTC-based, hence the 5 s offset in its logs.
 
 **AtsSecurity campaigns.** `etsi_security_adapter.cpp` implements the
 `ItsSecSystem` ports (GeoNetworking, GN/CAM/DENM upper testers, adapter
 control) against the official `AtsSecurity` testcase objects
 ([build_etsi_security_adapter.py](../../ports/esp_idf/tools/build_etsi_security_adapter.py),
-[adapter-build.json](evidence/security-host-01/adapter-build.json)). The
+[adapter-build.json](evidence/security-host-03/adapter-build.json)). The
 host SUT is `vidf_sut --security-pool ./certificates`, the pool an isolated test
 trust domain written by `vidf_test_pool` in the framework's own loader layout
 (hashes in each `result.json`). Three properties of the run matter for reading
@@ -278,13 +288,14 @@ the verdicts:
    Release 2 CAM (SHB) and DENM (GBC into a 500 m circle, TS 103 831 clause
    5.4.2) PDUs of the test application; no CA/DEN service is claimed.
 
-Verdicts ([security-host-01](evidence/security-host-01/result.json),
-[security-host-02](evidence/security-host-02/result.json)):
+Verdicts ([security-host-03](evidence/security-host-03/result.json),
+[security-host-04](evidence/security-host-04/result.json); the first runs -01/-02
+of 2026-09-13 gave the same verdicts):
 
 | Case | Verdict | Note |
 |---|---|---|
 | `TC_SEC_ITSS_SND_GENMSG_01..04, 06..08_BV` | pass | Secured beacons, psid 141, digest/certificate alternation, generationTime, signedData payload |
-| `TC_SEC_ITSS_SND_GENMSG_05_BV` | **fail** | The testcase compares `validityPeriod.start` (Time32, seconds) with a range built from `v_curTime` in microseconds (pinned `ItsSecurity_TestCases.ttcn` line 7313; unchanged at the upstream master's line 6672), so no IUT passes it. The test purpose's own condition (start <= generation time < start + duration) holds for the logged values. Retained, not tuned; [analysis](evidence/security-host-01/analysis.md) |
+| `TC_SEC_ITSS_SND_GENMSG_05_BV` | **fail** | The testcase compares `validityPeriod.start` (Time32, seconds) with a range built from `v_curTime` in microseconds (pinned `ItsSecurity_TestCases.ttcn` line 7313; unchanged at the upstream master's line 6672), so no IUT passes it. The test purpose's own condition (start <= generation time < start + duration) holds for the logged values. Retained, not tuned; [analysis](evidence/security-host-03/analysis.md) |
 | `TC_SEC_ITSS_SND_CAM_01..04_BV` | pass | psid 36, headerInfo without expiry/location, signer digest or certificate with appPermissions |
 | `TC_SEC_ITSS_SND_DENM_01..03_BV` | pass | psid 37, generationLocation present, GBC packet |
 
@@ -304,12 +315,16 @@ test firmware leaves roughly 110 kB of the internal heap.
 **Board recovery.** That failing device run also left the board unflashable
 ("Write timeout" from esptool): the ROM UART0 clock-enable repair described
 above lived in `run_hil_server()`, which a failed test run never reaches, so
-the next USB-triggered warm reset hung in ROM. `app_main` applies the repair
-first now. The board still running the older image (COM20) was recovered over
-JTAG instead: OpenOCD halts the core, sets `PCR_UART0_SCLK_EN` before each
+the next USB-triggered warm reset hung in ROM. The repair now lives in the
+component itself (`ports/esp_idf/src/esp32c5_rom_uart_clock.c`, an
+`ESP_SYSTEM_INIT_FN` kept by an undefined-symbol reference, so every application
+using the component on an ESP32-C5 gets it before `app_main`); after that build
+both boards accepted a second esptool `--before default-reset` flash
+([security-device-05](evidence/security-device-05/result.json), 537 checks).
+The board that was still running the older image (COM20) had been recovered
+over JTAG first: OpenOCD halts the core, sets `PCR_UART0_SCLK_EN` before each
 `program_esp` step and programs the three images
-([security-device-04](evidence/security-device-04/result.json), `openocd-flash.log`);
-that board then passed the same 503 checks and accepts a plain esptool reset again.
+([security-device-04](evidence/security-device-04/result.json), `openocd-flash.log`).
 
 ### Independent C5 radio pair: a real bug in an "FCS" check that could never pass
 

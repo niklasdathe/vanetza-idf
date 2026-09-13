@@ -72,7 +72,7 @@ disabling it first, one FAIL from an unimplemented multi-component (PTC) gap.
 The AtsSecurity sending-side campaigns (15 official cases, two stimulus
 configurations) pass except `TC_SEC_ITSS_SND_GENMSG_05_BV`, whose failing
 branch is an IUT-independent unit defect of the testcase itself; see
-[security-host-01/analysis.md](evidence/security-host-01/analysis.md). The
+[security-host-03/analysis.md](evidence/security-host-03/analysis.md). The
 receiving-side cases were not executed because SN-DECAP verification does
 not exist. Access behavior tests and independent two-radio tests remain
 necessary.

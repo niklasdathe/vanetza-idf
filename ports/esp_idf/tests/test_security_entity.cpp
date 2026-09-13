@@ -192,12 +192,16 @@ void test_signing_profiles() {
     HashedId8 unknown {1, 2, 3, 4, 5, 6, 7, 8};
     s.entity->header_policy().request_unrecognized_certificate(unknown);
     s.advance(100ms); s.send(aid::CA, {0x01, 0xff, 0xfc});
-    // Read the ASN.1 field directly: upstream SecuredMessage::get_inline_p2pcd_request() widens the
-    // 3-octet digest through an 8-octet conversion and truncates the wrong end (unused by upstream itself).
+    // Upstream SecuredMessage::get_inline_p2pcd_request() widened the 3-octet digest through an
+    // 8-octet conversion and truncated the wrong end; patched in vanetza/security/v3/secured_message.cpp
+    // (docs/idf/validation.md), so the accessor and the raw ASN.1 field must agree here.
     m = s.last();
     const auto* p2pcd = m->content->choice.signedData->tbsData->headerInfo.inlineP2pcdRequest;
     check(p2pcd && p2pcd->list.count == 1 && create_hashed_id3(*p2pcd->list.array[0]) == truncate(unknown),
           "inlineP2pcdRequest lists the unknown digest");
+    const auto requested = m.get_inline_p2pcd_request();
+    check(requested.size() == 1 && requested.front() == truncate(unknown),
+          "get_inline_p2pcd_request() returns the digest as sent (upstream defect patched)");
     // Peer asks for our AA certificate: requestedCertificate while we sign with the digest.
     s.entity->header_policy().enqueue_p2p_request(truncate(*s.domain.aa.certificate.calculate_digest()));
     s.advance(100ms); s.send(aid::CA, {0x01, 0xff, 0xfc});

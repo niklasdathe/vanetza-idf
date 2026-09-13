@@ -25,6 +25,8 @@
  */
 namespace vanetza_idf::SF_SAP {
 
+// The same identifier-change service types as sn_sap.hpp (TS 102 723-9 V1.1.1 clause 4.1.5:
+// one security entity serves several layers), under the SF-SAP names.
 using security::Identifier;
 using security::IdChangeCommand;
 using security::LockHandle;

@@ -1,0 +1,7 @@
+{
+  "adapter_sha256": "091929148ecd8866d9a561fb41d7f7426a0db22cc4f81f397cf94cc76dee3ce3",
+  "binary_sha256": "253600e26949f935113a0c122d0f05ab04876fae96b1711d3be28e96bbc0a6a1",
+  "testcase_object_sha256": "e506d7762f0ce795943360eb5d685413aa70ae2059981d8b2949a30d3d32dd2d",
+  "testcase_source_sha256": "764fac9ba93c71ea8b6017f650242b1844d0c661cb058fbd7efa8b6b1f64e08b",
+  "scope": "Official BTP testcase objects; custom host/device SUT ports; no conformance verdict implied"
+}

@@ -52,6 +52,10 @@ public:
 using IdChangeHook = std::function<void(IdChangeCommand, const Identifier&, const vanetza::ByteBuffer& subscriber_data,
                                         std::shared_ptr<IdChangeResponder>)>;
 
+/** The identifier-change service of the security entity (TS 102 723-8 V1.1.1 clause 6.3
+ * "ID management"): SN-IDCHANGE-SUBSCRIBE/-UNSUBSCRIBE/-TRIGGER and SN-ID-LOCK/-UNLOCK
+ * (clauses 5.2.5, 5.2.7 to 5.2.10) as virtual calls; the same instance serves the
+ * SF-SAP (TS 102 723-9 V1.1.1 clauses 5.2.5 to 5.2.10). */
 class IdChangeService {
 public:
     virtual ~IdChangeService() = default;

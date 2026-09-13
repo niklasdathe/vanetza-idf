@@ -23,6 +23,7 @@
 #include "geonetworking_codec.hh"
 #include "security_services_its.hh"
 #include "params_its.hh"
+#include <vanetza_idf/its_time.hpp>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
@@ -66,13 +67,9 @@ void parse_gn_params(const std::string& value) {
     security_checks = security_checks_default;
 }
 
-// ITS time (TAI microseconds since 2004-01-01T00:00:00Z): UTC plus the leap seconds
-// inserted since 2004 (2005-12, 2008-12, 2012-06, 2015-06, 2016-12).
+// ITS time (TAI microseconds since 2004-01-01T00:00:00Z), the library's tested conversion.
 std::uint64_t its_now_us() {
-    const auto unix_us = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    constexpr std::int64_t epoch_2004_us = 1072915200LL * 1000000LL;
-    return static_cast<std::uint64_t>(unix_us - epoch_2004_us + 5LL * 1000000LL);
+    return static_cast<std::uint64_t>(vanetza_idf::its_time::since_epoch(std::chrono::system_clock::now()).count());
 }
 
 // The external SUT process. TITAN's parallel runtime forks the MTC and every PTC from

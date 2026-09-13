@@ -17,6 +17,7 @@
 #include <vector>
 #include <limits>
 
+void test_its_time();
 #if VIDF_NETWORK
 void test_management();
 #endif
@@ -278,6 +279,7 @@ int main() {
 #if VIDF_NETWORK
         test_management();
 #endif
+        test_its_time();
 #if VIDF_SECURITY
         test_crypto_backend_known_answers();
 #if VIDF_BACKEND_OPENSSL

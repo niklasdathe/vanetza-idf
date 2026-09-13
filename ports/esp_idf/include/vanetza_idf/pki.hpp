@@ -42,6 +42,9 @@ using vanetza::security::PrivateKey;
 using vanetza::security::PublicKey;
 using vanetza::security::v3::Certificate;
 
+/// A verification or encryption key pair (IEEE Std 1609.2 PublicVerificationKey /
+/// BasePublicEncryptionKey, TS 103 097 V2.2.1 clause 6): private scalar and the
+/// uncompressed public point of the same curve.
 struct KeyPair {
     PrivateKey priv;
     PublicKey pub; // uncompressed
@@ -93,6 +96,8 @@ struct RequestContext {
     std::array<std::uint8_t, 16> request_hash {};
 };
 
+/// requested appPermissions (IEEE Std 1609.2 SequenceOfPsidSsp: ITS-AID and opaque SSP),
+/// TS 102 941 V2.2.1 clause 6.2.3.2/6.2.3.3 request parameters
 using Permissions = std::vector<std::pair<vanetza::ItsAid, ByteBuffer>>;
 
 /// Clause 6.2.3.2.1 inputs

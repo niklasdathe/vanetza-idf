@@ -20,6 +20,8 @@
  */
 namespace vanetza_idf::SN_SAP {
 
+// Types of the identifier-change service (id_change.hpp: TS 102 723-8 V1.1.1 clause 6.3,
+// identifier = HashedId8 per TS 102 940 V2.1.1 clause 6.5) under the SN-SAP names.
 using security::Identifier;
 using security::IdChangeCommand;
 using security::LockHandle;

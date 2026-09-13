@@ -1,0 +1,15 @@
+{
+  "adapter_sha256": "2ae0e42818c5f1fee1e26161352864775bd1f3b6f8b9b2d6339efab5ce8b47c9",
+  "binary_sha256": "4eee9c54024f4a615eda290997a14de47db8a68f749f034065bc4904c6ecdf4f",
+  "testcase_object_sha256": "22768d8957504590104401f742680fc5aa9680ad5062790e0e04f36e6ca44b57",
+  "testcase_source_sha256": "862a7eecc337cefb8d055e558d66f325489e48530f7302bf0f4b948f1d6b16b4",
+  "scope": "Official Security testcase objects; custom host SUT ports for the sending side (GN-MGMT beacons, CAM/DENM carriers); receiving cases not wired; no conformance verdict implied",
+  "suite_overlay": [
+    {
+      "path": "ccsrc/Protocols/GeoNetworking/geonetworking_codec.cc",
+      "before": "a01ee9c560d093f785c2a9fa113dc16a9645e16fa537d1539666642374b635c8",
+      "after": "5bdf56506e59a647d0d321ce768ca1951ba9d119cfcf53da61fa1cc19590ceaa",
+      "reason": "Same null-params guard as the GeoNetworking adapter build; pinned source untouched."
+    }
+  ]
+}

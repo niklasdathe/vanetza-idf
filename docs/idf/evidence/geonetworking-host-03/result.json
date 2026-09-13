@@ -1,0 +1,30 @@
+{
+  "started_utc": "2026-09-13T23:10:33.371432+00:00",
+  "binary_sha256": "a1a0b814154d332b91c0348e0609b3263d93d7a0244b8df96c427c8b697d3a8f",
+  "config_sha256": "7863a2695637b779357e393a08644048a9aa6d6009492954f6cc0ad40029dd10",
+  "sut_sha256": "52ed5f50655820f3efd5eecfd49e54b304939f0b000d555218e78eb8f7f8aa4e",
+  "sut_args": null,
+  "pool_sha256": null,
+  "expected_cases_sha256": "d446bc932c6fc07477df498310010e223fb931b33aa1501602def0b89b50b977",
+  "verdicts": [
+    {
+      "testcase": "TC_GEONW_FDV_SHB_BV_01",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_GEONW_PON_FPB_BV_11_05",
+      "verdict": "inconc"
+    },
+    {
+      "testcase": "TC_GEONW_PON_SHB_BV_01",
+      "verdict": "fail"
+    }
+  ],
+  "status": "completed",
+  "exit_code": 0,
+  "missing_cases": [],
+  "unexpected_cases": [],
+  "duplicate_cases": [],
+  "campaign_complete": true,
+  "finished_utc": "2026-09-13T23:11:08.657329+00:00"
+}

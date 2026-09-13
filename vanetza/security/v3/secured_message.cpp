@@ -206,8 +206,9 @@ std::list<HashedId3> SecuredMessage::get_inline_p2pcd_request() const
         const asn1::SequenceOfHashedId3* inline_p2pcd_request = m_struct->content->choice.signedData->tbsData->headerInfo.inlineP2pcdRequest;
         if (inline_p2pcd_request) {
             for (int i = 0; i < inline_p2pcd_request->list.count; i++) {
-                HashedId3 new_elem = truncate(convert(*inline_p2pcd_request->list.array[i]));
-                requests.push_back(new_elem);
+                // vanetza-idf: the element is a 3-octet HashedId3; widening it through the
+                // 8-octet conversion and truncating kept the wrong end (zero padding).
+                requests.push_back(create_hashed_id3(*inline_p2pcd_request->list.array[i]));
             }
         }
     }

@@ -21,8 +21,12 @@ project's `components` directory. Keep the directory name `vanetza-idf`:
 git clone --recurse-submodules https://github.com/niklasdathe/vanetza-idf.git components/vanetza-idf
 ```
 
-Until the port branch is merged, add `--branch codex/esp-idf-library` to that
-command. Pin a reviewed commit for reproducible builds. An existing clone needs
+`master` carries the port without the security entity. The security entity,
+identifier change, cross-layer SAP bindings and TS 102 941 core live on
+`feature/etsi-cross-layer-security` (add `--branch feature/etsi-cross-layer-security`)
+and stay there until sending signed messages with real credentials has been
+verified end to end; see [validation.md](validation.md). Pin a reviewed commit
+for reproducible builds. An existing clone needs
 `git submodule update --init --recursive`.
 
 Alternatively, keep the clone elsewhere and add its absolute path to

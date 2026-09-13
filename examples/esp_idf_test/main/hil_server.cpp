@@ -12,8 +12,6 @@
 void run_hil_server() {
     using namespace vanetza_idf;
     using vanetza::ByteBuffer;
-    // The ROM UART0 clock-enable repair (PCR_UART0_SCLK_EN) is applied in app_main
-    // before the tests run, so it also covers boots whose tests fail.
     usb_serial_jtag_driver_config_t config {};
     config.rx_buffer_size = 8192; config.tx_buffer_size = 8192;
     ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&config));

@@ -57,6 +57,8 @@ inline const ByteBuffer vam_cluster {0x01};
  */
 class CertificatePool : public vanetza::security::v3::BaseCertificateProvider {
 public:
+    /// An authorization ticket (TS 103 097 V2.2.1 clause 7.2.1 profile) with the private
+    /// key of its verifyKeyIndicator; the pool owns both.
     struct Ticket {
         Certificate certificate;
         PrivateKey key;
@@ -74,6 +76,7 @@ public:
     Result add(const ByteBuffer& coer_certificate, const PrivateKey&);
     Result add(Certificate, PrivateKey);
 
+    /// pool bookkeeping for the application's provisioning and persistence
     std::size_t size() const { return tickets_.size(); }
     bool empty() const { return tickets_.empty(); }
     const std::vector<Ticket>& tickets() const { return tickets_; }
