@@ -1,0 +1,59 @@
+14:26:05.926042 TTCN-3 Parallel Test Component started on framework-dathe. Component reference: DENM Trigger(3), component type: LibItsDenm_TestSystem.ItsDenm, component name: DENM Trigger. Version: 10.1.2.
+14:26:05.926136 TTCN Logger v2.2 options: TimeStampFormat:=Time; LogEntityName:=No; LogEventTypes:=No; SourceInfoFormat:=None; LogSensitiveData:=No; *.FileMask:=LOG_ALL; *.ConsoleMask:=ERROR | EXECUTOR | VERDICTOP | WARNING; LogFileSize:=0; LogFileNumber:=1; DiskFullAction:=Error
+14:26:05.926295 Connected to MC.
+14:26:05.926337 Initializing variables, timers and ports of component type LibItsDenm_TestSystem.ItsDenm inside testcase TC_SEC_ITSS_SND_DENM_01_BV.
+14:26:05.926458 Port syncSendPort was started.
+14:26:05.926480 Port syncPort was started.
+14:26:05.926490 Port acPort was started.
+14:26:05.926496 Port utPort was started.
+14:26:05.926501 Port denmPort was started.
+14:26:05.926506 Component type LibItsDenm_TestSystem.ItsDenm was initialized.
+14:26:05.927046 Starting function fb_secTriggerDenmEvent().
+14:26:05.927154 >>> fb_secTriggerDenmEvent: { informationQuality := 0, eventType := { ccAndScc := { vehicleBreakdown91 := 0 } }, linkedCause := omit, eventZone := omit, linkedDenms := omit, eventEnd := omit }
+14:26:05.927202 Mapping port DENM Trigger(3):utPort to system:denmUtPort.
+14:26:05.927429 Port utPort was mapped to system:denmUtPort.
+14:26:05.927601 Map operation of DENM Trigger(3):utPort to system:denmUtPort finished.
+14:26:05.927656 Altstep a_utDefault was activated as default, id 1
+14:26:05.927671 *** f_getCurrentTime: INFO: calling fx_getCurrentTime() ***
+14:26:05.927667 fb_secTriggerDenmEvent: Call LibItsDenm_Functions.f_utTriggerEvent with { detectionTime := 716387165927, validityDuration := 600, repetitionDuration := omit, situation := { informationQuality := 0, eventType := { ccAndScc := { vehicleBreakdown91 := 0 } }, linkedCause := omit, eventZone := omit, linkedDenms := omit, eventEnd := omit }, awarenessDistance := lessThan50m (0), trafficDirection := allTrafficDirections (0), transmissionInterval := omit, repetitionInterval := omit, alacarte := omit }
+14:26:05.927933 *** f_getCurrentTime: INFO: calling fx_getCurrentTime() ***
+14:26:05.928011 Sent on utPort to system @LibItsDenm_TypesAndValues.UtDenmTrigger : { detectionTime := 716387165927, validityDuration := 600, repetitionDuration := omit, situation := { informationQuality := 0, eventType := { ccAndScc := { vehicleBreakdown91 := 0 } }, linkedCause := omit, eventZone := omit, linkedDenms := omit, eventEnd := omit }, awarenessDistance := lessThan50m (0), trafficDirection := allTrafficDirections (0), transmissionInterval := omit, repetitionInterval := omit, alacarte := omit }
+14:26:05.928306 Message enqueued on utPort from system @LibItsDenm_TypesAndValues.UtDenmResults : { utDenmTriggerResult := { result := true, actionId := { originatingStationId := 42, sequenceNumber := 1 } } } id 1
+14:26:05.928365 Start timer tc_wait: 120 s
+14:26:05.928391 Receive operation on port utPort succeeded, message from system(): @LibItsDenm_TypesAndValues.UtDenmResults : { utDenmTriggerResult := { result := true, actionId := { originatingStationId := 42, sequenceNumber := 1 } } } id 1
+14:26:05.928402 Message with id 1 was extracted from the queue of utPort.
+14:26:05.928410 Stop timer tc_wait: 120 s
+14:26:05.928424 fb_secTriggerDenmEvent: actionId={ originatingStationId := 42, sequenceNumber := 1 }
+14:26:05.928440 Unmapping port DENM Trigger(3):utPort from system:denmUtPort.
+14:26:05.928700 Port utPort was unmapped from system:denmUtPort.
+14:26:05.928963 Unmap operation of DENM Trigger(3):utPort from system:denmUtPort finished.
+14:26:05.929015 Function fb_secTriggerDenmEvent finished. PTC remains alive and is waiting for next start.
+14:26:06.024178 Starting function fb_secCancelDenmEvent().
+14:26:06.024204 >>> fb_secCancelDenmEvent
+14:26:06.024208 Mapping port DENM Trigger(3):utPort to system:denmUtPort.
+14:26:06.024336 Port utPort was mapped to system:denmUtPort.
+14:26:06.024469 Map operation of DENM Trigger(3):utPort to system:denmUtPort finished.
+14:26:06.024489 Altstep a_utDefault was activated as default, id 2
+14:26:06.024517 Sent on utPort to system @LibItsDenm_TypesAndValues.UtDenmTermination : { actionId := { originatingStationId := 42, sequenceNumber := 1 } }
+14:26:06.024524 Message enqueued on utPort from system @LibItsDenm_TypesAndValues.UtDenmResults : { utDenmTerminationResult := true } id 2
+14:26:06.024530 Start timer tc_wait: 120 s
+14:26:06.024541 Receive operation on port utPort succeeded, message from system(): @LibItsDenm_TypesAndValues.UtDenmResults : { utDenmTerminationResult := true } id 2
+14:26:06.024546 Message with id 2 was extracted from the queue of utPort.
+14:26:06.024549 Stop timer tc_wait: 120 s
+14:26:06.024555 Unmapping port DENM Trigger(3):utPort from system:denmUtPort.
+14:26:06.024629 Port utPort was unmapped from system:denmUtPort.
+14:26:06.024763 Unmap operation of DENM Trigger(3):utPort from system:denmUtPort finished.
+14:26:06.024788 Default with id 2 (altstep a_utDefault) was deactivated.
+14:26:06.024794 Function fb_secCancelDenmEvent finished. PTC remains alive and is waiting for next start.
+14:26:06.025283 Kill was requested from MC. Terminating idle PTC.
+14:26:06.025304 Terminating component type LibItsDenm_TestSystem.ItsDenm.
+14:26:06.025310 Default with id 1 (altstep a_utDefault) was deactivated.
+14:26:06.025315 Port syncSendPort was stopped.
+14:26:06.025321 Port syncPort was stopped.
+14:26:06.025324 Port acPort was stopped.
+14:26:06.025327 Port utPort was stopped.
+14:26:06.025330 Port denmPort was stopped.
+14:26:06.025333 Component type LibItsDenm_TestSystem.ItsDenm was shut down inside testcase TC_SEC_ITSS_SND_DENM_01_BV.
+14:26:06.025356 Final verdict of PTC: none
+14:26:06.025494 Disconnected from MC.
+14:26:06.025515 TTCN-3 Parallel Test Component finished.

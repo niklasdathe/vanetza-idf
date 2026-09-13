@@ -1,0 +1,62 @@
+{
+  "started_utc": "2026-09-13T12:26:21.456776+00:00",
+  "binary_sha256": "6b77e9371fff7aa171b3fd9efd93ca0f99e6215cca07dc7782426deda3d6b6a7",
+  "config_sha256": "9738ccbe1d5b82bb9dea0b2c5bcd55a42769c9b01a0ce51e97b7e46744755d98",
+  "sut_sha256": "541939c608f9d5b025e69f606c2365e04bd11f33bcc7cd53c1b518061dc98c33",
+  "sut_args": "--security-pool ./certificates",
+  "pool_sha256": {
+    "CERT_IUT_A_AA.oer": "f446036a0efcb7ff83481af542010fcb2f2d09c5ddf9f879827c527e1d518974",
+    "CERT_IUT_A_AA.vkey": "56a3b7a28fca0cef8221d2327af5421680cdc3ffb98fc1781142f34e1b7e70e9",
+    "CERT_IUT_A_AT.oer": "42536b1b16e339917016676ea957d6ca7bfc5c6473095e9c6a96f4c09905cf42",
+    "CERT_IUT_A_AT.vkey": "758d50a2cbcfb131f26c8a5bd6de48ece27f23e87669df0ae012d6404d2c4637",
+    "CERT_IUT_A_RCA.oer": "8be6abca3560aa3e012fa439865908fa083c6616ef5f57d77d30684a1a658c03",
+    "CERT_IUT_A_RCA.vkey": "27665860cfcce2802d6666bb29a57ee6871b61d69944e0b2fd3aff70da7370e8",
+    "CERT_TS_A_AA.oer": "c5c3d989fc3ef31eae49050c22f2dee6d49ddc8eded4e0bd99b8baad5a396d5f",
+    "CERT_TS_A_AA.vkey": "1b2e04441de119372b7853052da34effc599e7203f7b2daede72bfe730a6eb7f",
+    "CERT_TS_A_AT.oer": "68441f201fe2db6d22abf2c60c9d6cf3762f628c70e43a7d8ab3a22f62b2407b",
+    "CERT_TS_A_AT.vkey": "c4c0142d32b28d2a75c26c6b1c41882a17d4cfd6c3f4905559d308a94c639d91",
+    "index.lst": "ecd305a0b80ace27b60a2bbf8ed6256d960c9b11f3421d8c58eb5964c6a6cb79"
+  },
+  "expected_cases_sha256": "c5e35af30dd9e246d5f6b93d43ccfede92690389f955cd0eb1d4bdb0a28cef23",
+  "verdicts": [
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_01_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_02_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_03_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_04_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_05_BV",
+      "verdict": "fail"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_06_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_07_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_SND_GENMSG_08_BV",
+      "verdict": "pass"
+    }
+  ],
+  "status": "completed",
+  "exit_code": 0,
+  "missing_cases": [],
+  "unexpected_cases": [],
+  "duplicate_cases": [],
+  "campaign_complete": true,
+  "finished_utc": "2026-09-13T12:26:55.669395+00:00"
+}

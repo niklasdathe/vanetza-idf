@@ -16,6 +16,7 @@
 #include <vanetza/security/v3/secured_message.hpp>
 #include <vanetza/security/v2/basic_elements.hpp>
 #include <chrono>
+#include <cstdio>
 #include <memory>
 #include <vector>
 
@@ -255,45 +256,61 @@ void test_signing_profiles() {
 
 void test_fail_closed() {
     vidf_test::section("test_fail_closed");
-    Station s;
-    s.start(); // empty pool
-    check(s.send(aid::VRU, {0x01}) == Result::accepted, "router accepts the request");
-    check(s.radio.packets.empty() && s.entity->statistics().refused_no_ticket == 1,
-          "no AT: nothing is transmitted unsigned");
-    auto cam_only = s.domain.issue_ticket({{aid::CA, {0x01, 0xff, 0xfc}}}, t0 - 1h, 24);
-    check(s.pool.add(cam_only.certificate, cam_only.key) == Result::accepted, "CAM-only AT provisioned");
-    s.send(aid::VRU, {0x01});
-    check(s.radio.packets.empty() && s.entity->statistics().refused_permission == 1,
-          "AT without VRU appPermissions is refused for a VAM (TS 103 097 7.2.1)");
-    s.send(aid::CA, {0x01, 0xff, 0xfc});
-    check(s.radio.packets.size() == 1, "the same AT signs a CAM");
-    // Untrusted chain: an AT from a different, unknown AA is refused by the validator.
-    Station t;
-    Station foreign;
-    auto stranger = foreign.domain.issue_ticket(all_permissions, t0 - 1h, 24);
-    check(t.pool.add(stranger.certificate, stranger.key) == Result::accepted, "AT of unknown issuer can be stored");
-    t.start();
-    t.send(aid::VRU, {0x01});
-    check(t.radio.packets.empty() && t.entity->statistics().refused_permission == 1,
-          "AT whose chain is not anchored in the trust store is refused");
-    // Expired AT.
-    Station e;
-    auto expired = e.domain.issue_ticket(all_permissions, t0 - 48h, 24);
-    e.pool.add(expired.certificate, expired.key);
-    e.start();
-    e.send(aid::VRU, {0x01});
-    check(e.radio.packets.empty(), "expired AT is refused");
-    // SN-DECAP never reports success.
-    Station r;
-    auto at = r.domain.issue_ticket(all_permissions, t0 - 1h, 24);
-    r.pool.add(at.certificate, at.key);
-    r.start();
-    r.send(aid::VRU, {0x01});
-    auto message = r.last();
-    vanetza::security::SecuredMessage variant {message};
-    auto decap = r.entity->decapsulate_packet(DecapRequest {SecuredMessageView {variant}});
-    check(!is_successful(decap.report) && decap.report == VerificationReport::Configuration_Problem &&
-          decap.its_aid == aid::VRU, "SN-DECAP reports the missing verification, not success");
+    // Each scenario owns its stations in a block: a Station (router, security entity,
+    // trust domain) costs 25-45 kB of device heap and five of them do not fit.
+    {
+        Station s;
+        s.start(); // empty pool
+        check(s.send(aid::VRU, {0x01}) == Result::accepted, "router accepts the request");
+        check(s.radio.packets.empty() && s.entity->statistics().refused_no_ticket == 1,
+              "no AT: nothing is transmitted unsigned");
+        auto cam_only = s.domain.issue_ticket({{aid::CA, {0x01, 0xff, 0xfc}}}, t0 - 1h, 24);
+        check(s.pool.add(cam_only.certificate, cam_only.key) == Result::accepted, "CAM-only AT provisioned");
+        s.send(aid::VRU, {0x01});
+        check(s.radio.packets.empty() && s.entity->statistics().refused_permission == 1,
+              "AT without VRU appPermissions is refused for a VAM (TS 103 097 7.2.1)");
+        s.send(aid::CA, {0x01, 0xff, 0xfc});
+        check(s.radio.packets.size() == 1, "the same AT signs a CAM");
+    }
+    {
+        // Untrusted chain: an AT from a different, unknown AA is refused by the validator.
+        vidf_test::section("test_fail_closed: unknown issuer");
+        Station t;
+        vidf_test::Credential stranger;
+        {
+            Station foreign;
+            stranger = foreign.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+        }
+        check(t.pool.add(stranger.certificate, stranger.key) == Result::accepted, "AT of unknown issuer can be stored");
+        t.start();
+        t.send(aid::VRU, {0x01});
+        check(t.radio.packets.empty() && t.entity->statistics().refused_permission == 1,
+              "AT whose chain is not anchored in the trust store is refused");
+    }
+    {
+        // Expired AT.
+        vidf_test::section("test_fail_closed: expired ticket");
+        Station e;
+        auto expired = e.domain.issue_ticket(all_permissions, t0 - 48h, 24);
+        e.pool.add(expired.certificate, expired.key);
+        e.start();
+        e.send(aid::VRU, {0x01});
+        check(e.radio.packets.empty(), "expired AT is refused");
+    }
+    {
+        // SN-DECAP never reports success.
+        vidf_test::section("test_fail_closed: SN-DECAP");
+        Station r;
+        auto at = r.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+        r.pool.add(at.certificate, at.key);
+        r.start();
+        r.send(aid::VRU, {0x01});
+        auto message = r.last();
+        vanetza::security::SecuredMessage variant {message};
+        auto decap = r.entity->decapsulate_packet(DecapRequest {SecuredMessageView {variant}});
+        check(!is_successful(decap.report) && decap.report == VerificationReport::Configuration_Problem &&
+              decap.its_aid == aid::VRU, "SN-DECAP reports the missing verification, not success");
+    }
 }
 
 struct Subscriber {
@@ -427,7 +444,9 @@ void test_gn_core_identifier_change() {
     const auto& pdu = boost::get<CohesivePacket>(payload);
     // Payload = Common Header (8) + SHB header: SO PV starts with the 8-octet GN address, MID at +2.
     auto view = create_byte_view(pdu, OsiLayer::Network, max_osi_layer());
-    check(view.size() >= 16 && std::equal(mid_of(id1).octets.begin(), mid_of(id1).octets.end(), view.begin() + 10),
+    const ByteBuffer so_pv(view.begin(), view.end());
+    const MacAddress expected_mid = mid_of(id1);
+    check(so_pv.size() >= 16 && std::equal(expected_mid.octets.begin(), expected_mid.octets.end(), so_pv.begin() + 10),
           "SO PV GN address MID carries the identifier");
     // Remote subscriber keeps PREPARE open: the GN core refuses requests meanwhile.
     Subscriber remote; remote.defer = true;
@@ -456,6 +475,7 @@ void test_gn_core_identifier_change() {
     remote.answer = true;
     check(svc.trigger() == Result::accepted && !svc.change_pending() && svc.current_identifier() == id1,
           "after the stack is gone the change completes with the remaining subscriber only");
+    s.entity.reset(); // DEREG reaches `remote` while it is still alive (it outlives no entity otherwise)
     // Managed/auto address configuration does not subscribe.
     Station m2;
     auto at = m2.domain.issue_ticket(all_permissions, t0 - 1h, 24);

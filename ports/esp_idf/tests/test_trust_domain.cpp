@@ -154,6 +154,29 @@ TrustDomain::TrustDomain(Backend& backend, Clock::time_point now) : backend_(bac
     sign(ea.certificate, &root.certificate, root.key);
 }
 
+Credential TrustDomain::issue_ticket(const Credential& authority, const Permissions& permissions,
+                                     Clock::time_point start, unsigned hours) const {
+    Credential ticket;
+    auto ticket_key = fresh_key();
+    ticket.key = ticket_key.priv;
+    common_fields(ticket.certificate, ticket_key.pub, start, hours, Vanetza_Security_Duration_PR_hours);
+    ticket.certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_none;
+    for (const auto& permission : permissions) ticket.certificate.add_app_permission(permission.first, permission.second);
+    sign(ticket.certificate, &authority.certificate, authority.key);
+    return ticket;
+}
+
+Credential TrustDomain::issue_authority(const std::string& name, Clock::time_point start) const {
+    Credential authority;
+    auto key = fresh_key();
+    auto enc = fresh_key();
+    authority.key = key.priv;
+    common_fields(authority.certificate, key.pub, start, 3, Vanetza_Security_Duration_PR_years);
+    authority_fields(authority.certificate, name, enc.pub);
+    sign(authority.certificate, &root.certificate, root.key);
+    return authority;
+}
+
 Certificate TrustDomain::issue_ticket_for(const PublicKey& verification, const Permissions& permissions,
                                           Clock::time_point start, unsigned hours) const {
     Certificate ticket;

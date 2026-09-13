@@ -1,0 +1,318 @@
+14:28:03.909459 TTCN-3 Main Test Component started on framework-dathe. Version: 10.1.2.
+14:28:03.909598 TTCN Logger v2.2 options: TimeStampFormat:=Time; LogEntityName:=No; LogEventTypes:=No; SourceInfoFormat:=None; LogSensitiveData:=No; *.FileMask:=LOG_ALL; *.ConsoleMask:=ERROR | EXECUTOR | VERDICTOP | WARNING; LogFileSize:=0; LogFileNumber:=1; DiskFullAction:=Error
+14:28:03.909814 Connected to MC.
+14:28:03.911264 Executing control part of module ItsBtp_TestControl.
+14:28:03.911334 Execution of control part in module ItsBtp_TestControl started.
+14:28:03.911432 Test case TC_BTP_PGA_BV_01 started.
+14:28:03.911456 Initializing variables, timers and ports of component type LibItsBtp_TestSystem.ItsBtp inside testcase TC_BTP_PGA_BV_01.
+14:28:03.911529 Port syncSendPort was started.
+14:28:03.911544 Port syncPort was started.
+14:28:03.911550 Port utPort was started.
+14:28:03.911555 Port btpPort was started.
+14:28:03.911560 Component type LibItsBtp_TestSystem.ItsBtp was initialized.
+14:28:03.911568 Mapping port mtc:utPort to system:utPort.
+14:28:03.911731 Port utPort was mapped to system:utPort.
+14:28:03.911849 Map operation of mtc:utPort to system:utPort finished.
+14:28:03.911866 Mapping port mtc:btpPort to system:btpPort.
+14:28:03.911956 Port btpPort was mapped to system:btpPort.
+14:28:03.912048 Map operation of mtc:btpPort to system:btpPort finished.
+14:28:03.912063 Connecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.912147 Port syncPort has established the connection with local port syncSendPort.
+14:28:03.912158 Port syncSendPort has established the connection with local port syncPort.
+14:28:03.912237 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.912280 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpInitialize : { hashedId8 := '0000000000000000'O }
+14:28:03.916463 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.916527 Start timer tc_wait: 120 s
+14:28:03.916554 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.916563 Message with id 1 was extracted from the queue of utPort.
+14:28:03.916569 Stop timer tc_wait: 120 s
+14:28:03.916574 *** f_utInitializeIut: INFO: IUT initialized ***
+14:28:03.916582 Altstep a_default was activated as default, id 1
+14:28:03.916589 Altstep a_utDefault was activated as default, id 2
+14:28:03.916600 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+14:28:03.916622 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpTrigger : { btpA := { btpAHeader := { destinationPort := 2009, sourcePort := 1234 } } }
+14:28:03.916920 Message enqueued on btpPort from system @LibItsBtp_TypesAndValues.BtpInd : { msgIn := { header := { btpAHeader := { destinationPort := 2009, sourcePort := 1234 } }, payload := '00'O } } id 1
+14:28:03.916944 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpTriggerResult := true } id 2
+14:28:03.916954 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpTriggerResult := true } id 2
+14:28:03.916961 Message with id 2 was extracted from the queue of utPort.
+14:28:03.916967 Warning: Stopping inactive timer tc_wait.
+14:28:03.917046 Start timer tc_ac: 30 s
+14:28:03.917072 Receive operation on port btpPort succeeded, message from system(): @LibItsBtp_TypesAndValues.BtpInd : { msgIn := { header := { btpAHeader := { destinationPort := 2009, sourcePort := 1234 } }, payload := '00'O } } id 1
+14:28:03.917080 Message with id 1 was extracted from the queue of btpPort.
+14:28:03.917088 Stop timer tc_ac: 30 s
+14:28:03.917094 *** TC_BTP_PGA_BV_01: PASS: BTP-A packet correclty received ***
+14:28:03.917100 setverdict(pass): none -> pass
+14:28:03.917123 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+14:28:03.917130 Unmapping port mtc:utPort from system:utPort.
+14:28:03.917269 Port utPort was unmapped from system:utPort.
+14:28:03.917407 Unmap operation of mtc:utPort from system:utPort finished.
+14:28:03.917475 Unmapping port mtc:btpPort from system:btpPort.
+14:28:03.917611 Port btpPort was unmapped from system:btpPort.
+14:28:03.917780 Unmap operation of mtc:btpPort from system:btpPort finished.
+14:28:03.917796 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.917903 Port syncSendPort has terminated the connection with local port syncPort.
+14:28:03.917937 Port syncPort has terminated the connection with local port syncSendPort.
+14:28:03.918035 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.918052 Terminating component type LibItsBtp_TestSystem.ItsBtp.
+14:28:03.918062 Default with id 1 (altstep a_default) was deactivated.
+14:28:03.918069 Default with id 2 (altstep a_utDefault) was deactivated.
+14:28:03.918075 Port syncSendPort was stopped.
+14:28:03.918083 Port syncPort was stopped.
+14:28:03.918088 Port utPort was stopped.
+14:28:03.918092 Port btpPort was stopped.
+14:28:03.918097 Component type LibItsBtp_TestSystem.ItsBtp was shut down inside testcase TC_BTP_PGA_BV_01.
+14:28:03.918103 Waiting for PTCs to finish.
+14:28:03.918227 Setting final verdict of the test case.
+14:28:03.918264 Local verdict of MTC: pass
+14:28:03.918279 No PTCs were created.
+14:28:03.918288 Test case TC_BTP_PGA_BV_01 finished. Verdict: pass
+14:28:03.918304 Test case TC_BTP_PGB_BV_01 started.
+14:28:03.918310 Initializing variables, timers and ports of component type LibItsBtp_TestSystem.ItsBtp inside testcase TC_BTP_PGB_BV_01.
+14:28:03.918329 Port syncSendPort was started.
+14:28:03.918335 Port syncPort was started.
+14:28:03.918339 Port utPort was started.
+14:28:03.918343 Port btpPort was started.
+14:28:03.918347 Component type LibItsBtp_TestSystem.ItsBtp was initialized.
+14:28:03.918353 Mapping port mtc:utPort to system:utPort.
+14:28:03.918477 Port utPort was mapped to system:utPort.
+14:28:03.918593 Map operation of mtc:utPort to system:utPort finished.
+14:28:03.918620 Mapping port mtc:btpPort to system:btpPort.
+14:28:03.918720 Port btpPort was mapped to system:btpPort.
+14:28:03.918847 Map operation of mtc:btpPort to system:btpPort finished.
+14:28:03.918865 Connecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.918981 Port syncPort has established the connection with local port syncSendPort.
+14:28:03.919000 Port syncSendPort has established the connection with local port syncPort.
+14:28:03.919098 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.919124 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpInitialize : { hashedId8 := '0000000000000000'O }
+14:28:03.919263 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.919278 Start timer tc_wait: 120 s
+14:28:03.919296 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.919305 Message with id 1 was extracted from the queue of utPort.
+14:28:03.919311 Stop timer tc_wait: 120 s
+14:28:03.919317 *** f_utInitializeIut: INFO: IUT initialized ***
+14:28:03.919323 Altstep a_default was activated as default, id 1
+14:28:03.919330 Altstep a_utDefault was activated as default, id 2
+14:28:03.919336 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+14:28:03.919353 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpTrigger : { btpB := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 43981 } } }
+14:28:03.919600 Message enqueued on btpPort from system @LibItsBtp_TypesAndValues.BtpInd : { msgIn := { header := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 43981 } }, payload := '00'O } } id 1
+14:28:03.919641 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpTriggerResult := true } id 2
+14:28:03.919653 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpTriggerResult := true } id 2
+14:28:03.919662 Message with id 2 was extracted from the queue of utPort.
+14:28:03.919680 Warning: Stopping inactive timer tc_wait.
+14:28:03.919759 Start timer tc_ac: 30 s
+14:28:03.919789 Receive operation on port btpPort succeeded, message from system(): @LibItsBtp_TypesAndValues.BtpInd : { msgIn := { header := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 43981 } }, payload := '00'O } } id 1
+14:28:03.919798 Message with id 1 was extracted from the queue of btpPort.
+14:28:03.919805 Stop timer tc_ac: 30 s
+14:28:03.919812 *** TC_BTP_PGB_BV_01: PASS: BTP-B packet correclty received ***
+14:28:03.919818 setverdict(pass): none -> pass
+14:28:03.919856 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+14:28:03.919865 Unmapping port mtc:utPort from system:utPort.
+14:28:03.919974 Port utPort was unmapped from system:utPort.
+14:28:03.920101 Unmap operation of mtc:utPort from system:utPort finished.
+14:28:03.920117 Unmapping port mtc:btpPort from system:btpPort.
+14:28:03.920204 Port btpPort was unmapped from system:btpPort.
+14:28:03.920327 Unmap operation of mtc:btpPort from system:btpPort finished.
+14:28:03.920338 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.920451 Port syncSendPort has terminated the connection with local port syncPort.
+14:28:03.920490 Port syncPort has terminated the connection with local port syncSendPort.
+14:28:03.920592 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.920606 Terminating component type LibItsBtp_TestSystem.ItsBtp.
+14:28:03.920615 Default with id 1 (altstep a_default) was deactivated.
+14:28:03.920622 Default with id 2 (altstep a_utDefault) was deactivated.
+14:28:03.920628 Port syncSendPort was stopped.
+14:28:03.920635 Port syncPort was stopped.
+14:28:03.920640 Port utPort was stopped.
+14:28:03.920645 Port btpPort was stopped.
+14:28:03.920648 Component type LibItsBtp_TestSystem.ItsBtp was shut down inside testcase TC_BTP_PGB_BV_01.
+14:28:03.920655 Waiting for PTCs to finish.
+14:28:03.920844 Setting final verdict of the test case.
+14:28:03.920906 Local verdict of MTC: pass
+14:28:03.920930 No PTCs were created.
+14:28:03.920944 Test case TC_BTP_PGB_BV_01 finished. Verdict: pass
+14:28:03.920969 Test case TC_BTP_PGB_BV_02 started.
+14:28:03.920979 Initializing variables, timers and ports of component type LibItsBtp_TestSystem.ItsBtp inside testcase TC_BTP_PGB_BV_02.
+14:28:03.921007 Port syncSendPort was started.
+14:28:03.921017 Port syncPort was started.
+14:28:03.921024 Port utPort was started.
+14:28:03.921030 Port btpPort was started.
+14:28:03.921037 Component type LibItsBtp_TestSystem.ItsBtp was initialized.
+14:28:03.921047 Mapping port mtc:utPort to system:utPort.
+14:28:03.921439 Port utPort was mapped to system:utPort.
+14:28:03.921636 Map operation of mtc:utPort to system:utPort finished.
+14:28:03.921660 Mapping port mtc:btpPort to system:btpPort.
+14:28:03.921859 Port btpPort was mapped to system:btpPort.
+14:28:03.922062 Map operation of mtc:btpPort to system:btpPort finished.
+14:28:03.922090 Connecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.922220 Port syncPort has established the connection with local port syncSendPort.
+14:28:03.922237 Port syncSendPort has established the connection with local port syncPort.
+14:28:03.922354 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.922383 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpInitialize : { hashedId8 := '0000000000000000'O }
+14:28:03.922588 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.922610 Start timer tc_wait: 120 s
+14:28:03.922639 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.922648 Message with id 1 was extracted from the queue of utPort.
+14:28:03.922654 Stop timer tc_wait: 120 s
+14:28:03.922660 *** f_utInitializeIut: INFO: IUT initialized ***
+14:28:03.922666 Altstep a_default was activated as default, id 1
+14:28:03.922673 Altstep a_utDefault was activated as default, id 2
+14:28:03.922680 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+14:28:03.922711 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpTrigger : { btpB := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 0 } } }
+14:28:03.922912 Message enqueued on btpPort from system @LibItsBtp_TypesAndValues.BtpInd : { msgIn := { header := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 0 } }, payload := '00'O } } id 1
+14:28:03.922927 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpTriggerResult := true } id 2
+14:28:03.923002 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpTriggerResult := true } id 2
+14:28:03.923015 Message with id 2 was extracted from the queue of utPort.
+14:28:03.923022 Warning: Stopping inactive timer tc_wait.
+14:28:03.923070 Start timer tc_ac: 30 s
+14:28:03.923102 Receive operation on port btpPort succeeded, message from system(): @LibItsBtp_TypesAndValues.BtpInd : { msgIn := { header := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 0 } }, payload := '00'O } } id 1
+14:28:03.923112 Message with id 1 was extracted from the queue of btpPort.
+14:28:03.923121 Stop timer tc_ac: 30 s
+14:28:03.923127 *** TC_BTP_PGB_BV_02: PASS: BTP-B packet correclty received ***
+14:28:03.923134 setverdict(pass): none -> pass
+14:28:03.923172 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+14:28:03.923184 Unmapping port mtc:utPort from system:utPort.
+14:28:03.923268 Port utPort was unmapped from system:utPort.
+14:28:03.923397 Unmap operation of mtc:utPort from system:utPort finished.
+14:28:03.923411 Unmapping port mtc:btpPort from system:btpPort.
+14:28:03.923529 Port btpPort was unmapped from system:btpPort.
+14:28:03.923664 Unmap operation of mtc:btpPort from system:btpPort finished.
+14:28:03.923688 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.923777 Port syncSendPort has terminated the connection with local port syncPort.
+14:28:03.923788 Port syncPort has terminated the connection with local port syncSendPort.
+14:28:03.923868 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.923880 Terminating component type LibItsBtp_TestSystem.ItsBtp.
+14:28:03.923889 Default with id 1 (altstep a_default) was deactivated.
+14:28:03.923898 Default with id 2 (altstep a_utDefault) was deactivated.
+14:28:03.923905 Port syncSendPort was stopped.
+14:28:03.923914 Port syncPort was stopped.
+14:28:03.923921 Port utPort was stopped.
+14:28:03.923929 Port btpPort was stopped.
+14:28:03.923934 Component type LibItsBtp_TestSystem.ItsBtp was shut down inside testcase TC_BTP_PGB_BV_02.
+14:28:03.923943 Waiting for PTCs to finish.
+14:28:03.924115 Setting final verdict of the test case.
+14:28:03.924162 Local verdict of MTC: pass
+14:28:03.924181 No PTCs were created.
+14:28:03.924193 Test case TC_BTP_PGB_BV_02 finished. Verdict: pass
+14:28:03.924212 Test case TC_BTP_PP_BV_01 started.
+14:28:03.924220 Initializing variables, timers and ports of component type LibItsBtp_TestSystem.ItsBtp inside testcase TC_BTP_PP_BV_01.
+14:28:03.924243 Port syncSendPort was started.
+14:28:03.924250 Port syncPort was started.
+14:28:03.924257 Port utPort was started.
+14:28:03.924263 Port btpPort was started.
+14:28:03.924268 Component type LibItsBtp_TestSystem.ItsBtp was initialized.
+14:28:03.924277 Mapping port mtc:utPort to system:utPort.
+14:28:03.924399 Port utPort was mapped to system:utPort.
+14:28:03.924517 Map operation of mtc:utPort to system:utPort finished.
+14:28:03.924534 Mapping port mtc:btpPort to system:btpPort.
+14:28:03.924629 Port btpPort was mapped to system:btpPort.
+14:28:03.924808 Map operation of mtc:btpPort to system:btpPort finished.
+14:28:03.924833 Connecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:03.924972 Port syncPort has established the connection with local port syncSendPort.
+14:28:03.924990 Port syncSendPort has established the connection with local port syncPort.
+14:28:03.925095 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:03.925135 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpInitialize : { hashedId8 := '0000000000000000'O }
+14:28:03.925354 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.925381 Start timer tc_wait: 120 s
+14:28:03.925407 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:03.925421 Message with id 1 was extracted from the queue of utPort.
+14:28:03.925432 Stop timer tc_wait: 120 s
+14:28:03.925442 *** f_utInitializeIut: INFO: IUT initialized ***
+14:28:03.925450 Altstep a_default was activated as default, id 1
+14:28:03.925460 Altstep a_utDefault was activated as default, id 2
+14:28:03.925469 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+14:28:03.925510 Sent on btpPort to system @LibItsBtp_TypesAndValues.BtpReq : { msgOut := { header := { btpAHeader := { destinationPort := 2009, sourcePort := 1234 } }, payload := '0102030405'O } }
+14:28:03.925772 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpEventInd : { rawPayload := '0102030405'O } id 2
+14:28:03.925804 Start timer t: 10 s
+14:28:03.925825 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpEventInd : { rawPayload := '0102030405'O } id 2
+14:28:03.925839 Message with id 2 was extracted from the queue of utPort.
+14:28:03.925851 Default with id 2 (altstep a_utDefault) has reached a break statement. Skipping current alt statement or receiving operation.
+14:28:13.935192 Timeout t: 10 s
+14:28:13.935297 *** TC_BTP_PP_BV_01: PASS: BTP was transmitted to upper layer***
+14:28:13.935307 setverdict(pass): none -> pass
+14:28:13.935407 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+14:28:13.935416 Unmapping port mtc:utPort from system:utPort.
+14:28:13.935609 Port utPort was unmapped from system:utPort.
+14:28:13.935716 Unmap operation of mtc:utPort from system:utPort finished.
+14:28:13.935745 Unmapping port mtc:btpPort from system:btpPort.
+14:28:13.935901 Port btpPort was unmapped from system:btpPort.
+14:28:13.936025 Unmap operation of mtc:btpPort from system:btpPort finished.
+14:28:13.936049 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:13.936185 Port syncSendPort has terminated the connection with local port syncPort.
+14:28:13.936209 Port syncPort has terminated the connection with local port syncSendPort.
+14:28:13.936344 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:13.936372 Terminating component type LibItsBtp_TestSystem.ItsBtp.
+14:28:13.936379 Default with id 1 (altstep a_default) was deactivated.
+14:28:13.936386 Default with id 2 (altstep a_utDefault) was deactivated.
+14:28:13.936390 Port syncSendPort was stopped.
+14:28:13.936395 Port syncPort was stopped.
+14:28:13.936399 Port utPort was stopped.
+14:28:13.936402 Port btpPort was stopped.
+14:28:13.936404 Component type LibItsBtp_TestSystem.ItsBtp was shut down inside testcase TC_BTP_PP_BV_01.
+14:28:13.936409 Waiting for PTCs to finish.
+14:28:13.936558 Setting final verdict of the test case.
+14:28:13.936586 Local verdict of MTC: pass
+14:28:13.936597 No PTCs were created.
+14:28:13.936603 Test case TC_BTP_PP_BV_01 finished. Verdict: pass
+14:28:13.936616 Test case TC_BTP_PP_BV_02 started.
+14:28:13.936620 Initializing variables, timers and ports of component type LibItsBtp_TestSystem.ItsBtp inside testcase TC_BTP_PP_BV_02.
+14:28:13.936640 Port syncSendPort was started.
+14:28:13.936645 Port syncPort was started.
+14:28:13.936648 Port utPort was started.
+14:28:13.936650 Port btpPort was started.
+14:28:13.936653 Component type LibItsBtp_TestSystem.ItsBtp was initialized.
+14:28:13.936659 Mapping port mtc:utPort to system:utPort.
+14:28:13.936766 Port utPort was mapped to system:utPort.
+14:28:13.936909 Map operation of mtc:utPort to system:utPort finished.
+14:28:13.936934 Mapping port mtc:btpPort to system:btpPort.
+14:28:13.937011 Port btpPort was mapped to system:btpPort.
+14:28:13.937096 Map operation of mtc:btpPort to system:btpPort finished.
+14:28:13.937104 Connecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:13.937236 Port syncPort has established the connection with local port syncSendPort.
+14:28:13.937261 Port syncSendPort has established the connection with local port syncPort.
+14:28:13.937330 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:13.937347 Sent on utPort to system @LibItsBtp_TypesAndValues.UtBtpInitialize : { hashedId8 := '0000000000000000'O }
+14:28:13.937477 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:13.937488 Start timer tc_wait: 120 s
+14:28:13.937503 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpResults : { utBtpInitializeResult := true } id 1
+14:28:13.937509 Message with id 1 was extracted from the queue of utPort.
+14:28:13.937513 Stop timer tc_wait: 120 s
+14:28:13.937517 *** f_utInitializeIut: INFO: IUT initialized ***
+14:28:13.937521 Altstep a_default was activated as default, id 1
+14:28:13.937526 Altstep a_utDefault was activated as default, id 2
+14:28:13.937531 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+14:28:13.937554 Sent on btpPort to system @LibItsBtp_TypesAndValues.BtpReq : { msgOut := { header := { btpBHeader := { destinationPort := 2009, destinationPortInfo := 43981 } }, payload := '0102030405'O } }
+14:28:13.937698 Message enqueued on utPort from system @LibItsBtp_TypesAndValues.UtBtpEventInd : { rawPayload := '0102030405'O } id 2
+14:28:13.937728 Start timer t: 10 s
+14:28:13.937739 Receive operation on port utPort succeeded, message from system(): @LibItsBtp_TypesAndValues.UtBtpEventInd : { rawPayload := '0102030405'O } id 2
+14:28:13.937745 Message with id 2 was extracted from the queue of utPort.
+14:28:13.937750 Default with id 2 (altstep a_utDefault) has reached a break statement. Skipping current alt statement or receiving operation.
+14:28:23.947201 Timeout t: 10 s
+14:28:23.947341 *** TC_BTP_PP_BV_02: PASS: BTP was transmitted to upper layer***
+14:28:23.947408 setverdict(pass): none -> pass
+14:28:23.947531 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+14:28:23.947543 Unmapping port mtc:utPort from system:utPort.
+14:28:23.947786 Port utPort was unmapped from system:utPort.
+14:28:23.948047 Unmap operation of mtc:utPort from system:utPort finished.
+14:28:23.948095 Unmapping port mtc:btpPort from system:btpPort.
+14:28:23.948266 Port btpPort was unmapped from system:btpPort.
+14:28:23.948422 Unmap operation of mtc:btpPort from system:btpPort finished.
+14:28:23.948466 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+14:28:23.948656 Port syncSendPort has terminated the connection with local port syncPort.
+14:28:23.948671 Port syncPort has terminated the connection with local port syncSendPort.
+14:28:23.948817 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+14:28:23.948865 Terminating component type LibItsBtp_TestSystem.ItsBtp.
+14:28:23.948935 Default with id 1 (altstep a_default) was deactivated.
+14:28:23.948949 Default with id 2 (altstep a_utDefault) was deactivated.
+14:28:23.948955 Port syncSendPort was stopped.
+14:28:23.948964 Port syncPort was stopped.
+14:28:23.948970 Port utPort was stopped.
+14:28:23.948975 Port btpPort was stopped.
+14:28:23.948980 Component type LibItsBtp_TestSystem.ItsBtp was shut down inside testcase TC_BTP_PP_BV_02.
+14:28:23.948987 Waiting for PTCs to finish.
+14:28:23.949267 Setting final verdict of the test case.
+14:28:23.949377 Local verdict of MTC: pass
+14:28:23.949398 No PTCs were created.
+14:28:23.949409 Test case TC_BTP_PP_BV_02 finished. Verdict: pass
+14:28:23.949421 Execution of control part in module ItsBtp_TestControl finished.
+14:28:23.950713 Verdict statistics: 0 none (0.00 %), 5 pass (100.00 %), 0 inconc (0.00 %), 0 fail (0.00 %), 0 error (0.00 %).
+14:28:23.950792 Test execution summary: 5 test cases were executed. Overall verdict: pass
+14:28:23.950802 Exit was requested from MC. Terminating MTC.

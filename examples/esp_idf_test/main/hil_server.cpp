@@ -8,21 +8,12 @@
 #if CONFIG_VANETZA_IDF_RADIO_C5
 #include <vanetza_idf/c5_radio.hpp>
 #endif
-#if CONFIG_IDF_TARGET_ESP32C5
-#include <soc/pcr_reg.h>
-#include <soc/soc.h>
-#endif
 
 void run_hil_server() {
     using namespace vanetza_idf;
     using vanetza::ByteBuffer;
-#if CONFIG_IDF_TARGET_ESP32C5
-    // ESP-IDF's C5 system_internal.c documents that ROM UART initialization
-    // misses this clock enable. A USB/JTAG-triggered reset bypasses esp_restart's
-    // repair, so the next boot's ROM stage waits forever for PCR_UART0_READY even
-    // though this console uses USB, not UART0. Keep the function clock enabled.
-    REG_SET_BIT(PCR_UART0_SCLK_CONF_REG, PCR_UART0_SCLK_EN);
-#endif
+    // The ROM UART0 clock-enable repair (PCR_UART0_SCLK_EN) is applied in app_main
+    // before the tests run, so it also covers boots whose tests fail.
     usb_serial_jtag_driver_config_t config {};
     config.rx_buffer_size = 8192; config.tx_buffer_size = 8192;
     ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&config));

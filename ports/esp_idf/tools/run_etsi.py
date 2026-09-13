@@ -23,6 +23,8 @@ def main():
     parser.add_argument('--sut', type=Path)
     parser.add_argument('--sut-script')
     parser.add_argument('--port')
+    parser.add_argument('--sut-args', help='extra SUT arguments (VIDF_SUT_ARGS), e.g. "--security-pool ./certificates"')
+    parser.add_argument('--pool', type=Path, help='certificate pool directory copied to <out>/certificates')
     parser.add_argument('--timeout', type=int, default=300)
     parser.add_argument('--expected-cases', type=Path, required=True,
                         help='JSON array of the exact testcase names expected in this campaign')
@@ -45,10 +47,16 @@ def main():
         env['VIDF_SUT_SCRIPT'] = args.sut_script
     if args.port:
         env['VIDF_SUT_PORT'] = args.port
+    if args.sut_args:
+        env['VIDF_SUT_ARGS'] = args.sut_args
+    if args.pool:
+        shutil.copytree(args.pool, out / 'certificates')
     sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
     metadata = {'started_utc': datetime.now(timezone.utc).isoformat(),
                 'binary_sha256': sha(binary), 'config_sha256': sha(config),
                 'sut_sha256': sha(args.sut) if args.sut else None,
+                'sut_args': args.sut_args,
+                'pool_sha256': {p.name: sha(p) for p in sorted((out / 'certificates').iterdir())} if args.pool else None,
                 'expected_cases_sha256': sha(args.expected_cases),
                 'verdicts': [], 'status': 'running'}
     with (out / 'console.txt').open('w') as log:

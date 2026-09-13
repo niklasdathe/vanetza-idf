@@ -30,6 +30,11 @@ public:
 
     /// authorization ticket (clause 7.2.1) issued by the AA
     Credential issue_ticket(const Permissions&, vanetza::Clock::time_point start, unsigned hours) const;
+    /// the same, issued by another authority of this domain (see issue_authority)
+    Credential issue_ticket(const Credential& authority, const Permissions&, vanetza::Clock::time_point start,
+                            unsigned hours) const;
+    /// a further subordinate CA (clause 7.2.4) under the root, e.g. the test-system side authority
+    Credential issue_authority(const std::string& name, vanetza::Clock::time_point start) const;
     /// AT for a verification key the station generated itself (TS 102 941 authorization); no private key
     vanetza::security::v3::Certificate issue_ticket_for(const vanetza::security::PublicKey& verification,
                                                         const Permissions&, vanetza::Clock::time_point start,
