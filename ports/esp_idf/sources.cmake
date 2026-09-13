@@ -121,6 +121,26 @@ set(VIDF_NETWORK_SOURCES
     "${VIDF_ROOT}/vanetza/security/v3/secured_message.cpp"
     "${VIDF_ROOT}/vanetza/security/v3/validity_restriction.cpp"
 )
+set(VIDF_SECURITY_PROVIDER_SOURCES
+    "${VIDF_ROOT}/vanetza/geodesy/country_data_reader.cpp"
+    "${VIDF_ROOT}/vanetza/geodesy/country_database.cpp"
+    "${VIDF_ROOT}/vanetza/security/peer_request_tracker.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/certificate_cache.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/certificate_validator.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/hash.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/issuer_memory_lookup.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/location_checker.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/persistence.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/revocation_lookup.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/sign_header_policy.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/sign_service.cpp"
+    "${VIDF_ROOT}/vanetza/security/v3/trust_store.cpp"
+)
+set(VIDF_SECURITY_HOST_SOURCES
+    "${VIDF_ROOT}/vanetza/security/backend_openssl.cpp"
+    "${VIDF_ROOT}/vanetza/security/openssl_wrapper.cpp"
+    "${VIDF_ROOT}/vanetza/security/persistence.cpp"
+)
 set(VIDF_ASN_SUPPORT_SOURCES
     "${VIDF_ROOT}/vanetza/asn1/asn1c_wrapper.cpp"
     "${VIDF_ROOT}/vanetza/asn1/memory.c"

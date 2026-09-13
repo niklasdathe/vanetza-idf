@@ -24,6 +24,35 @@ menu "Vanetza-IDF"
         bool "Release 2 VAM codec and endpoint"
         default y if VANETZA_IDF_PROFILE_FACILITIES
         depends on VANETZA_IDF_NETWORK
+    config VANETZA_IDF_SECURITY
+        bool "TS 103 097 signing security entity and identifier-change service"
+        default y
+        depends on VANETZA_IDF_NETWORK
+        help
+            SN-SAP security entity: signs outgoing GeoNetworking packets with
+            authorization tickets the application provisions (TS 103 097
+            V2.2.1, IEEE Std 1609.2) on the mbedTLS PSA backend and runs the
+            TS 102 723-8 clause 6.3 identifier-change two-phase commit that
+            the GN core, access adapter and facilities subscribe to. Without
+            it a stack with itsGnSecurity enabled fails closed.
+    config VANETZA_IDF_SECURITY_VERIFY
+        bool "SN-DECAP signature verification (not implemented)"
+        default n
+        depends on VANETZA_IDF_SECURITY
+        help
+            Reserved. Verification of received secured packets is not
+            implemented (docs/idf/conformance.md GAP-SEC-001). Enabling this
+            option fails the build rather than reporting unverified packets
+            as verified.
+    config VANETZA_IDF_PKI
+        bool "TS 102 941 enrolment and authorization request-response core"
+        default n
+        depends on VANETZA_IDF_SECURITY
+        help
+            Builds and parses EtsiTs102941Data enrolment/authorization
+            requests and responses (TS 102 941 V2.2.1 clause 6.2.3). The
+            transport to the EA/AA and credential storage are supplied by the
+            application.
     config VANETZA_IDF_HIL
         bool "Upper/lower tester hooks"
         default n

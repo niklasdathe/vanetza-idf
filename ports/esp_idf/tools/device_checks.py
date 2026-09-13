@@ -17,6 +17,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--timeout', type=float, default=30.0,
+                        help='seconds to wait for VIDF_TEST_RESULT (security builds need about 90)')
+    parser.add_argument('--no-reset', action='store_true',
+                        help='only listen: use right after "idf.py flash", whose own reset boots the '
+                             'application (a DTR/RTS reset can leave the ESP32-C5 ROM waiting for UART0, '
+                             'see docs/idf/validation.md)')
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     result = {'kind': 'component-tests', 'port': args.port, 'status': 'error'}
@@ -25,8 +31,10 @@ def main():
     try:
         device = SerialSut(args.port)
         device.port.reset_input_buffer()
-        HardReset(device.port, uses_usb=True)()
-        deadline = time.monotonic() + 30
+        if not args.no_reset:
+            HardReset(device.port, uses_usb=True)()
+        result['reset'] = 'none' if args.no_reset else 'usb-hard-reset'
+        deadline = time.monotonic() + args.timeout
         while time.monotonic() < deadline:
             output.extend(device.port.read(4096))
             if b'VIDF_TEST_RESULT=' in output and re.search(rb'VIDF_TEST_RESULT=\d+\r?\n', output):

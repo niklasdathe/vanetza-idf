@@ -2,7 +2,8 @@
 """Deterministic allowlists for the IDF port, including ASN.1 dependency closure.
 
 Run after an upstream merge, then review the generated diff. Unselected ITS
-services, RPC, host tools, GNSS drivers, PQC and PKI clients are not compiled.
+services, RPC, host tools, GNSS drivers, PQC, the dummy/null crypto backend and
+the upstream PKI client tool are not compiled.
 """
 import hashlib
 import json
@@ -15,8 +16,8 @@ PORT = ROOT / 'ports/esp_idf'
 
 def write_changed(path, text):
     # Avoid forcing an IDF reconfigure when the allowlist is unchanged.
-    if not path.exists() or path.read_text() != text:
-        path.write_text(text)
+    if not path.exists() or path.read_text(encoding='utf-8') != text:
+        path.write_text(text, encoding='utf-8', newline=chr(10))
 
 
 def module(name):
@@ -64,6 +65,32 @@ def main():
         'vanetza/geodesy/geodesy.cpp', 'vanetza/geodesy/haversine.cpp',
         'vanetza/security/v3/distance.cpp', 'vanetza/security/v3/geometry.cpp',
         'vanetza/security/v3/boost_geometry.cpp']
+    # Signing security entity (TS 103 097 V2.2.1 / IEEE 1609.2): the upstream v3
+    # sign service, certificate provider base, validator, trust anchors and
+    # message-hash helpers. Backends are supplied by the port (PSA on device,
+    # OpenSSL on host); the upstream backend factory is deliberately absent
+    # because it registers the dummy BackendNull. DummySignService and
+    # DefaultSignHeaderPolicy are compiled with their translation units but never
+    # instantiated by the port; --gc-sections drops them.
+    groups['security_provider'] = [
+        'vanetza/security/peer_request_tracker.cpp',
+        'vanetza/security/v3/certificate_cache.cpp',
+        'vanetza/security/v3/certificate_validator.cpp',
+        'vanetza/security/v3/hash.cpp',
+        'vanetza/security/v3/issuer_memory_lookup.cpp',
+        'vanetza/security/v3/location_checker.cpp',
+        'vanetza/security/v3/persistence.cpp',
+        'vanetza/security/v3/revocation_lookup.cpp',
+        'vanetza/security/v3/sign_header_policy.cpp',
+        'vanetza/security/v3/sign_service.cpp',
+        'vanetza/security/v3/trust_store.cpp',
+        'vanetza/geodesy/country_data_reader.cpp',
+        'vanetza/geodesy/country_database.cpp']
+    # Host-only OpenSSL backend and PEM/DER key loading (VANETZA_WITH_OPENSSL).
+    groups['security_host'] = [
+        'vanetza/security/backend_openssl.cpp',
+        'vanetza/security/openssl_wrapper.cpp',
+        'vanetza/security/persistence.cpp']
     groups['asn_support'] = ['vanetza/asn1/' + s for s in
                             (ROOT / 'vanetza/asn1/asn1c_support_sources.txt').read_text().splitlines()
                             if s and not s.startswith('#')]

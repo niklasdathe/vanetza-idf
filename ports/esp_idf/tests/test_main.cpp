@@ -11,18 +11,23 @@
 #if VIDF_HIL
 #include <vanetza_idf/hil.hpp>
 #endif
+#include "check.hpp"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
 #include <limits>
 
+#if VIDF_SECURITY
+void test_crypto_backend_known_answers();
+#if VIDF_BACKEND_OPENSSL
+void test_crypto_backends(); // host only: OpenSSL is the oracle
+#endif
+#endif
+
 using namespace vanetza_idf;
+using vidf_test::check;
+using vidf_test::checks;
 namespace {
-unsigned checks = 0;
-void check(bool ok, const char* description) {
-    ++checks;
-    if (!ok) throw std::runtime_error(description);
-}
 struct Capture : Access {
     std::vector<AlDataRequest> packets;
     Result next = Result::accepted;
@@ -87,12 +92,7 @@ void test_its_g5_frame() {
 void test_digests() {
     // FIPS 180-4 algorithms, standard "abc" known-answer vectors.
     const std::uint8_t input[] = {'a', 'b', 'c'};
-    auto hex = [](const auto& bytes) {
-        std::string result;
-        const char* digits = "0123456789abcdef";
-        for (auto b : bytes) { result += digits[b >> 4]; result += digits[b & 15]; }
-        return result;
-    };
+    using vidf_test::hex;
     check(hex(vanetza::security::calculate_sha256_digest(input, sizeof(input))) ==
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
         "SHA-256 known answer");
@@ -267,6 +267,12 @@ int main() {
 #endif
 #if VIDF_CAM || VIDF_DENM || VIDF_VAM
         test_codecs();
+#endif
+#if VIDF_SECURITY
+        test_crypto_backend_known_answers();
+#if VIDF_BACKEND_OPENSSL
+        test_crypto_backends();
+#endif
 #endif
         std::printf("PASS: %u checks (host/component tests, not ETSI ATS verdicts)\n", checks);
         return 0;
