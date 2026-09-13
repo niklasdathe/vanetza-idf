@@ -1,0 +1,19 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "mbedtls_version": "4.1.0 (TF-PSA-Crypto), PSA Crypto API backend",
+  "port": "COM11",
+  "status": "pass",
+  "checks": 360,
+  "console_result_line": "VIDF_TEST_RESULT=0",
+  "capture": "partial: the serial capture attached at about 45 s into the run that esptool's post-flash hard reset started, so the boot banner and the first test lines are missing; the PASS line and VIDF_TEST_RESULT=0 are complete. Task-watchdog notices in the capture come from the idle task starving during about 60 s of software ECDSA; the test application now widens that watchdog to 300 s.",
+  "firmware": "examples/esp_idf_test built from the sources of this commit before the main.cpp watchdog change and the device_checks.py --no-reset/--timeout options (test code identical)",
+  "not_done": "a clean end-to-end capture with tools/device_checks.py: a DTR/RTS (USB) reset afterwards left both attached ESP32-C5 boards (COM11, COM20) in the ROM UART0 clock-wait hang recorded in docs/idf/validation.md, which needs a physical power cycle; rerun with device_checks.py --no-reset --timeout 180 immediately after idf.py flash",
+  "sha256": {
+    "application": "37024d195f01f7fb176766db315c572a2416b1187a4504a7ab5f7f1992098c3d",
+    "bootloader": "93903cefa2bae3f5805a604ae744fabfdea78a866a1230ec3cc129190b93fe40",
+    "partition_table": "73c0b5c3e5fcba3a151cc70c453c93dd5f4798899e7f2f8cca76da1f32ffc501",
+    "sdkconfig": "325efa2be69cfe970c558da8453b45a8531a2640057d03d0b59d947e409c6529"
+  }
+}

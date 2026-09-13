@@ -1,4 +1,5 @@
 #include <vanetza_idf/facilities.hpp>
+#include <vanetza/common/its_aid.hpp>
 #include <utility>
 
 namespace vanetza_idf::facilities {
@@ -49,6 +50,19 @@ Result send(Stack& stack, Kind kind, vanetza::ByteBuffer bytes, BtpRequest req) 
     req.source_port.reset();
     req.destination_port = descriptor(kind).port;
     req.destination_port_info = 0;
+    if (req.its_aid == 0) {
+        // SN-ENCAP its_aid selects the security profile: TS 102 965 V2.4.1 Table A.1
+        // (CA 36, DEN 37, VRU 638); TS 103 300-3 V2.3.1 clause 6.5.1 for VAMs.
+        switch (kind) {
+            case Kind::cam: req.its_aid = vanetza::aid::CA; break;
+            case Kind::denm: req.its_aid = vanetza::aid::DEN; break;
+            case Kind::vam: req.its_aid = vanetza::aid::VRU; break;
+        }
+    }
+    if (kind == Kind::vam && req.permissions.empty()) {
+        // TS 103 300-3 V2.3.1 clause 6.5.2: BitmapSsp whose first octet, value 1, is the SSP version.
+        req.permissions = {0x01};
+    }
     req.data = std::move(bytes);
     return stack.request(std::move(req));
 }

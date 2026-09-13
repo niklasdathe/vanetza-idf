@@ -44,12 +44,14 @@ struct ControlInfo
     ControlInfo(const DataRequest& request) :
         communication_profile(request.communication_profile),
         its_aid(request.its_aid),
-        permissions(request.permissions)
+        permissions(request.permissions),
+        security_context(request.security_context)
     {}
 
     const CommunicationProfile communication_profile;
     const ItsAid its_aid;
     const ByteBuffer permissions;
+    const ByteBuffer security_context;
 };
 
 template<typename PDU>
@@ -251,7 +253,7 @@ DataConfirm Router::request(const ShbDataRequest& request, DownPacketPtr payload
 
             // step 2: encapsulate packet by security
             if (m_mib.itsGnSecurity) {
-                payload = encap_packet(ctrl.its_aid, ctrl.permissions, *pdu, std::move(payload));
+                payload = encap_packet(ctrl.its_aid, ctrl.permissions, ctrl.security_context, *pdu, std::move(payload));
                 if (!payload) {
                     // stop because encapsulation failed
                     return;
@@ -320,7 +322,7 @@ DataConfirm Router::request(const GbcDataRequest& request, DownPacketPtr payload
         // step 5: apply security
         if (m_mib.itsGnSecurity) {
             assert(pdu->basic().next_header == NextHeaderBasic::Secured);
-            payload = encap_packet(ctrl.its_aid, ctrl.permissions, *pdu, std::move(payload));
+            payload = encap_packet(ctrl.its_aid, ctrl.permissions, ctrl.security_context, *pdu, std::move(payload));
             if (!payload) {
                 // stop because encapsulation failed
                 return;
@@ -720,7 +722,7 @@ void Router::on_beacon_timer_expired()
 
     if (m_mib.itsGnSecurity) {
         pdu->basic().next_header = NextHeaderBasic::Secured;
-        payload = encap_packet(aid::GN_MGMT, ByteBuffer {}, *pdu, std::move(payload));
+        payload = encap_packet(aid::GN_MGMT, ByteBuffer {}, ByteBuffer {}, *pdu, std::move(payload));
         if (!payload) {
             // stop because encapsulation failed
             return;
@@ -1342,7 +1344,7 @@ std::unique_ptr<GbcPdu> Router::create_gbc_pdu(const GbcDataRequest& request)
     return pdu;
 }
 
-Router::DownPacketPtr Router::encap_packet(ItsAid its_aid, ByteBuffer ssp, Pdu& pdu, DownPacketPtr packet)
+Router::DownPacketPtr Router::encap_packet(ItsAid its_aid, ByteBuffer ssp, ByteBuffer context, Pdu& pdu, DownPacketPtr packet)
 {
     if (m_security_entity) {
         DownPacket sec_payload;
@@ -1353,6 +1355,7 @@ Router::DownPacketPtr Router::encap_packet(ItsAid its_aid, ByteBuffer ssp, Pdu& 
         sign_request.plain_message = std::move(sec_payload);
         sign_request.its_aid = its_aid;
         sign_request.permissions = std::move(ssp);
+        sign_request.context_information = std::move(context);
 
         security::EncapConfirm confirm = m_security_entity->encapsulate_packet(std::move(sign_request));
 

@@ -171,6 +171,7 @@ Result Stack::request(BtpRequest req) {
             gn_req.communication_profile = req.communication_profile;
             gn_req.its_aid = req.its_aid;
             gn_req.permissions = std::move(req.permissions);
+            gn_req.security_context = std::move(req.security_context);
             gn_req.traffic_class = req.traffic_class;
             if (req.maximum_lifetime) gn_req.maximum_lifetime = *req.maximum_lifetime;
             if (req.maximum_hop_limit) gn_req.max_hop_limit = *req.maximum_hop_limit;
@@ -213,6 +214,7 @@ Result Stack::request(GnRequest req) {
             gn_req.communication_profile = req.communication_profile;
             gn_req.its_aid = req.its_aid;
             gn_req.permissions = std::move(req.permissions);
+            gn_req.security_context = std::move(req.security_context);
             gn_req.traffic_class = req.traffic_class;
             if (req.maximum_lifetime) gn_req.maximum_lifetime = *req.maximum_lifetime;
             if (req.maximum_hop_limit) gn_req.max_hop_limit = *req.maximum_hop_limit;

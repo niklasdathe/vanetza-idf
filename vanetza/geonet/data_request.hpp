@@ -43,6 +43,8 @@ struct DataRequest
     CommunicationProfile communication_profile;
     ItsAid its_aid;
     ByteBuffer permissions;
+    // Security context information (TS 103 836-4-1 V2.2.1 Annex J.2), passed to SN-ENCAP.request
+    ByteBuffer security_context;
     Lifetime maximum_lifetime;
     boost::optional<Repetition> repetition;
     unsigned max_hop_limit;

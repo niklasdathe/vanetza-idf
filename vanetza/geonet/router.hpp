@@ -520,7 +520,7 @@ private:
      * \param pdu PDU
      * \param packet Packet with payload
      */
-    DownPacketPtr encap_packet(ItsAid aid, ByteBuffer ssp, Pdu& pdu, DownPacketPtr packet);
+    DownPacketPtr encap_packet(ItsAid aid, ByteBuffer ssp, ByteBuffer context, Pdu& pdu, DownPacketPtr packet);
 
     /**
      * \brief Create an initialized Single-Hop-Broadcast PDU

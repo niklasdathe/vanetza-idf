@@ -26,11 +26,14 @@ struct BtpRequest {
     vanetza::geonet::TransportType transport = vanetza::geonet::TransportType::SHB;
     vanetza::geonet::DestinationVariant destination = nullptr;
     vanetza::geonet::CommunicationProfile communication_profile = vanetza::geonet::CommunicationProfile::ITS_G5;
-    // The selected security entity implements this profile; ITS-AID and SSP
-    // are SN-ENCAP inputs (TS 102 723-8 V2.0.0 clause 5 / V1.1.1 Table 24).
+    // The selected security entity implements this profile; ITS-AID, SSP and
+    // context information are SN-ENCAP inputs (TS 102 723-8 V2.0.0 clause 5 /
+    // V1.1.1 Table 24) that GN forwards unchanged (TS 103 836-4-1 V2.2.1
+    // Table 34, Annex J.2 "Security context information").
     std::optional<std::uint32_t> security_profile;
     vanetza::ItsAid its_aid = 0;
     vanetza::ByteBuffer permissions;
+    vanetza::ByteBuffer security_context; // see security::context for the values this library defines
     std::optional<vanetza::geonet::Lifetime> maximum_lifetime;
     std::optional<vanetza::geonet::DataRequest::Repetition> repetition;
     std::optional<unsigned> maximum_hop_limit;
@@ -68,6 +71,7 @@ struct GnRequest {
     std::optional<vanetza::geonet::DataRequest::Repetition> repetition;
     vanetza::ItsAid its_aid = 0;
     vanetza::ByteBuffer permissions;
+    vanetza::ByteBuffer security_context; // TS 103 836-4-1 V2.2.1 Annex J.2 Security context information
     vanetza::ByteBuffer data;
 };
 

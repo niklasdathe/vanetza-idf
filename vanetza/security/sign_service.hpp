@@ -27,6 +27,9 @@ struct SignRequest
     DownPacket plain_message;
     ItsAid its_aid;
     ByteBuffer permissions;
+    // optional SN-ENCAP.request context_information (TS 102 723-8 V1.1.1 Table 24):
+    // opaque octets for selecting properties of the security protocol
+    ByteBuffer context_information;
     bool external_payload = false;
     bool self_signed = false;
 };

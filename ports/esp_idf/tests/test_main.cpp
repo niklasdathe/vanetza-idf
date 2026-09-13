@@ -22,6 +22,7 @@ void test_crypto_backend_known_answers();
 #if VIDF_BACKEND_OPENSSL
 void test_crypto_backends(); // host only: OpenSSL is the oracle
 #endif
+void test_security_entity();
 #endif
 
 using namespace vanetza_idf;
@@ -273,6 +274,7 @@ int main() {
 #if VIDF_BACKEND_OPENSSL
         test_crypto_backends();
 #endif
+        test_security_entity();
 #endif
         std::printf("PASS: %u checks (host/component tests, not ETSI ATS verdicts)\n", checks);
         return 0;

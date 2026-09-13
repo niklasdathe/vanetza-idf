@@ -30,6 +30,9 @@ struct BTP_DATA_request {
     std::optional<vanetza::geonet::DataRequest::Repetition> gn_repetition;
     vanetza::ItsAid its_aid = 0;
     vanetza::ByteBuffer permissions;
+    // SN-ENCAP context_information (TS 102 723-8 V1.1.1 Table 24), forwarded by GN
+    // as the TRANSP_CORE.request Security context information (TS 103 836-4-1 Annex J.2)
+    vanetza::ByteBuffer context_information;
 };
 
 /** BTP-DATA.indication, TS 103 836-5-1 V2.1.1 Annex A.3.
@@ -79,6 +82,7 @@ inline Result BTP_DATA_request_submit(Stack& stack, BTP_DATA_request primitive) 
     request.repetition = primitive.gn_repetition;
     request.its_aid = primitive.its_aid;
     request.permissions = std::move(primitive.permissions);
+    request.security_context = std::move(primitive.context_information);
     request.data = std::move(primitive.fl_sdu);
     return stack.request(std::move(request));
 }
