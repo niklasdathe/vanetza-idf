@@ -1,0 +1,18 @@
+{
+  "kind": "radio-integration",
+  "dut": "COM20",
+  "receiver": "COM11",
+  "channel": 180,
+  "status": "pass",
+  "captures": [
+    {
+      "rssi_dbm": -46,
+      "device_timestamp_us": 48779796,
+      "trailing_bytes": "00009900",
+      "exact_match": true
+    }
+  ],
+  "cleanup_errors": [],
+  "receive_only_tx_rejected": true,
+  "submission_accepted": true
+}

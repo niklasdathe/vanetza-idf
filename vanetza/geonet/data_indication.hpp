@@ -27,7 +27,9 @@ struct DataIndication
     security::DecapReport security_report;
     boost::optional<ItsAid> its_aid;
     boost::optional<ByteBuffer> permissions;
-    // TODO: certificate id is missing (optional)
+    // TS 102 723-8 V2.0.0 clause 5 incorporates V1.1.1 Table 27:
+    // preserve the optional SN-DECAP certificate_id through NF-SAP.
+    boost::optional<security::HashedId8> certificate_id;
     TrafficClass traffic_class;
     boost::optional<Lifetime> remaining_packet_lifetime;
     boost::optional<unsigned> remaining_hop_limit;

@@ -46,6 +46,11 @@ CommonHeader::CommonHeader(const DataRequest& request, const MIB& mib) :
         case UpperProtocol::IPv6:
             next_header = NextHeaderCommon::IPv6;
             break;
+        case UpperProtocol::Unknown:
+            // No upper-layer header: e.g. a raw GN-DATA.request SDU (TS 103 836-4-1
+            // clause 9.3 N-SAP), which carries no BTP/IPv6 framing to declare.
+            next_header = NextHeaderCommon::Any;
+            break;
         default:
             throw std::runtime_error("Unhandled upper protocol");
             break;

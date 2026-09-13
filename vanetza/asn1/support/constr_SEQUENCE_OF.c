@@ -13,14 +13,9 @@
  * some codegen paths. Concrete OF types still have their own descriptors.
  */
 asn_TYPE_descriptor_t asn_DEF_SEQUENCE_OF = {
-    "SEQUENCE OF",
-    "SEQUENCE OF",
-    &asn_OP_SEQUENCE_OF,
-    0, 0,
-    0, 0,
-    0,              /* No constraints */
-    0, 0,           /* No members */
-    0               /* No specifics */
+    .name = "SEQUENCE OF",
+    .xml_tag = "SEQUENCE OF",
+    .op = &asn_OP_SEQUENCE_OF
 };
 
 asn_TYPE_operation_t asn_OP_SEQUENCE_OF = {

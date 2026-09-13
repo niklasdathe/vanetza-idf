@@ -1,0 +1,21 @@
+[submodule "ports/esp_idf/third_party/iostreams"]
+	path = ports/esp_idf/third_party/iostreams
+	url = https://github.com/boostorg/iostreams.git
+[submodule "ports/esp_idf/third_party/circular_buffer"]
+	path = ports/esp_idf/third_party/circular_buffer
+	url = https://github.com/boostorg/circular_buffer.git
+[submodule "ports/esp_idf/third_party/geometry"]
+	path = ports/esp_idf/third_party/geometry
+	url = https://github.com/boostorg/geometry.git
+[submodule "ports/esp_idf/third_party/heap"]
+	path = ports/esp_idf/third_party/heap
+	url = https://github.com/boostorg/heap.git
+[submodule "ports/esp_idf/third_party/rational"]
+	path = ports/esp_idf/third_party/rational
+	url = https://github.com/boostorg/rational.git
+[submodule "ports/esp_idf/third_party/multiprecision"]
+	path = ports/esp_idf/third_party/multiprecision
+	url = https://github.com/boostorg/multiprecision.git
+[submodule "ports/esp_idf/third_party/otm"]
+	path = ports/esp_idf/third_party/otm
+	url = https://codeberg.org/opentrafficmap/its-g5-receiver-firmware_txenabled.git

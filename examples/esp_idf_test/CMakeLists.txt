@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.22)
+list(APPEND EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/../..")
+set(SDKCONFIG_DEFAULTS "${CMAKE_CURRENT_LIST_DIR}/../esp_idf/sdkconfig.defaults;${CMAKE_CURRENT_LIST_DIR}/sdkconfig.defaults")
+set(COMPONENTS main)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(vanetza_idf_component_tests)

@@ -1,0 +1,28 @@
+{
+  "started_utc": "2026-09-12T19:44:41.713129+00:00",
+  "binary_sha256": "45b8812d102c6f5079588f74a2a9cf616b68d721bec46b93972e815594e24fc5",
+  "config_sha256": "7863a2695637b779357e393a08644048a9aa6d6009492954f6cc0ad40029dd10",
+  "sut_sha256": "0ec3d7ac426287e2caaef42690e62653f79b383fa511201626c5354ffd9dda4a",
+  "expected_cases_sha256": "d446bc932c6fc07477df498310010e223fb931b33aa1501602def0b89b50b977",
+  "verdicts": [
+    {
+      "testcase": "TC_GEONW_FDV_SHB_BV_01",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_GEONW_PON_FPB_BV_11_05",
+      "verdict": "inconc"
+    },
+    {
+      "testcase": "TC_GEONW_PON_SHB_BV_01",
+      "verdict": "fail"
+    }
+  ],
+  "status": "completed",
+  "exit_code": 0,
+  "missing_cases": [],
+  "unexpected_cases": [],
+  "duplicate_cases": [],
+  "campaign_complete": true,
+  "finished_utc": "2026-09-12T19:45:17.003007+00:00"
+}

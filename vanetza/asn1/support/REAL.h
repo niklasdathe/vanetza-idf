@@ -8,7 +8,9 @@
 #include "asn_application.h"
 #include "asn_codecs_prim.h"
 
+#ifndef _ISOC99_SOURCE
 #define	_ISOC99_SOURCE		/* For ilogb() and quiet NAN */
+#endif
 #ifndef _BSD_SOURCE
 #define	_BSD_SOURCE		/* To reintroduce finite(3) */
 #endif

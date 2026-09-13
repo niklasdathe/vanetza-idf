@@ -1,0 +1,36 @@
+{
+  "started_utc": "2026-09-11T16:47:24.268388+00:00",
+  "binary_sha256": "48d874ff6650ddbeec3b79409c5adced448ffd01be79dbfa6f7ce25f0a2fa227",
+  "config_sha256": "ffea9d920a2c0a1942af537400b745d0cbcfbff4629ce73c2f639aad8339abc9",
+  "sut_sha256": "b02eb13d9c9139def94d47c45c804fac1052822dce196de8547a5ea842e49fc0",
+  "expected_cases_sha256": "9a71319ec8f848fd5bb9b2ef37bc29771e7ef703a276ad61409e0af3e71eb42b",
+  "verdicts": [
+    {
+      "testcase": "TC_BTP_PGA_BV_01",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_BTP_PGB_BV_01",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_BTP_PGB_BV_02",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_BTP_PP_BV_01",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_BTP_PP_BV_02",
+      "verdict": "pass"
+    }
+  ],
+  "status": "completed",
+  "exit_code": 0,
+  "missing_cases": [],
+  "unexpected_cases": [],
+  "duplicate_cases": [],
+  "campaign_complete": true,
+  "finished_utc": "2026-09-11T16:47:45.639877+00:00"
+}

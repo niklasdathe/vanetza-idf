@@ -1,0 +1,15 @@
+{
+  "kind": "build",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "status": "pass",
+  "application_size_bytes": 1753088,
+  "application_partition_bytes": 3145728,
+  "sha256": {
+    "application": "90624f6cce77e703e8137dc62fd88efdba65d7a8561bcb7d800cc0915b468b33",
+    "bootloader": "93903cefa2bae3f5805a604ae744fabfdea78a866a1230ec3cc129190b93fe40",
+    "partition_table": "73c0b5c3e5fcba3a151cc70c453c93dd5f4798899e7f2f8cca76da1f32ffc501",
+    "sdkconfig": "987e89dd7dc4e745e1d09861b836cc51811d4a13cd29b3ba10f0cefaa9e62825"
+  },
+  "hardware_execution": "pass; see evidence/btp-device-01/result.json (official AtsBTP, 5/5, COM20). serial_sut.py/hil_server.cpp previously hung after a JTAG/USB reset because the ROM UART0 init waits for a clock-enable bit a warm reset can leave cleared (same class of ESP32-C5 issue as the parent project's implementation/firmware/main/usb_hil.c:75); hil_server.cpp now sets PCR_UART0_SCLK_EN before installing the USB-Serial/JTAG driver, matching that fix"
+}

@@ -1,0 +1,9 @@
+version: "0.1.0"
+description: "Modular Vanetza library for ESP-IDF (conformance work in progress)"
+url: https://github.com/niklasdathe/vanetza-idf
+repository: https://github.com/niklasdathe/vanetza-idf.git
+dependencies:
+  idf: ">=5.3"
+  espressif/esp-boost:
+    version: "0.4.1"
+    public: true

@@ -106,7 +106,7 @@ BIT_STRING_encode_jer(const asn_TYPE_descriptor_t *td,
         } else {
             ASN__CALLBACK("\"length\":", 9);
         }
-        int wr = snprintf(scratch, sizeof(scratch), "%lu",
+        int wr = snprintf(scratch, sizeof(scratch), "%zu",
                 st->size * 8 - (st->bits_unused));
         if(wr < 0 || (size_t)wr >= sizeof(scratch)) {
             ASN__ENCODE_FAILED;

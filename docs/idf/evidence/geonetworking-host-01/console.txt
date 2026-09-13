@@ -1,0 +1,192 @@
+ttcn3_start: Starting the test suite
+spawn /opt/microbu-ttcn/titan-9ff25f04c2a437716b91517bcd00b68d72fb8ea2/Install/bin/mctr_cli test.cfg
+
+*************************************************************************
+* TTCN-3 Test Executor - Main Controller 2                              *
+* Version: 10.1.2                                                       *
+* Copyright (c) 2000-2024 Ericsson Telecom AB                           *
+* All rights reserved. This program and the accompanying materials      *
+* are made available under the terms of the Eclipse Public License v2.0 *
+* which accompanies this distribution, and is available at              *
+* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html            *
+*************************************************************************
+
+Using configuration file: test.cfg
+MC@framework-dathe: Unix server socket created successfully.
+MC@framework-dathe: Listening on TCP port 37139.
+MC2> framework-dathe. is the default
+spawn /tmp/vidf-gn-build/AtsGeoNetworking framework-dathe. 37139
+TTCN-3 Host Controller (parallel mode), version 10.1.2
+MC@framework-dathe: New HC connected from 127.0.0.1 [127.0.0.1]. framework-dathe: Linux 5.15.167.4-microsoft-standard-WSL2 on x86_64.
+cmtc
+MC@framework-dathe: Downloading configuration file to all HCs.
+HC@framework-dathe: TTCN-3 Host Controller started on framework-dathe. Version: 10.1.2.
+HC@framework-dathe: TTCN Logger v2.2 options: TimeStampFormat:=Time; LogEntityName:=No; LogEventTypes:=No; SourceInfoFormat:=None; LogSensitiveData:=No; *.FileMask:=LOG_ALL; *.ConsoleMask:=ERROR | EXECUTOR | VERDICTOP | WARNING; LogFileSize:=0; LogFileNumber:=1; DiskFullAction:=Error
+HC@framework-dathe: The address of MC was set to framework-dathe.[127.0.1.1]:0.
+HC@framework-dathe: The local IP address of the control connection to MC is 127.0.0.1.
+HC@framework-dathe: Connected to MC.
+HC@framework-dathe: This host supports UNIX domain sockets for local communication.
+HC@framework-dathe: Processing configuration data received from MC.
+HC@framework-dathe: Module LibCommon_Sync has the following parameters: { PX_TSYNC_TIME_LIMIT := 120.000000, PX_TSHUT_DOWN_TIME_LIMIT := 120.000000 }
+HC@framework-dathe: Module LibCommon_Time has the following parameters: { PX_TDONE := 120.000000, PX_TAC := 30.000000, PX_TNOAC := 10.000000, PX_TWAIT := 120.000000, PX_LOOP := 1.000000 }
+HC@framework-dathe: Module LibItsCommon_Pixits has the following parameters: { PX_IUT_STATION_ID := 1, PX_IUT_STATION_TYPE := 5, PX_TESTER_STATION_ID := 111111, PX_TESTER_STATION_TYPE := 3, PX_TS_LATITUDE := 515344680, PX_TS_LONGITUDE := 139284390, PX_TIME_DELTA := 1000, PX_GNSS_SCENARIO_SUPPORT := false, PX_T_GNSS_AWAIT_DISTANCE_COVERED := 120.000000, PX_T_GNSS_AWAIT_SPEED_REACHED := 120.000000, PX_TIME_FOR_GPS_FIX := 60, PX_CERT_FOR_TS := "CERT_TS_A_AT" }
+HC@framework-dathe: Module LibItsGeoNetworking_Pics has the following parameters: { PICS_GN_LOCAL_GN_ADDR := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, PICS_GN_LOCAL_ADDR_CONF_METHOD := e_anonymous (2), PICS_GN_IS_MOBILE := true, PICS_GN_MINIMUM_UPDATE_FREQUENCY_LPV := 1000, PICS_GN_MAX_SDU_SIZE := 1398, PICS_GN_MAX_GN_HEADER_SIZE := 88, PICS_GN_LIFETIME_LOC_TE := 20, PICS_GN_SECURITY := false, PICS_GN_LOCATION_SERVICE_MAX_RETRANS := 10, PICS_GN_LOCATION_SERVICE_RETRANSMIT_TIMER := 1000, PICS_GN_LOCATION_SERVICE_PACKET_BUFFER_SIZE := 1024, PICS_GN_BEACON_SERVICE_RETRANSMIT_TIMER := 3000, PICS_GN_BEACON_SERVICE_MAX_JITTER := 750, PICS_GN_DEFAULT_HOP_LIMIT := 10, PICS_GN_MAX_PACKET_LIFETIME := 600, PICS_GN_MAX_GEO_AREA_SIZE := 10.000000, PICS_GN_MIN_PACKET_REPETITION_INTERVAL := 100, PICS_GN_NON_AREA_FORWARDING_ALGORITHM := e_greedy (1), PICS_GN_AREA_FORWARDING_ALGORITHM := e_cbf (2), PICS_GN_CBF_MIN_TIME := 1, PICS_GN_CBF_MAX_TIME := 100, PICS_GN_DEFAULT_MAX_COMMUNICATION_RANGE := 1000, PICS_GN_UC_FORWARDING_PACKET_BUFFER_SIZE := 256, PICS_GN_BC_FORWARDING_PACKET_BUFFER_SIZE := 1024, PICS_GN_BASIC_HEADER := false, PICS_GN_COMMON_HEADER := false, PICS_GN_BEACON_SRC := false, PICS_GN_BEACON_DST := false, PICS_GN_GUC := false, PICS_GN_GUC_SRC := false, PICS_GN_GUC_DST := false, PICS_GN_GUC_FWD := false, PICS_GN_GBC := false, PICS_GN_GBC_SRC := false, PICS_GN_GBC_DST := false, PICS_GN_GBC_FWD := false, PICS_GN_GAC := false, PICS_GN_GAC_SRC := false, PICS_GN_GAC_DST := false, PICS_GN_GAC_FWD := false, PICS_GN_SHB := true, PICS_GN_SHB_SRC := true, PICS_GN_SHB_DST := false, PICS_GN_TSB := false, PICS_GN_TSB_SRC := false, PICS_GN_TSB_DST := false, PICS_GN_TSB_FWD := false, PICS_GN_LS_REQ_SRC := false, PICS_GN_LS_REQ_RETRANSMISSION := false, PICS_GN_LS_REQ_DST := false, PICS_GN_LS_REP_DST := false, PICS_GN_LS_FWD := false, PICS_GN_ADDR_AUTO := true, PICS_GN_ADDR_MANAGED := true, PICS_GN_ADDR_ANONYMOUS := true, PICS_GN_DAD := false, PICS_GN_ADVANCED_BC_FORWARDING_MAX_COUNTER := 3, PICS_IUT_MAC_ADDRESS := 'FFFFFFFFFFFF'O, PICS_IS_IUT_SECURED := false }
+HC@framework-dathe: Module LibItsGeoNetworking_Pixits has the following parameters: { PX_TS_NODE_A_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000A'O }, PX_TS_NODE_B_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, PX_TS_NODE_C_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000C'O }, PX_TS_NODE_D_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000D'O }, PX_TS_NODE_E_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000E'O }, PX_TS_NODE_F_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000F'O }, PX_MIN_NR_NEIGHBOUR := 50, PX_MAX_NR_NEIGHBOUR := 50, PX_GN_APPLICATION_MAX_RETRANS := 10, PX_T_DELTA := 0.100000, PX_GN_BEACON_SERVICE_TIMER_MEDIUM := 5000, PX_GN_BEACON_SERVICE_TIMER_MAXIMUM := 8000, PX_GN_LOCATION_SERVICE_TIMER_MEDIUM := 2000, PX_GN_LOCATION_SERVICE_TIMER_MAXIMUM := 3000, PX_GN_APPLICATION_RETRANSMIT_TIMER := 1000, PX_GN_APPLICATION_RETRANSMIT_TIMER_MEDIUM := 2000, PX_GN_APPLICATION_RETRANSMIT_TIMER_MAXIMUM := 3000, PX_POS_DELTA := 1, PX_GN_UPPER_LAYER := e_any (0), PX_BTP_IN_UT_IND := true, PX_MESSAGE_COUNT := 5, PX_NEIGHBOUR_DISCOVERY_DELAY := 1.000000, PX_INC_TIMER_CONTROL_FACTOR_INC := 1.100000, PX_DEC_TIMER_CONTROL_FACTOR := 0.950000 }
+HC@framework-dathe: Module LibItsIpv6OverGeoNetworking_Pics has the following parameters: { PICS_GN6_ASL_VI_RESOL_ADDR := true }
+HC@framework-dathe: Module LibItsIpv6OverGeoNetworking_Pixits has the following parameters: { PX_CONFIG_MANUAL_GVL := false, PX_T_BUILD_CONFIG := 5.000000, PX_GN6_PREFIX_1 := '3FFE0000000000010000000000000000'O, PX_GN6_PREFIX_2 := '3FFE0000000000020000000000000000'O, PX_GN6_PREFIX_3 := '3FFE0000000000030000000000000000'O, PX_GN6_PREFIX_LENGTH_1 := 64, PX_GN6_PREFIX_LENGTH_2 := 64, PX_GN6_PREFIX_LENGTH_3 := 64, PX_GN6_TVL_INTERFACE_NAME := "tvl0" }
+HC@framework-dathe: Module LibItsSecurity_Pics has the following parameters: { PICS_SEC_IMPLICIT_CERTIFICATES := false, PICS_SEC_SHA256 := true, PICS_SEC_SHA384 := false, PICS_SEC_NIST_P256 := true, PICS_SEC_BRAINPOOL_P256R1 := true, PICS_SEC_BRAINPOOL_P384R1 := true, PICS_SEC_P2P_AT_DISTRIBUTION := true, PICS_SEC_P2P_AA_DISTRIBUTION := true, PICS_SEC_CERTIFICATE_SELECTION := true, PICS_SEC_CIRCULAR_REGION := true, PICS_SEC_RECTANGULAR_REGION := true, PICS_SEC_POLYGONAL_REGION := true, PICS_SEC_IDENTIFIED_REGION := true, PICS_SEC_ITS_AID_OTHER := true, PICS_SEC_BFK_AUTH := false }
+HC@framework-dathe: Module LibItsSecurity_Pixits has the following parameters: { PX_CERTIFICATE_POOL_PATH := "data/v3/certificates", PX_IUT_SEC_CONFIG_NAME := "", PX_IUT_DEFAULT_CERTIFICATE := "CERT_IUT_A_AT", PX_AT_CERTIFICATE := "CERT_TS_B_AT", PX_OTHER_ITS_AID := 141, PX_WRONG_PROTOCOL_VERSION := 4, PX_WGSLONGITUDE := 0, PX_WGSLATITUDE := 0, PX_VE_ALG := e_nist_p256 (0), PX_EC_ALG_FOR_EC := e_nist_p256 (0), PX_EC_ALG_FOR_AT := e_nist_p256 (0), PX_EC_ALG_FOR_ATV := e_nist_p256 (0), PX_EC_ALG_FOR_MA := e_nist_p256 (0), PX_EC_ALG_FOR_EC_SIGN := e_nist_p256 (0), PX_BFK_TEST_VECTORS := false, PX_USE_BFK_MODE := false, PX_INC_TIMER_CONTROL_FACTOR_INC := 1.100000, PX_DEC_TIMER_CONTROL_FACTOR := 0.900000 }
+HC@framework-dathe: Initializing module ETSI-ITS-CDD.
+HC@framework-dathe: Initialization of module ETSI-ITS-CDD finished.
+HC@framework-dathe: Initializing module EtsiTs103097ExtensionModule.
+HC@framework-dathe: Initialization of module EtsiTs103097ExtensionModule finished.
+HC@framework-dathe: Initializing module EtsiTs103097Module.
+HC@framework-dathe: Initialization of module EtsiTs103097Module finished.
+HC@framework-dathe: Initializing module Ieee1609Dot2.
+HC@framework-dathe: Initialization of module Ieee1609Dot2 finished.
+HC@framework-dathe: Initializing module Ieee1609Dot2BaseTypes.
+HC@framework-dathe: Initialization of module Ieee1609Dot2BaseTypes finished.
+HC@framework-dathe: Initializing module ItsGeoNetworking_TestCases.
+HC@framework-dathe: Initializing module ItsGeoNetworking_TpFunctions.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_Functions.
+HC@framework-dathe: Initializing module LibItsCommon_Templates.
+HC@framework-dathe: Initializing module LibItsCommon_TypesAndValues.
+HC@framework-dathe: Initializing module LibCommon_DataStrings.
+HC@framework-dathe: Initialization of module LibCommon_DataStrings finished.
+HC@framework-dathe: Initialization of module LibItsCommon_TypesAndValues finished.
+HC@framework-dathe: Initialization of module LibItsCommon_Templates finished.
+HC@framework-dathe: Initializing module LibItsSecurity_Functions.
+HC@framework-dathe: Initializing module LibItsCommon_Functions.
+HC@framework-dathe: Initializing module LibCommon_BasicTypesAndValues.
+HC@framework-dathe: Initialization of module LibCommon_BasicTypesAndValues finished.
+HC@framework-dathe: Initializing module LibItsCommon_Pixits.
+HC@framework-dathe: Initialization of module LibItsCommon_Pixits finished.
+HC@framework-dathe: Initialization of module LibItsCommon_Functions finished.
+HC@framework-dathe: Initializing module LibItsSecurity_Templates.
+HC@framework-dathe: Initializing module LibHelpers_Functions.
+HC@framework-dathe: Initialization of module LibHelpers_Functions finished.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_TypesAndValues.
+HC@framework-dathe: Initializing module LibItsExternal_TypesAndValues.
+HC@framework-dathe: Initialization of module LibItsExternal_TypesAndValues finished.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_TypesAndValues finished.
+HC@framework-dathe: Initializing module LibItsSecurity_Pixits.
+HC@framework-dathe: Initializing module LibItsSecurity_TypesAndValues.
+HC@framework-dathe: Initialization of module LibItsSecurity_TypesAndValues finished.
+HC@framework-dathe: Initialization of module LibItsSecurity_Pixits finished.
+HC@framework-dathe: Initialization of module LibItsSecurity_Templates finished.
+HC@framework-dathe: Initializing module LibItsSecurity_Pics.
+HC@framework-dathe: Initialization of module LibItsSecurity_Pics finished.
+HC@framework-dathe: Initializing module LibItsSecurity_TestSystem.
+HC@framework-dathe: Initialization of module LibItsSecurity_TestSystem finished.
+HC@framework-dathe: Initializing module LibItsSecurity_EncdecDeclarations.
+HC@framework-dathe: Initialization of module LibItsSecurity_EncdecDeclarations finished.
+HC@framework-dathe: Initialization of module LibItsSecurity_Functions finished.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_TestSystem.
+HC@framework-dathe: Initializing module LibItsCommon_TestSystem.
+HC@framework-dathe: Initializing module LibCommon_Time.
+HC@framework-dathe: Initialization of module LibCommon_Time finished.
+HC@framework-dathe: Initializing module LibCommon_Sync.
+HC@framework-dathe: Initializing module LibCommon_AbstractData.
+HC@framework-dathe: Initialization of module LibCommon_AbstractData finished.
+HC@framework-dathe: Initializing module LibCommon_VerdictControl.
+HC@framework-dathe: Initialization of module LibCommon_VerdictControl finished.
+HC@framework-dathe: Initialization of module LibCommon_Sync finished.
+HC@framework-dathe: Initialization of module LibItsCommon_TestSystem finished.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_TypesAndValues.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_TypesAndValues finished.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_TestSystem finished.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_Templates.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_Pixits.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_Pixits finished.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_Templates finished.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_Pics.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_Pics finished.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_Functions finished.
+HC@framework-dathe: Initializing module LibItsGeoNetworking_EncdecDeclarations.
+HC@framework-dathe: Initialization of module LibItsGeoNetworking_EncdecDeclarations finished.
+HC@framework-dathe: Initialization of module ItsGeoNetworking_TpFunctions finished.
+HC@framework-dathe: Initialization of module ItsGeoNetworking_TestCases finished.
+HC@framework-dathe: Initializing module ItsGeoNetworking_TestControl.
+HC@framework-dathe: Initialization of module ItsGeoNetworking_TestControl finished.
+HC@framework-dathe: Initializing module LibCommon_TextStrings.
+HC@framework-dathe: Initialization of module LibCommon_TextStrings finished.
+HC@framework-dathe: Initializing module LibItsCommon_ASN1_NamedNumbers.
+HC@framework-dathe: Initialization of module LibItsCommon_ASN1_NamedNumbers finished.
+HC@framework-dathe: Initializing module LibItsCommon_CddTemplates.
+HC@framework-dathe: Initialization of module LibItsCommon_CddTemplates finished.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_EncdecDeclarations.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_EncdecDeclarations finished.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_Functions.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_TestSystem.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_TestSystem finished.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_Templates.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_Templates finished.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_Pixits.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_Pixits finished.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_Functions finished.
+HC@framework-dathe: Initializing module LibItsIpv6OverGeoNetworking_Pics.
+HC@framework-dathe: Initialization of module LibItsIpv6OverGeoNetworking_Pics finished.
+HC@framework-dathe: Initializing module LibSecurity_Certificates.
+HC@framework-dathe: Initialization of module LibSecurity_Certificates finished.
+HC@framework-dathe: Initializing module LibSecurity_Hash.
+HC@framework-dathe: Initialization of module LibSecurity_Hash finished.
+HC@framework-dathe: Initializing module LibSecurity_Hmac.
+HC@framework-dathe: Initialization of module LibSecurity_Hmac finished.
+HC@framework-dathe: Initializing module LibSecurity_Signature.
+HC@framework-dathe: Initializing module http_www_w3_org_2000_09_xmldsig.
+HC@framework-dathe: Initializing module XSD.
+HC@framework-dathe: Initializing module UsefulTtcn3Types.
+HC@framework-dathe: Initialization of module UsefulTtcn3Types finished.
+HC@framework-dathe: Initialization of module XSD finished.
+HC@framework-dathe: Initialization of module http_www_w3_org_2000_09_xmldsig finished.
+HC@framework-dathe: Initialization of module LibSecurity_Signature finished.
+HC@framework-dathe: Initializing module NoTargetNamespace.
+HC@framework-dathe: Initialization of module NoTargetNamespace finished.
+HC@framework-dathe: Initializing module PreGenRecordOf.
+HC@framework-dathe: Initialization of module PreGenRecordOf finished.
+HC@framework-dathe: Initializing module TitanLoggerApi.
+HC@framework-dathe: Initialization of module TitanLoggerApi finished.
+HC@framework-dathe: Initializing module http_www_w3_org_XML_1998_namespace.
+HC@framework-dathe: Initialization of module http_www_w3_org_XML_1998_namespace finished.
+MC@framework-dathe: Configuration file was processed on all HCs.
+HC@framework-dathe: Configuration data was processed successfully.
+MC@framework-dathe: Creating MTC on host 127.0.0.1.
+HC@framework-dathe: MTC was created. Process id: 372.
+MC@framework-dathe: MTC is created.
+MC2> smtc
+Executing all items of [EXECUTE] section.
+MC2> MTC@framework-dathe: Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
+MTC@framework-dathe: setverdict(pass): none -> pass
+MTC@framework-dathe: Waiting for PTCs to finish.
+MTC@framework-dathe: Setting final verdict of the test case.
+MTC@framework-dathe: Local verdict of MTC: pass
+MTC@framework-dathe: No PTCs were created.
+MTC@framework-dathe: setverdict(inconc): none -> inconc
+MTC@framework-dathe: Waiting for PTCs to finish.
+MTC@framework-dathe: Setting final verdict of the test case.
+MTC@framework-dathe: Local verdict of MTC: inconc
+MTC@framework-dathe: No PTCs were created.
+NodeB(3)@framework-dathe: Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
+NodeD(4)@framework-dathe: Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
+MTC@framework-dathe: setverdict(pass): none -> pass
+NodeB(3)@framework-dathe: setverdict(fail): none -> fail
+NodeD(4)@framework-dathe: setverdict(fail): none -> fail
+MTC@framework-dathe: setverdict(inconc): pass -> inconc
+MTC@framework-dathe: setverdict(inconc): inconc -> inconc, component reason not changed
+MTC@framework-dathe: Waiting for PTCs to finish.
+NodeB(3)@framework-dathe: Final verdict of PTC: fail
+NodeD(4)@framework-dathe: Final verdict of PTC: fail
+MTC@framework-dathe: Setting final verdict of the test case.
+MTC@framework-dathe: Local verdict of MTC: inconc
+MTC@framework-dathe: Local verdict of PTC NodeB(3): fail (inconc -> fail)
+MTC@framework-dathe: Local verdict of PTC NodeD(4): fail (fail -> fail)
+MC@framework-dathe: Test execution finished.
+Execution of [EXECUTE] section finished.
+emtc
+MC@framework-dathe: Terminating MTC.
+MTC@framework-dathe: Exit was requested from MC. Terminating MTC.
+MC@framework-dathe: MTC terminated.
+MC2> exit
+MC@framework-dathe: Shutting down session.
+HC@framework-dathe: Exit was requested from MC. Terminating HC.
+MC@framework-dathe: Shutdown complete.

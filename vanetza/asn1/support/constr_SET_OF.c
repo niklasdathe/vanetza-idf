@@ -11,14 +11,9 @@
  * NOTE: not a concrete "OF T" — used only to satisfy references.
  */
 asn_TYPE_descriptor_t asn_DEF_SET_OF = {
-    "SET OF",
-    "SET OF",
-    &asn_OP_SET_OF,
-    0, 0,
-    0, 0,
-    0,              /* No constraints */
-    0, 0,           /* No members */
-    0               /* No specifics */
+    .name = "SET OF",
+    .xml_tag = "SET OF",
+    .op = &asn_OP_SET_OF
 };
 
 asn_TYPE_operation_t asn_OP_SET_OF = {

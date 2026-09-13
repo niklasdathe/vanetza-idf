@@ -1,0 +1,15 @@
+{
+  "adapter_sha256": "bbf47a7753fa6a12a4d59d573eb9e19f764ebef7b2808834ac4fc5af6fb65b9c",
+  "binary_sha256": "45b8812d102c6f5079588f74a2a9cf616b68d721bec46b93972e815594e24fc5",
+  "testcase_object_sha256": "730f879dea4c305cc6b8367616b4d73770f45c34e3b3bad11f2638e1ff8c98a6",
+  "testcase_source_sha256": "07bbdd7e586c9f9678ad684c82fd3e5b2b565084f768a3f5942758259c14ee51",
+  "scope": "Official GeoNetworking testcase objects; custom host/device SUT ports, SHB source only; no conformance verdict implied",
+  "suite_overlay": [
+    {
+      "path": "ccsrc/Protocols/GeoNetworking/geonetworking_codec.cc",
+      "before": "a01ee9c560d093f785c2a9fa113dc16a9645e16fa537d1539666642374b635c8",
+      "after": "5bdf56506e59a647d0d321ce768ca1951ba9d119cfcf53da61fa1cc19590ceaa",
+      "reason": "Null-guard three unconditional (*_params)[...] writes while decoding GnNonSecuredPacket.payload; fx__dec__GeoNetworkingPdu always decodes with params=nullptr, so every decode of an observed GN packet segfaulted. Pinned source on disk is untouched; only this tool's own --out build uses the patch."
+    }
+  ]
+}

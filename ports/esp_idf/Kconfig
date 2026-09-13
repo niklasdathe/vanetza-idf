@@ -1,0 +1,46 @@
+menu "Vanetza-IDF"
+    choice VANETZA_IDF_PROFILE
+        prompt "Stack entry point"
+        default VANETZA_IDF_PROFILE_NETWORK
+        config VANETZA_IDF_PROFILE_ACCESS
+            bool "Access: AL_DATA / IN-SAP"
+        config VANETZA_IDF_PROFILE_NETWORK
+            bool "Network: BTP-DATA / NF-SAP"
+        config VANETZA_IDF_PROFILE_FACILITIES
+            bool "Facilities endpoints (CAM, DENM, VAM)"
+    endchoice
+    config VANETZA_IDF_NETWORK
+        bool
+        default y if !VANETZA_IDF_PROFILE_ACCESS
+    config VANETZA_IDF_CAM
+        bool "Release 2 CAM codec and endpoint"
+        default y if VANETZA_IDF_PROFILE_FACILITIES
+        depends on VANETZA_IDF_NETWORK
+    config VANETZA_IDF_DENM
+        bool "Release 2 DENM codec and endpoint"
+        default y if VANETZA_IDF_PROFILE_FACILITIES
+        depends on VANETZA_IDF_NETWORK
+    config VANETZA_IDF_VAM
+        bool "Release 2 VAM codec and endpoint"
+        default y if VANETZA_IDF_PROFILE_FACILITIES
+        depends on VANETZA_IDF_NETWORK
+    config VANETZA_IDF_HIL
+        bool "Upper/lower tester hooks"
+        default n
+        help
+            Builds test control without enabling a UART, USB, BLE or network
+            transport. Wire transports explicitly in the application.
+    choice VANETZA_IDF_RADIO
+        prompt "Access adapter"
+        default VANETZA_IDF_RADIO_EXTERNAL
+        config VANETZA_IDF_RADIO_EXTERNAL
+            bool "Application-provided access adapter"
+        config VANETZA_IDF_RADIO_C5
+            bool "Experimental integrated ESP32-C5 ITS-G5 radio"
+            depends on IDF_TARGET_ESP32C5
+            help
+                Uses OpenTrafficMap's private driver transmit path. Only the
+                pinned ESP-IDF version is accepted. Hardware/RF and DCC
+                qualification remain separate acceptance requirements.
+    endchoice
+endmenu

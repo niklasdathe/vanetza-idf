@@ -1,0 +1,144 @@
+10:03:50.773739 TTCN-3 Host Controller started on framework-dathe. Version: 10.1.2.
+10:03:50.773759 TTCN Logger v2.2 options: TimeStampFormat:=Time; LogEntityName:=No; LogEventTypes:=No; SourceInfoFormat:=None; LogSensitiveData:=No; *.FileMask:=LOG_ALL; *.ConsoleMask:=ERROR | EXECUTOR | VERDICTOP | WARNING; LogFileSize:=0; LogFileNumber:=1; DiskFullAction:=Error
+10:03:50.773863 The address of MC was set to framework-dathe.[127.0.1.1]:0.
+10:03:50.773945 The local IP address of the control connection to MC is 127.0.0.1.
+10:03:50.773960 Connected to MC.
+10:03:50.773975 This host supports UNIX domain sockets for local communication.
+10:03:50.774503 Processing configuration data received from MC.
+10:03:50.774723 Module LibCommon_Sync has the following parameters: { PX_TSYNC_TIME_LIMIT := 120.000000, PX_TSHUT_DOWN_TIME_LIMIT := 120.000000 }
+10:03:50.774736 Module LibCommon_Time has the following parameters: { PX_TDONE := 120.000000, PX_TAC := 30.000000, PX_TNOAC := 10.000000, PX_TWAIT := 120.000000, PX_LOOP := 1.000000 }
+10:03:50.774745 Module LibItsBtp_Pixits has the following parameters: { PX_SOURCE_PORT := 1234, PX_DESTINATION_PORT := 2009, PX_UNKNOWN_DESTINATION_PORT := 65534, PX_DESTINATION_PORT_INFO := 43981, PX_PAYLOAD := '0102030405'O }
+10:03:50.774752 Module LibItsCommon_Pixits has the following parameters: { PX_IUT_STATION_ID := 1, PX_IUT_STATION_TYPE := 5, PX_TESTER_STATION_ID := 111111, PX_TESTER_STATION_TYPE := 3, PX_TS_LATITUDE := 515344680, PX_TS_LONGITUDE := 139284390, PX_TIME_DELTA := 1000, PX_GNSS_SCENARIO_SUPPORT := false, PX_T_GNSS_AWAIT_DISTANCE_COVERED := 120.000000, PX_T_GNSS_AWAIT_SPEED_REACHED := 120.000000, PX_TIME_FOR_GPS_FIX := 60, PX_CERT_FOR_TS := "CERT_TS_A_AT" }
+10:03:50.774761 Module LibItsGeoNetworking_Pics has the following parameters: { PICS_GN_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '000000000000'O }, PICS_GN_LOCAL_ADDR_CONF_METHOD := e_anonymous (2), PICS_GN_IS_MOBILE := true, PICS_GN_MINIMUM_UPDATE_FREQUENCY_LPV := 1000, PICS_GN_MAX_SDU_SIZE := 1398, PICS_GN_MAX_GN_HEADER_SIZE := 88, PICS_GN_LIFETIME_LOC_TE := 20, PICS_GN_SECURITY := false, PICS_GN_LOCATION_SERVICE_MAX_RETRANS := 10, PICS_GN_LOCATION_SERVICE_RETRANSMIT_TIMER := 1000, PICS_GN_LOCATION_SERVICE_PACKET_BUFFER_SIZE := 1024, PICS_GN_BEACON_SERVICE_RETRANSMIT_TIMER := 3000, PICS_GN_BEACON_SERVICE_MAX_JITTER := 750, PICS_GN_DEFAULT_HOP_LIMIT := 10, PICS_GN_MAX_PACKET_LIFETIME := 600, PICS_GN_MAX_GEO_AREA_SIZE := 10.000000, PICS_GN_MIN_PACKET_REPETITION_INTERVAL := 100, PICS_GN_NON_AREA_FORWARDING_ALGORITHM := e_greedy (1), PICS_GN_AREA_FORWARDING_ALGORITHM := e_cbf (2), PICS_GN_CBF_MIN_TIME := 1, PICS_GN_CBF_MAX_TIME := 100, PICS_GN_DEFAULT_MAX_COMMUNICATION_RANGE := 1000, PICS_GN_UC_FORWARDING_PACKET_BUFFER_SIZE := 256, PICS_GN_BC_FORWARDING_PACKET_BUFFER_SIZE := 1024, PICS_GN_BASIC_HEADER := true, PICS_GN_COMMON_HEADER := true, PICS_GN_BEACON_SRC := true, PICS_GN_BEACON_DST := true, PICS_GN_GUC := true, PICS_GN_GUC_SRC := true, PICS_GN_GUC_DST := true, PICS_GN_GUC_FWD := true, PICS_GN_GBC := true, PICS_GN_GBC_SRC := true, PICS_GN_GBC_DST := true, PICS_GN_GBC_FWD := true, PICS_GN_GAC := true, PICS_GN_GAC_SRC := true, PICS_GN_GAC_DST := true, PICS_GN_GAC_FWD := true, PICS_GN_SHB := true, PICS_GN_SHB_SRC := true, PICS_GN_SHB_DST := true, PICS_GN_TSB := true, PICS_GN_TSB_SRC := true, PICS_GN_TSB_DST := true, PICS_GN_TSB_FWD := true, PICS_GN_LS_REQ_SRC := true, PICS_GN_LS_REQ_RETRANSMISSION := true, PICS_GN_LS_REQ_DST := true, PICS_GN_LS_REP_DST := true, PICS_GN_LS_FWD := true, PICS_GN_ADDR_AUTO := true, PICS_GN_ADDR_MANAGED := true, PICS_GN_ADDR_ANONYMOUS := true, PICS_GN_DAD := true, PICS_GN_ADVANCED_BC_FORWARDING_MAX_COUNTER := 3, PICS_IUT_MAC_ADDRESS := 'FFFFFFFFFFFF'O, PICS_IS_IUT_SECURED := false }
+10:03:50.774804 Module LibItsGeoNetworking_Pixits has the following parameters: { PX_TS_NODE_A_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000A'O }, PX_TS_NODE_B_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, PX_TS_NODE_C_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000C'O }, PX_TS_NODE_D_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000D'O }, PX_TS_NODE_E_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000E'O }, PX_TS_NODE_F_LOCAL_GN_ADDR := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000F'O }, PX_MIN_NR_NEIGHBOUR := 50, PX_MAX_NR_NEIGHBOUR := 50, PX_GN_APPLICATION_MAX_RETRANS := 10, PX_T_DELTA := 0.100000, PX_GN_BEACON_SERVICE_TIMER_MEDIUM := 5000, PX_GN_BEACON_SERVICE_TIMER_MAXIMUM := 8000, PX_GN_LOCATION_SERVICE_TIMER_MEDIUM := 2000, PX_GN_LOCATION_SERVICE_TIMER_MAXIMUM := 3000, PX_GN_APPLICATION_RETRANSMIT_TIMER := 1000, PX_GN_APPLICATION_RETRANSMIT_TIMER_MEDIUM := 2000, PX_GN_APPLICATION_RETRANSMIT_TIMER_MAXIMUM := 3000, PX_POS_DELTA := 1, PX_GN_UPPER_LAYER := e_any (0), PX_BTP_IN_UT_IND := true, PX_MESSAGE_COUNT := 5, PX_NEIGHBOUR_DISCOVERY_DELAY := 1.000000, PX_INC_TIMER_CONTROL_FACTOR_INC := 1.100000, PX_DEC_TIMER_CONTROL_FACTOR := 0.950000 }
+10:03:50.774827 Module LibItsIpv6OverGeoNetworking_Pics has the following parameters: { PICS_GN6_ASL_VI_RESOL_ADDR := true }
+10:03:50.774837 Module LibItsIpv6OverGeoNetworking_Pixits has the following parameters: { PX_CONFIG_MANUAL_GVL := false, PX_T_BUILD_CONFIG := 5.000000, PX_GN6_PREFIX_1 := '3FFE0000000000010000000000000000'O, PX_GN6_PREFIX_2 := '3FFE0000000000020000000000000000'O, PX_GN6_PREFIX_3 := '3FFE0000000000030000000000000000'O, PX_GN6_PREFIX_LENGTH_1 := 64, PX_GN6_PREFIX_LENGTH_2 := 64, PX_GN6_PREFIX_LENGTH_3 := 64, PX_GN6_TVL_INTERFACE_NAME := "tvl0" }
+10:03:50.774847 Module LibItsSecurity_Pics has the following parameters: { PICS_SEC_IMPLICIT_CERTIFICATES := false, PICS_SEC_SHA256 := true, PICS_SEC_SHA384 := false, PICS_SEC_NIST_P256 := true, PICS_SEC_BRAINPOOL_P256R1 := true, PICS_SEC_BRAINPOOL_P384R1 := true, PICS_SEC_P2P_AT_DISTRIBUTION := true, PICS_SEC_P2P_AA_DISTRIBUTION := true, PICS_SEC_CERTIFICATE_SELECTION := true, PICS_SEC_CIRCULAR_REGION := true, PICS_SEC_RECTANGULAR_REGION := true, PICS_SEC_POLYGONAL_REGION := true, PICS_SEC_IDENTIFIED_REGION := true, PICS_SEC_ITS_AID_OTHER := true, PICS_SEC_BFK_AUTH := false }
+10:03:50.774855 Module LibItsSecurity_Pixits has the following parameters: { PX_CERTIFICATE_POOL_PATH := "data/v3/certificates", PX_IUT_SEC_CONFIG_NAME := "", PX_IUT_DEFAULT_CERTIFICATE := "CERT_IUT_A_AT", PX_AT_CERTIFICATE := "CERT_TS_B_AT", PX_OTHER_ITS_AID := 141, PX_WRONG_PROTOCOL_VERSION := 4, PX_WGSLONGITUDE := 0, PX_WGSLATITUDE := 0, PX_VE_ALG := e_nist_p256 (0), PX_EC_ALG_FOR_EC := e_nist_p256 (0), PX_EC_ALG_FOR_AT := e_nist_p256 (0), PX_EC_ALG_FOR_ATV := e_nist_p256 (0), PX_EC_ALG_FOR_MA := e_nist_p256 (0), PX_EC_ALG_FOR_EC_SIGN := e_nist_p256 (0), PX_BFK_TEST_VECTORS := false, PX_USE_BFK_MODE := false, PX_INC_TIMER_CONTROL_FACTOR_INC := 1.100000, PX_DEC_TIMER_CONTROL_FACTOR := 0.900000 }
+10:03:50.774867 Initializing module ETSI-ITS-CDD.
+10:03:50.774873 Initialization of module ETSI-ITS-CDD finished.
+10:03:50.774878 Initializing module EtsiTs103097ExtensionModule.
+10:03:50.774882 Initialization of module EtsiTs103097ExtensionModule finished.
+10:03:50.774887 Initializing module EtsiTs103097Module.
+10:03:50.774891 Initialization of module EtsiTs103097Module finished.
+10:03:50.774895 Initializing module Ieee1609Dot2.
+10:03:50.774899 Initialization of module Ieee1609Dot2 finished.
+10:03:50.774903 Initializing module Ieee1609Dot2BaseTypes.
+10:03:50.774908 Initialization of module Ieee1609Dot2BaseTypes finished.
+10:03:50.774912 Initializing module ItsBtp_TestCases.
+10:03:50.774916 Initializing module LibItsBtp_Functions.
+10:03:50.774920 Initializing module LibItsBtp_TestSystem.
+10:03:50.774924 Initializing module LibItsCommon_TestSystem.
+10:03:50.774929 Initializing module LibCommon_Time.
+10:03:50.774933 Initialization of module LibCommon_Time finished.
+10:03:50.774939 Initializing module LibCommon_Sync.
+10:03:50.774943 Initializing module LibCommon_AbstractData.
+10:03:50.774948 Initializing module LibCommon_BasicTypesAndValues.
+10:03:50.774952 Initialization of module LibCommon_BasicTypesAndValues finished.
+10:03:50.774956 Initialization of module LibCommon_AbstractData finished.
+10:03:50.774959 Initializing module LibCommon_VerdictControl.
+10:03:50.774962 Initialization of module LibCommon_VerdictControl finished.
+10:03:50.774972 Initialization of module LibCommon_Sync finished.
+10:03:50.774978 Initialization of module LibItsCommon_TestSystem finished.
+10:03:50.774982 Initializing module LibItsCommon_TypesAndValues.
+10:03:50.774986 Initializing module LibCommon_DataStrings.
+10:03:50.774990 Initialization of module LibCommon_DataStrings finished.
+10:03:50.774994 Initialization of module LibItsCommon_TypesAndValues finished.
+10:03:50.774998 Initializing module LibItsBtp_TypesAndValues.
+10:03:50.775002 Initialization of module LibItsBtp_TypesAndValues finished.
+10:03:50.775006 Initialization of module LibItsBtp_TestSystem finished.
+10:03:50.775011 Initializing module LibItsBtp_Templates.
+10:03:50.775015 Initializing module LibItsBtp_Pixits.
+10:03:50.775019 Initialization of module LibItsBtp_Pixits finished.
+10:03:50.775027 Initialization of module LibItsBtp_Templates finished.
+10:03:50.775031 Initialization of module LibItsBtp_Functions finished.
+10:03:50.775035 Initialization of module ItsBtp_TestCases finished.
+10:03:50.775039 Initializing module ItsBtp_TestControl.
+10:03:50.775044 Initialization of module ItsBtp_TestControl finished.
+10:03:50.775048 Initializing module LibCommon_TextStrings.
+10:03:50.775053 Initialization of module LibCommon_TextStrings finished.
+10:03:50.775057 Initializing module LibHelpers_Functions.
+10:03:50.775061 Initialization of module LibHelpers_Functions finished.
+10:03:50.775065 Initializing module LibItsBtp_EncdecDeclarations.
+10:03:50.775069 Initialization of module LibItsBtp_EncdecDeclarations finished.
+10:03:50.775074 Initializing module LibItsCommon_ASN1_NamedNumbers.
+10:03:50.775078 Initialization of module LibItsCommon_ASN1_NamedNumbers finished.
+10:03:50.775082 Initializing module LibItsCommon_CddTemplates.
+10:03:50.775091 Initialization of module LibItsCommon_CddTemplates finished.
+10:03:50.775095 Initializing module LibItsCommon_Functions.
+10:03:50.775099 Initializing module LibItsCommon_Pixits.
+10:03:50.775104 Initialization of module LibItsCommon_Pixits finished.
+10:03:50.775108 Initialization of module LibItsCommon_Functions finished.
+10:03:50.775116 Initializing module LibItsCommon_Templates.
+10:03:50.775124 Initialization of module LibItsCommon_Templates finished.
+10:03:50.775129 Initializing module LibItsExternal_TypesAndValues.
+10:03:50.775133 Initialization of module LibItsExternal_TypesAndValues finished.
+10:03:50.775137 Initializing module LibItsGeoNetworking_EncdecDeclarations.
+10:03:50.775142 Initializing module LibItsGeoNetworking_TypesAndValues.
+10:03:50.775146 Initialization of module LibItsGeoNetworking_TypesAndValues finished.
+10:03:50.775150 Initialization of module LibItsGeoNetworking_EncdecDeclarations finished.
+10:03:50.775154 Initializing module LibItsGeoNetworking_Functions.
+10:03:50.775157 Initializing module LibItsSecurity_Functions.
+10:03:50.775160 Initializing module LibItsSecurity_Templates.
+10:03:50.775164 Initializing module LibItsSecurity_Pixits.
+10:03:50.775167 Initializing module LibItsSecurity_TypesAndValues.
+10:03:50.775170 Initialization of module LibItsSecurity_TypesAndValues finished.
+10:03:50.775173 Initialization of module LibItsSecurity_Pixits finished.
+10:03:50.775209 Initialization of module LibItsSecurity_Templates finished.
+10:03:50.775214 Initializing module LibItsSecurity_Pics.
+10:03:50.775218 Initialization of module LibItsSecurity_Pics finished.
+10:03:50.775222 Initializing module LibItsSecurity_TestSystem.
+10:03:50.775227 Initialization of module LibItsSecurity_TestSystem finished.
+10:03:50.775231 Initializing module LibItsSecurity_EncdecDeclarations.
+10:03:50.775237 Initialization of module LibItsSecurity_EncdecDeclarations finished.
+10:03:50.775241 Initialization of module LibItsSecurity_Functions finished.
+10:03:50.775245 Initializing module LibItsGeoNetworking_TestSystem.
+10:03:50.775250 Initializing module LibItsIpv6OverGeoNetworking_TypesAndValues.
+10:03:50.775254 Initialization of module LibItsIpv6OverGeoNetworking_TypesAndValues finished.
+10:03:50.775258 Initialization of module LibItsGeoNetworking_TestSystem finished.
+10:03:50.775262 Initializing module LibItsGeoNetworking_Templates.
+10:03:50.775266 Initializing module LibItsGeoNetworking_Pixits.
+10:03:50.775270 Initialization of module LibItsGeoNetworking_Pixits finished.
+10:03:50.775322 Initialization of module LibItsGeoNetworking_Templates finished.
+10:03:50.775328 Initializing module LibItsGeoNetworking_Pics.
+10:03:50.775333 Initialization of module LibItsGeoNetworking_Pics finished.
+10:03:50.775337 Initialization of module LibItsGeoNetworking_Functions finished.
+10:03:50.775342 Initializing module LibItsIpv6OverGeoNetworking_EncdecDeclarations.
+10:03:50.775346 Initialization of module LibItsIpv6OverGeoNetworking_EncdecDeclarations finished.
+10:03:50.775351 Initializing module LibItsIpv6OverGeoNetworking_Functions.
+10:03:50.775355 Initializing module LibItsIpv6OverGeoNetworking_TestSystem.
+10:03:50.775359 Initialization of module LibItsIpv6OverGeoNetworking_TestSystem finished.
+10:03:50.775363 Initializing module LibItsIpv6OverGeoNetworking_Templates.
+10:03:50.775369 Initialization of module LibItsIpv6OverGeoNetworking_Templates finished.
+10:03:50.775373 Initializing module LibItsIpv6OverGeoNetworking_Pixits.
+10:03:50.775377 Initialization of module LibItsIpv6OverGeoNetworking_Pixits finished.
+10:03:50.775381 Initialization of module LibItsIpv6OverGeoNetworking_Functions finished.
+10:03:50.775385 Initializing module LibItsIpv6OverGeoNetworking_Pics.
+10:03:50.775390 Initialization of module LibItsIpv6OverGeoNetworking_Pics finished.
+10:03:50.775401 Initializing module LibSecurity_Certificates.
+10:03:50.775406 Initialization of module LibSecurity_Certificates finished.
+10:03:50.775410 Initializing module LibSecurity_Hash.
+10:03:50.775414 Initialization of module LibSecurity_Hash finished.
+10:03:50.775419 Initializing module LibSecurity_Hmac.
+10:03:50.775423 Initialization of module LibSecurity_Hmac finished.
+10:03:50.775427 Initializing module LibSecurity_Signature.
+10:03:50.775431 Initializing module http_www_w3_org_2000_09_xmldsig.
+10:03:50.775436 Initializing module XSD.
+10:03:50.775441 Initializing module UsefulTtcn3Types.
+10:03:50.775445 Initialization of module UsefulTtcn3Types finished.
+10:03:50.775449 Initialization of module XSD finished.
+10:03:50.775453 Initialization of module http_www_w3_org_2000_09_xmldsig finished.
+10:03:50.775648 Initialization of module LibSecurity_Signature finished.
+10:03:50.775656 Initializing module NoTargetNamespace.
+10:03:50.775661 Initialization of module NoTargetNamespace finished.
+10:03:50.775666 Initializing module PreGenRecordOf.
+10:03:50.775670 Initialization of module PreGenRecordOf finished.
+10:03:50.775674 Initializing module TitanLoggerApi.
+10:03:50.775678 Initialization of module TitanLoggerApi finished.
+10:03:50.775683 Initializing module http_www_w3_org_XML_1998_namespace.
+10:03:50.775687 Initialization of module http_www_w3_org_XML_1998_namespace finished.
+10:03:50.775694 Configuration data was processed successfully.
+10:03:50.776168 MTC was created. Process id: 356.
+10:04:12.184577 Exit was requested from MC. Terminating HC.
+10:04:12.184979 Disconnected from MC.
+10:04:12.185028 TTCN-3 Host Controller finished.

@@ -1,3 +1,7 @@
+if(ESP_PLATFORM)
+    include("${CMAKE_CURRENT_LIST_DIR}/ports/esp_idf/CMakeLists.txt")
+    return()
+endif()
 cmake_minimum_required(VERSION 3.14)
 cmake_policy(VERSION 3.14...3.31)
 project(Vanetza VERSION 26.02)
