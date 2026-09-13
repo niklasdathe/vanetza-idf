@@ -94,6 +94,69 @@ see docs/idf/validation.md for the full diagnosis and
 
 Device execution has not been attempted for this suite.
 
+## Security
+
+`ports/esp_idf/tools/build_etsi_security_adapter.py` links
+`ports/esp_idf/tests/etsi_security_adapter.cpp` with a separately compiled
+`AtsSecurity` (official testcase objects unchanged; the framework's own
+GeoNetworking/CAM/DENM port objects are replaced, the same disposable
+`geonetworking_codec.cc` overlay as for GeoNetworking is applied to this build
+only). The adapter covers the sending side: GN-MGMT beacons through the GN core,
+CAM and DENM carriers from the test application behind the upper tester ports.
+Receiving-side cases are not wired (GAP-SEC-001).
+
+Generate an isolated test trust domain in the framework's certificate pool
+layout, then run the two configurations (the GN-MGMT cases must run without the
+CAM carrier, which restarts the beacon timer, TS 103 836-4-1 clause 10.3.5):
+
+```sh
+cmake -S ports/esp_idf -B build-host -DVIDF_TESTS=ON -DVIDF_SECURITY=ON
+cmake --build build-host
+./build-host/vidf_test_pool /path/to/new-pool-directory        # <name>.oer, <name>.vkey, index.lst
+python3 ports/esp_idf/tools/build_etsi_security_adapter.py \
+  --etsi /path/to/TS.ITS --titan /path/to/titan/Install \
+  --out /path/to/new-build-directory
+python3 ports/esp_idf/tools/run_etsi.py \
+  --titan /path/to/titan/Install \
+  --binary /path/to/new-build-directory/AtsSecurity \
+  --config ports/esp_idf/tests/etsi_security_gn.cfg \
+  --expected-cases ports/esp_idf/tests/etsi_security_gn_cases.json \
+  --sut ./build-host/vidf_sut --sut-args "--security-pool ./certificates" \
+  --pool /path/to/new-pool-directory \
+  --out /path/to/new-result-directory-gn
+python3 ports/esp_idf/tools/run_etsi.py \
+  --titan /path/to/titan/Install \
+  --binary /path/to/new-build-directory/AtsSecurity \
+  --config ports/esp_idf/tests/etsi_security_facilities.cfg \
+  --expected-cases ports/esp_idf/tests/etsi_security_facilities_cases.json \
+  --sut ./build-host/vidf_sut --sut-args "--security-pool ./certificates" \
+  --pool /path/to/new-pool-directory \
+  --out /path/to/new-result-directory-facilities
+```
+
+`--pool` copies the pool to `<out>/certificates` (the SUT reads it from there
+through `--sut-args`, the testcases through `PX_CERTIFICATE_POOL_PATH`/
+`PX_IUT_SEC_CONFIG_NAME`) and records each file's hash. The SUT must be a
+native Linux build, as for GeoNetworking. Pool tickets start one minute before
+generation and last 24 hours; regenerate the pool for a campaign run later
+than that.
+
+The `[TESTPORT_PARAMETERS]` of both configurations set
+`enable_security_checks=1` on the GeoNetworking port: the framework's own
+security services verify every transmission of the SUT against the pool and a
+failed verification discards the packet. `system.utPort.params` selects the
+CAM carrier period of the test application (`cam_carrier_ms`), the only
+stimulus difference between the two configurations. `AcEnableSecurity` names
+the certificate the *test system* would sign with; the adapter accepts it when
+it exists in the pool and applies the enforcement flag, but signs no
+test-system packets.
+
+Expected outcome with this library (retained in `docs/idf/evidence/security-host-01`
+and `-02`): 14 of 15 cases pass; `TC_SEC_ITSS_SND_GENMSG_05_BV` fails on a unit
+defect of the testcase itself (docs/idf/validation.md). Device execution of this
+suite has not been attempted; the device runs the same security entity in the
+component tests (`security-device-03`).
+
 ## Independent radio reception
 
 After flashing the test application on two C5 boards, use:

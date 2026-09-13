@@ -69,8 +69,13 @@ listed in [validation](validation.md) have actually been checked.
 `CONFIG_VANETZA_IDF_CAM`, `..._DENM` and `..._VAM` control individual codecs.
 The source manifest includes only the ASN.1 types transitively needed by enabled
 services. `CONFIG_VANETZA_IDF_HIL` adds transport-independent tester framing;
-it defaults off. Optional features are removed at compile time, rather than
-being permanently allocated and merely ignored at runtime.
+it defaults off. `CONFIG_VANETZA_IDF_SECURITY` (default on with the network
+profile) builds the signing security entity, the PSA crypto backend and the
+identifier change; `CONFIG_VANETZA_IDF_SECURITY_VERIFY` names the missing
+verification and fails the build when selected; `CONFIG_VANETZA_IDF_PKI`
+(default off) adds the TS 102 941 request/response core. Optional features are
+removed at compile time, rather than being permanently allocated and merely
+ignored at runtime.
 
 The core has no target-specific headers. It is intended for any ESP32 supported
 by the selected ESP-IDF/toolchain with sufficient memory. A C5 radio backend is
@@ -106,6 +111,73 @@ This binding follows EN 303 797 Annex B.2. It is a local C++ representation of
 the illustrated service primitives, **not** an ETSI-defined binary ABI. In
 particular, neither a C++ object layout nor raw structs should be sent over BLE,
 SPI or USB. Define an explicit versioned serialization for an inter-device link.
+
+## Security entity and identity management
+
+`vanetza_idf/security.hpp` provides a signing security entity for the SN-SAP
+(TS 102 723-8) that the GeoNetworking router calls for every outgoing packet
+when `itsGnSecurity` is set. The application provisions it; nothing is built
+in:
+
+```cpp
+using namespace vanetza_idf::security;
+vanetza_idf::BackendMbedTls backend;          // PSA Crypto (host: vanetza::security::BackendOpenSsl)
+TrustConfiguration trust;                     // root CA and the AA(s) of the tickets, COER
+trust.add_root(root_coer); trust.add_authority(aa_coer);
+CertificatePool pool {backend};               // authorization tickets with their private keys
+pool.add(at_coer, at_private_key);            // TS 103 097 clause 7.2.1 profile checked, key probed
+SecurityEntity entity {runtime, position_provider, backend, pool, trust};
+Stack stack {config, runtime, access, &entity};
+```
+
+The entity applies the TS 103 097 V2.2.1 signing profiles by ITS-AID and the
+SN-ENCAP `context_information`: CAM (clause 7.1.1: digest, certificate once
+per second or when a new CAM signer was reported), DENM (clause 7.1.2:
+certificate, generationLocation), generic/GN-MGMT (clause 7.1.3), VAM
+(TS 103 300-3 clause 6.5: individual 1 s, cluster 500 ms through
+`context::vam_cluster`). Without a valid ticket for the requested ITS-AID and
+permissions, or without an anchored chain, the request is refused and counted
+(`SecurityEntity::statistics()`); nothing is transmitted unsigned. SN-DECAP
+returns the report of the missing verification and never `Success`
+(docs/idf/conformance.md GAP-SEC-001).
+
+`IdentityManager` implements the identifier change of TS 102 723-8 clause 6.3:
+subscribers (the GN core when `itsGnLocalAddrConfMethod` is ANONYMOUS, the
+facilities layer through `sf_sap.hpp`, any other layer through `sn_sap.hpp`)
+receive PREPARE, answer through the responder, then COMMIT with the HashedId8 of
+the next ticket or ABORT; ID-LOCK holds the identifier for 0..255 s. A
+subscriber may run in the same task, in another task or process, or on another
+device; the responder object may be answered later from anywhere. The library
+defines no transport for that and no policy for *when* to change: the
+application triggers, the manager sequences.
+
+The private keys of the tickets stay with the application: the pool holds
+them, the backend imports them as volatile PSA keys, and no key ever leaves the
+device through this library. The test trust domain of the component tests
+(`tests/test_trust_domain.*`, `vidf_test_pool`) is generated per run and is not
+a PKI.
+
+## Cross-layer SAPs
+
+The management and security SAPs of the ITS station are bound as plain C++
+types and `*_request_submit` functions, one header per SAP, each declaration
+commented with its standard, edition and clause:
+
+| Header | SAP | Serves |
+|---|---|---|
+| `sn_sap.hpp` | SN-SAP, TS 102 723-8 V2.0.0 (V1.1.1 Tables 10 to 27) | SN-ENCAP/-DECAP into the security entity; SN-IDCHANGE-*/SN-ID-LOCK into the identity manager |
+| `sf_sap.hpp` | SF-SAP, TS 102 723-9 V1.1.1 | The same identity manager for the facilities layer (clause 4.1.5); SF-SIGN/-VERIFY/-ENCAP/-DECAP as types only |
+| `mn_sap.hpp` | MN-SAP, TS 102 723-4; TS 103 836-4-1 Annex K; TS 103 175 clause 8.3 | `CORE_MMT_response_apply` (time, position, address, TC mapping) into the stack; DCC N-Params through the application's provider |
+| `mf_sap.hpp` | MF-SAP, TS 102 723-5 V2.0.0; TS 103 175 clause 8.4 | DCC F-Params into the application's facilities layer |
+| `mi_sap.hpp` | MI-SAP, TS 102 723-3; TS 103 175 clause 8.2 | DCC I-Params through the application's access adapter |
+
+The peer of each binding (management entity, facilities layer, access adapter,
+identifier-change subscriber) may live in the same task, another task or
+process, or another device. The library defines no transport, serialization or
+RPC for these primitives, invents no DCC measurement (an absent provider
+answers ErrStatus 250, an undefined command ErrStatus 5 per TS 102 723-3 clause
+5.2.3) and keeps every optional peer compile-time selectable. The default build
+is one un-split station.
 
 ## Own the stack from one event loop
 
@@ -204,7 +276,7 @@ test application on ESP32 -> service/BTP/position/security hooks -> stack
 | BTP upper tester | `Stack::request(BtpRequest)`; result/events from the actual operation and `on_receive` | Test BTP-A/B headers, payload delivery and port handling |
 | GN upper tester | Router request/configuration through the test application | Test supported GN transports, forwarding and lifetimes; unsupported transports remain explicitly unimplemented |
 | Position/time control | `Stack::update_position` and `Stack::advance` | Deterministic host/component tests; physical campaigns use measured real time and ATS-defined timing tolerances |
-| Security | Injected `SecurityEntity`, real credentials and trust configuration | Test signing/verification and authorization; an absent signer cannot produce success |
+| Security | Injected `SecurityEntity`, real credentials and trust configuration; `vidf_sut --security-pool` for the host | Test signing and authorization (`etsi_security_gn.cfg`, `etsi_security_facilities.cfg`); an absent signer cannot produce success and receiving-side cases stay unexecuted until verification exists |
 | Software lower tester | `Access::request` (outgoing GNPDU), `Stack::indicate` (incoming GNPDU and metadata) | HIL for BTP/GN on the MCU while bypassing RF; codec conversion must preserve the ATS lower-port semantics |
 | Physical lower tester | Independent ITS-G5 capture/injection radio | Test MAC/PHY, channel behavior, radiated packets and integrated ITS-G5 behavior |
 

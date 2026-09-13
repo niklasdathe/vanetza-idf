@@ -5,12 +5,12 @@
   "port": "COM11",
   "status": "pass",
   "reset": "none",
-  "checks": 500,
-  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2); 500 checks = the 626 host checks minus the OpenSSL-only oracle tests",
+  "checks": 503,
+  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2); 503 checks = the 629 host checks minus the OpenSSL-only oracle tests",
   "capture": "listen-only after the esptool post-flash reset; the boot banner precedes the first retained line",
-  "resolves": "evidence/security-device-02 'OER decoding failed': device heap exhaustion in test_fail_closed (five concurrent test stations, ~25-45 kB each; 14 kB free when the asn1c copy failed). The test now scopes each scenario; the library was not changed. The board became unflashable after that failing run because the ROM UART0 clock-enable repair only ran inside the HIL server, which a failed test run never reaches; app_main now applies it first (COM20 still needs one power cycle before it can be flashed again).",
+  "resolves": "evidence/security-device-02 'OER decoding failed': device heap exhaustion in test_fail_closed (five concurrent test stations, ~25-45 kB each; 14 kB free when the asn1c copy failed). The test now scopes each scenario; the library was not changed. The board became unflashable after that failing run because the ROM UART0 clock-enable repair only ran inside the HIL server, which a failed test run never reaches; app_main now applies it first (COM20 still needs one boot into the ROM download mode by hand before it can be flashed again).",
   "sha256": {
-    "application": "c8566c8d8ffd62d182a4ebf30c5fb02c2c9b4c4257c26aed9790d8604b481f28",
+    "application": "5fd4602978f12bf18ad9a19e88836ff066450a0359092efb4b865192b9632eb5",
     "bootloader": "93903cefa2bae3f5805a604ae744fabfdea78a866a1230ec3cc129190b93fe40",
     "partition_table": "73c0b5c3e5fcba3a151cc70c453c93dd5f4798899e7f2f8cca76da1f32ffc501",
     "sdkconfig": "caa03c6c8556d56b8ac848bc142ce68331b4a9cae3081590d4c7111338bc60a6"

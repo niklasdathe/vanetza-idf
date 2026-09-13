@@ -310,6 +310,23 @@ void test_fail_closed() {
         auto decap = r.entity->decapsulate_packet(DecapRequest {SecuredMessageView {variant}});
         check(!is_successful(decap.report) && decap.report == VerificationReport::Configuration_Problem &&
               decap.its_aid == aid::VRU, "SN-DECAP reports the missing verification, not success");
+        // The same through the SN-SAP octet binding (TS 102 723-8 Tables 26/27).
+        const auto& frame = r.radio.packets.back().data;
+        SN_SAP::SN_DECAP_request request;
+        request.sec_packet.assign(frame.begin() + 4, frame.end());
+        request.sec_packet_length = request.sec_packet.size();
+        SN_SAP::SN_DECAP_confirm confirm;
+        check(SN_SAP::SN_DECAP_request_submit(*r.entity, request, confirm) == Result::accepted &&
+              confirm.report == VerificationReport::Configuration_Problem && confirm.its_aid == aid::VRU &&
+              confirm.plaintext_packet_length == confirm.plaintext_packet.size() && !confirm.plaintext_packet.empty(),
+              "SN_DECAP_request_submit carries the report and the claimed ITS-AID");
+        request.sec_packet_length += 1;
+        check(SN_SAP::SN_DECAP_request_submit(*r.entity, request, confirm) == Result::invalid_argument,
+              "SN-DECAP length mismatch is rejected");
+        request.sec_packet = {0x03, 0x81, 0x00};
+        request.sec_packet_length = 3;
+        check(SN_SAP::SN_DECAP_request_submit(*r.entity, request, confirm) == Result::invalid_argument,
+              "SN-DECAP of an undecodable packet is rejected");
     }
 }
 

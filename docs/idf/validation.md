@@ -15,7 +15,14 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Complete facilities/security ATS | Not executed | Full services and security integration remain incomplete |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 629 checks | Security entity, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 806 checks; security off 117; access-only 55; Linux Release 629 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 503 checks | PSA Crypto backend of mbedTLS 4.1.0; `CONFIG_VANETZA_IDF_PKI=y`; see [security-device-03](evidence/security-device-03/result.json) and the heap note below |
+| Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below |
+| Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below |
+| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-05](evidence/btp-host-05/result.json) |
+| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-02](evidence/geonetworking-host-02/result.json): no regression |
+| Security ATS receiving side, PKI ATS | Not executed | SN-DECAP verification does not exist (GAP-SEC-001); the TS 102 941 core has no transport (GAP-PKI-001) |
+| Complete facilities ATS | Not executed | Full services remain incomplete |
 
 The [BTP result](evidence/btp-host-04.json) records executable and configuration
 hashes, timestamps and every testcase verdict. Its five cases are
@@ -186,6 +193,119 @@ Evidence: [geonetworking-host-01](evidence/geonetworking-host-01/result.json)
 (host SUT, native Linux build — WSL interop could not pipe stdin/stdout to a
 Windows-built host executable, so the host SUT for this suite is built
 natively per [test-campaigns.md](test-campaigns.md)).
+
+### Security entity, cross-layer SAPs and the AtsSecurity campaigns
+
+The security work (branch `feature/etsi-cross-layer-security`, one commit per
+increment) adds a signing security entity, the identifier change of
+TS 102 723-8 clause 6.3, the SN/SF/MN/MF/MI bindings and the TS 102 941
+request/response core; [standards.md](standards.md) lists the clauses. Every
+result below comes from this port.
+
+**Crypto backend.** `BackendMbedTls` uses only the PSA Crypto API because
+ESP-IDF 6.0.2 ships mbedTLS 4.1.0 (TF-PSA-Crypto), whose classic ecp/bignum
+headers are private. PSA imports Weierstrass public keys only in uncompressed
+form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
+(y = rhs^((p+1)/4), p = 3 mod 4 for NIST P-256 and both Brainpool curves).
+The host tests run the same backend against OpenSSL as an oracle (signature
+cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
+known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
+build (806 checks); the device runs the PSA path natively (503 checks, the
+difference being the OpenSSL-only oracle tests).
+
+**Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
+7.2.1 ticket profile and probes the key against the certificate (sign then
+verify) before accepting it; `TrustConfiguration` anchors roots and AAs; the
+entity refuses a request without a valid ticket for the ITS-AID/SSP, with an
+expired ticket, or with a ticket whose issuer is not anchored, and counts each
+refusal. Nothing is transmitted unsigned when `itsGnSecurity` is set, and
+`decapsulate_packet` reports `Configuration_Problem`/`Unsigned_Message`, never
+success (`test_fail_closed`).
+
+**Identifier change.** `IdentityManager` runs PREPARE/COMMIT/ABORT/DEREG rounds
+with a response timeout (default 500 ms), lock with expiry, deferred responders
+(a subscriber may answer from another context) and re-entrancy guarding; the
+GN core subscribes when `itsGnLocalAddrConfMethod` is ANONYMOUS, marks
+`identity_change_pending` on PREPARE, flushes the forwarding buffers and
+rewrites the MID from the committed HashedId8 (least significant six octets,
+locally administered bit set); the SF binding drives a VRU-style subscriber in
+`test_sf_facilities_hook`. The corresponding Linux Release run initially
+segfaulted in that test: the entity was destroyed after the subscriber it
+notifies on DEREG had gone out of scope (a use-after-scope in the *test*, not
+the library), fixed by scoping the entity's lifetime explicitly.
+
+**Upstream Vanetza changes (additive only).** `SignRequest::context_information`
+and `DataRequest::security_context` carry the SN-ENCAP context information from
+BTP/GN request to the security entity (`Router::encap_packet` gained the
+parameter); `Router::flush_forwarding_buffers()` is public so the GN core can
+drop buffered packets carrying the old identifier on PREPARE. Nothing else in
+`vanetza/` changed. One upstream bug was found and worked around in the tests
+rather than patched: `v3::SecuredMessage::get_inline_p2pcd_request()` widens
+each 3-octet `HashedId3` through an 8-octet conversion and truncates the wrong
+end, so `test_signing_profiles` reads the ASN.1 field directly.
+
+**AtsSecurity campaigns.** `etsi_security_adapter.cpp` implements the
+`ItsSecSystem` ports (GeoNetworking, GN/CAM/DENM upper testers, adapter
+control) against the official `AtsSecurity` testcase objects
+([build_etsi_security_adapter.py](../../ports/esp_idf/tools/build_etsi_security_adapter.py),
+[adapter-build.json](evidence/security-host-01/adapter-build.json)). The
+host SUT is `vidf_sut --security-pool ./certificates`, the pool an isolated test
+trust domain written by `vidf_test_pool` in the framework's own loader layout
+(hashes in each `result.json`). Three properties of the run matter for reading
+the verdicts:
+
+1. *Verification is the framework's.* Secured transmissions are unwrapped by
+   `security_services_its::verify_and_extract_gn_payload` with
+   `enable_security_checks=1`, so a failed signature/digest/generation-time
+   check discards the packet instead of passing it up with a warning; a PASS
+   therefore includes a signature the framework verified against
+   `CERT_IUT_A_AT`, not only the template match.
+2. *One SUT per campaign, shared across TITAN components.* TITAN's parallel
+   runtime forks the MTC and each PTC from the host controller; the DENM cases
+   trigger from a PTC while the MTC observes the GN port. The adapter starts the
+   SUT once in the host controller before any fork and serialises every
+   command/reply exchange with a process-shared robust mutex; the DENM carrier
+   is deferred to the next clock advance so the transmission surfaces on the
+   component that owns the GN port.
+3. *Two stimulus configurations, no per-testcase switching.* A running CAM
+   carrier restarts the beacon timer with every SHB (TS 103 836-4-1 clause
+   10.3.5), so the GN-MGMT cases run with the carrier off
+   ([etsi_security_gn.cfg](../../ports/esp_idf/tests/etsi_security_gn.cfg))
+   and the CAM/DENM cases with it on
+   ([etsi_security_facilities.cfg](../../ports/esp_idf/tests/etsi_security_facilities.cfg),
+   `PX_GN_UPPER_LAYER := e_btpB`). The carriers are syntactically valid
+   Release 2 CAM (SHB) and DENM (GBC into a 500 m circle, TS 103 831 clause
+   5.4.2) PDUs of the test application; no CA/DEN service is claimed.
+
+Verdicts ([security-host-01](evidence/security-host-01/result.json),
+[security-host-02](evidence/security-host-02/result.json)):
+
+| Case | Verdict | Note |
+|---|---|---|
+| `TC_SEC_ITSS_SND_GENMSG_01..04, 06..08_BV` | pass | Secured beacons, psid 141, digest/certificate alternation, generationTime, signedData payload |
+| `TC_SEC_ITSS_SND_GENMSG_05_BV` | **fail** | The testcase compares `validityPeriod.start` (Time32, seconds) with a range built from `v_curTime` in microseconds (pinned `ItsSecurity_TestCases.ttcn` line 7313; unchanged at the upstream master's line 6672), so no IUT passes it. The test purpose's own condition (start <= generation time < start + duration) holds for the logged values. Retained, not tuned; [analysis](evidence/security-host-01/analysis.md) |
+| `TC_SEC_ITSS_SND_CAM_01..04_BV` | pass | psid 36, headerInfo without expiry/location, signer digest or certificate with appPermissions |
+| `TC_SEC_ITSS_SND_DENM_01..03_BV` | pass | psid 37, generationLocation present, GBC packet |
+
+The receiving-side cases (`TC_SEC_ITSS_RCV_*`) were not executed: the SUT
+cannot verify, and running them would only document INCONC.
+
+**Device heap.** The first device run with security failed in `test_fail_closed`
+with "OER decoding failed" ([security-device-02](evidence/security-device-02/result.json)).
+Section markers now print the free heap on the device; the re-run showed 14 kB
+free when the asn1c copy failed, with five test stations (router, security
+entity, trust domain each) alive at once, 25-45 kB apiece. The test scopes each
+scenario now; the library was not changed
+([security-device-03](evidence/security-device-03/console.txt), 112 kB free at
+every section). Sizing note for applications: one secured station on the C5
+test firmware leaves roughly 110 kB of the internal heap.
+
+**Board recovery.** That failing device run also left the board unflashable
+("Write timeout" from esptool): the ROM UART0 clock-enable repair described
+above lived in `run_hil_server()`, which a failed test run never reaches, so
+the next USB-triggered warm reset hung in ROM. `app_main` applies the repair
+first now. A board still running the older image needs one boot into the ROM
+download mode by hand (hold BOOT, press RST) before it can be flashed again.
 
 ### Independent C5 radio pair: a real bug in an "FCS" check that could never pass
 

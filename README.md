@@ -51,9 +51,12 @@ flowchart TB
             btp --> gn
             gn --> access
         end
-        security["SecurityEntity boundary: external provider; Release 2 integration pending"]
+        security["Security entity: TS 103 097 signing, ticket pool, identifier change; verification pending"]
+        saps["Cross-layer SAP bindings: SN, SF, MN, MF, MI"]
         management -.-> gn
         security -.-> gn
+        saps -.-> security
+        saps -.-> gn
     end
     application -->|"Facilities PDU entry"| facilities
     application -->|"BTP-DATA entry"| btp
@@ -66,7 +69,7 @@ flowchart TB
     classDef available fill:#e6f4ea,stroke:#237a3b,color:#17251b
     classDef external fill:#e8f0fe,stroke:#4169a1,stroke-dasharray:5 4,color:#182439
     classDef pending fill:#fff3cd,stroke:#9b7110,stroke-dasharray:5 4,color:#392c0a
-    class cam,denm,vam,btp,gn,access,management,hil available
+    class cam,denm,vam,btp,gn,access,management,hil,saps available
     class application,adapter,etsi external
     class services,security,radio pending
 ```

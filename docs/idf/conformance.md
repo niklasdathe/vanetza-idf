@@ -1,9 +1,11 @@
 # Conformance status
 
 No full-stack ETSI conformity is claimed for this port. The five official BTP
-cases pass against the host stack, and one official GeoNetworking case
+cases pass against the host stack, one official GeoNetworking case
 (`TC_GEONW_FDV_SHB_BV_01`, SHB source generation) passes against the host
-stack; this is not a complete N&T/access verdict. See
+stack, and 14 of the 15 executed official Security sending-side cases pass
+(the 15th fails on a defect of the testcase, see validation.md); this is not a
+complete N&T/access/security verdict. See
 [interface assessment](interface-assessment.md) for the SAP contract review.
 The intended deliverable is a Release 2 ITS-G5 library; the following required
 work remains visible rather than being hidden behind successful compilation.
@@ -14,11 +16,12 @@ work remains visible rather than being hidden behind successful compilation.
 | GAP-CA-001 | CA Basic Service | R2 CAM UPER codec, validation and BTP submission | Generation rules, vehicle/RSU state, special/low-frequency containers, authorization and complete CA service tests |
 | GAP-DEN-001 | DEN Basic Service | R2 DENM UPER codec, validation and BTP submission | Trigger/update/terminate, action-ID tables, repetition/validity, receiving lifecycle and complete DEN service tests |
 | GAP-VRU-001 | VRU Basic Service | R2 VAM UPER codec, validation and BTP submission | VAM generation and redundancy mitigation, VRU/cluster lifecycle and complete VBS service tests |
-| GAP-SEC-001 | Security | Injectable security entity; missing signer fails closed | R2 ASN.1/profile migration, production crypto backend, credential/trust/pseudonym integration, security ATS |
-| GAP-SEC-002 | Receive security metadata | Report/ITS-AID/permissions and optional certificate ID forwarded | Security ATS must verify the complete metadata path |
+| GAP-SEC-001 | Security | `security::SecurityEntity` signs with the TS 103 097 V2.2.1 profiles from a provisioned ticket pool and trust configuration (`VIDF_SECURITY`, default on); PSA Crypto backend on the device, OpenSSL on the host; identifier change (TS 102 723-8 clause 6.3) with the GN core and facilities as subscribers; official AtsSecurity sending-side cases pass with framework-side signature verification | Verification of received messages (SN-DECAP reporting `Success`: chain and signature check, permissions, time/location plausibility, replay) and P2P certificate distribution are not implemented; `VIDF_SECURITY_VERIFY` fails the build. Encryption at the SN-SAP, CTL/CRL processing and a pseudonym change policy are absent. The receiving-side Security ATS cases were not executed |
+| GAP-SEC-002 | Receive security metadata | Report/ITS-AID/permissions and optional certificate ID forwarded; SN-DECAP returns `Configuration_Problem`/`Unsigned_Message`, never success, so no packet is passed up as verified | Once GAP-SEC-001 verification exists, the Security ATS receiving cases must verify the complete metadata path |
+| GAP-PKI-001 | TS 102 941 client | `VIDF_PKI` (default off): EnrolmentRequest/Response and AuthorizationRequest/Response with proof of possession, ECIES/AES-CCM, request hash and `pskRecipInfo` decryption; host and PSA implementations interoperate | No HTTP/transport, CTL/CRL/ECTL retrieval, butterfly keys, re-enrolment scheduling or credential storage; no PKI ATS executed |
 | GAP-ACC-001 | ITS-G5 access | EN 303 797 AL_DATA binding, external Access injection, experimental C5 adapter; independent two-board real-RF reception verified passing (`radio_pair.py`, docs/idf/validation.md) | Complete IN-SAP and required controls/measurements; DCC; this passing reception check is exact-content-match at close range, not spectral mask, frequency accuracy, sensitivity, EIRP or full ITS-G5 RF conformance |
 | GAP-DCC-001 | DCC | Upstream DCC sources available in network build | Correct R2 access integration, real CBR inputs, queue/airtime behavior and verification |
-| GAP-HIL-001 | TTCN/HIL | Generic upper/lower hooks, bounded optional framing; BTP and GeoNetworking SUT adapters (host and, for BTP, device) | GeoNetworking adapter passes one single-component case (GAP-GN-001); multi-component (PTC) test cases are not supported by either adapter; CAM/DENM/VRU/Security/IPv6oGN adapters do not exist. The GeoNetworking adapter's build also carries a documented, hash-tracked overlay working around a null-pointer bug in the external ETSI framework's own codec (`geonetworking_codec.cc`), applied only to this tool's own build output, never to the pinned checkout |
+| GAP-HIL-001 | TTCN/HIL | Generic upper/lower hooks, bounded optional framing; BTP, GeoNetworking and Security SUT adapters (host and, for BTP, device); the Security adapter shares one SUT process across TITAN components, so its DENM cases (triggered from a PTC) run | GeoNetworking adapter passes one single-component case (GAP-GN-001); GeoNetworking multi-component (PTC) test cases are not supported; the Security adapter covers the sending side only; CAM/DENM/VRU/IPv6oGN adapters do not exist. The GeoNetworking adapter's build also carries a documented, hash-tracked overlay working around a null-pointer bug in the external ETSI framework's own codec (`geonetworking_codec.cc`), applied only to this tool's own build output, never to the pinned checkout |
 
 PICS must reflect these limits. Do not mark unsupported functionality as passing,
 silently downgrade a transport, use dummy certificates, or acknowledge a service
@@ -27,8 +30,9 @@ official ATS verdicts and adapted Release 2 verdicts.
 
 The source tree includes legacy security envelope parsing because the upstream
 router's `SecuredMessage` variant depends on it. This is an explicit dependency
-gap, not a selected legacy service or claim of R2 security support. Null/dummy
-signers, PKI clients and experimental PQC are excluded from the IDF source list.
+gap, not a selected legacy service. Null/dummy signers, the upstream PKI tools
+and experimental PQC are excluded from the IDF source list; the TS 102 941 core
+of this port is a separate, optional feature (GAP-PKI-001).
 
 An access-only deployment requires all higher-layer protocol/service behavior
 to exist in its external peer. A network deployment requires complete facilities

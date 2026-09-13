@@ -10,5 +10,5 @@
 -- test_sf_facilities_hook (free heap 111884, largest block 81920)
 -- test_ecies (free heap 111292, largest block 81920)
 -- test_enrolment_and_authorization (free heap 111292, largest block 81920)
-PASS: 500 checks (host/component tests, not ETSI ATS verdicts)
+PASS: 503 checks (host/component tests, not ETSI ATS verdicts)
 VIDF_TEST_RESULT=0

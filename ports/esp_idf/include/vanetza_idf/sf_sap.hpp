@@ -58,23 +58,29 @@ struct SF_ID_UNLOCK_request { LockHandle lock_handle; };
 /// Clause 5.2.11 / Table 22 (message example): SF-LOG-SECURITY-EVENT.request
 using SF_LOG_SECURITY_EVENT_request = security::SecurityEvent;
 
+/// TS 102 723-9 V1.1.1 clause 5.2.5: SF-IDCHANGE-SUBSCRIBE (Tables 10/11)
 inline SF_IDCHANGE_SUBSCRIBE_confirm SF_IDCHANGE_SUBSCRIBE_request_submit(security::IdChangeService& service,
                                                                           SF_IDCHANGE_SUBSCRIBE_request primitive) {
     return {service.subscribe(std::move(primitive.idchange_event_hook), std::move(primitive.subscriber_data))};
 }
+/// Clause 5.2.7: SF-IDCHANGE-UNSUBSCRIBE (Tables 14/15)
 inline Result SF_IDCHANGE_UNSUBSCRIBE_request_submit(security::IdChangeService& service,
                                                      SF_IDCHANGE_UNSUBSCRIBE_request primitive) {
     return service.unsubscribe(primitive.subscription);
 }
+/// Clause 5.2.8: SF-IDCHANGE-TRIGGER (Tables 16/17)
 inline Result SF_IDCHANGE_TRIGGER_request_submit(security::IdChangeService& service, SF_IDCHANGE_TRIGGER_request) {
     return service.trigger();
 }
+/// Clause 5.2.9: SF-ID-LOCK (Tables 18/19), Duration in seconds 0..255
 inline SF_ID_LOCK_confirm SF_ID_LOCK_request_submit(security::IdChangeService& service, SF_ID_LOCK_request primitive) {
     return {service.lock(primitive.Duration)};
 }
+/// Clause 5.2.10: SF-ID-UNLOCK (Tables 20/21)
 inline Result SF_ID_UNLOCK_request_submit(security::IdChangeService& service, SF_ID_UNLOCK_request primitive) {
     return service.unlock(primitive.lock_handle);
 }
+/// Clause 5.2.11: SF-LOG-SECURITY-EVENT (Tables 22/23)
 inline void SF_LOG_SECURITY_EVENT_request_submit(security::SecurityEntity& entity,
                                                  SF_LOG_SECURITY_EVENT_request primitive) {
     entity.log_security_event(std::move(primitive));
