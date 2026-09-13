@@ -1,0 +1,60 @@
+Open On-Chip Debugger v0.12.0-esp32-20260424 (2026-04-24-15:13)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+Info : esp_usb_jtag: VID set to 0x303a and PID to 0x1001
+Info : esp_usb_jtag: capabilities descriptor set to 0x2000
+Info : esp_usb_jtag: serial (10:BD:A3:CC:01:94)
+Info : esp_usb_jtag: Device found. Base speed 24000KHz, div range 1 to 255
+Info : clock speed 24000 kHz
+Info : JTAG tap: esp32c5.tap0 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : JTAG tap: esp32c5.tap1 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : [esp32c5] datacount=1 progbufsize=2
+Info : [esp32c5] Examined RISC-V core
+Info : [esp32c5]  XLEN=32, misa=0x40103105
+Warn : [esp32c5] Failed to read memory via program buffer.
+Info : [esp32c5] Chip revision v1.0
+Info : [esp32c5] Examination succeed
+Info : [esp32c5] starting gdb server on 3333
+Info : Listening on port 3333 for gdb connections
+Info : [esp32c5] Target halted, PC=0x40807752, debug_reason=00000000
+** program_esp input args <0x2000 verify> **
+Info : JTAG tap: esp32c5.tap0 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : JTAG tap: esp32c5.tap1 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : [esp32c5] Register fp is dirty!
+Info : [esp32c5] Register s1 is dirty!
+Info : [esp32c5] Discarding values of dirty registers.
+Info : [esp32c5] Reset cause (24) - (JTAG CPU reset)
+** Programming Started **
+Info : Flash mapping 0: 0x10020 -> 0x42140020, 518 KB
+Info : Flash mapping 1: 0xa0020 -> 0x42000020, 1226 KB
+Info : Auto-detected flash bank 'esp32c5.flash' size 8192 KB
+Info : Using flash bank 'esp32c5.flash' size 8192 KB
+** Verifying existing flash content **
+** Existing flash content matches **
+** program_esp input args <0x8000 verify> **
+Magic byte 0xe9 not found, skipping image revision check
+Info : JTAG tap: esp32c5.tap0 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : JTAG tap: esp32c5.tap1 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : [esp32c5] Reset cause (24) - (JTAG CPU reset)
+** Programming Started **
+** Verifying existing flash content **
+** Existing flash content matches **
+** program_esp input args <0x10000 verify> **
+Info : JTAG tap: esp32c5.tap0 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : JTAG tap: esp32c5.tap1 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : [esp32c5] Reset cause (24) - (JTAG CPU reset)
+** Programming Started **
+** Verifying existing flash content **
+** Existing flash content mismatched. Reprogramming the flash **
+Info : PROF: Erased 2031616 bytes in 6127.58 ms
+Info : PROF: Data transferred in 19230.7 ms @ 103.168 KB/s
+Info : PROF: Wrote 2031616 bytes in 19516.5 ms (data transfer time included)
+** Programming Finished in 26620 ms **
+** Verify Started **
+Info : PROF: Flash verified in 810.582 ms 
+** Verify OK **
+Info : JTAG tap: esp32c5.tap0 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : JTAG tap: esp32c5.tap1 tap/device found: 0x00017c25 (mfg: 0x612 (Espressif Systems), part: 0x0017, ver: 0x0)
+Info : [esp32c5] Reset cause (24) - (JTAG CPU reset)
+shutdown command invoked

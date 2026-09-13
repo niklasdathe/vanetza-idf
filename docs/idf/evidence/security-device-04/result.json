@@ -1,0 +1,18 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "port": "COM20",
+  "status": "pass",
+  "reset": "none",
+  "checks": 503,
+  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2); same image as security-device-03 (COM11)",
+  "capture": "listen-only after the OpenOCD 'reset run'; the boot banner precedes the first retained line",
+  "recovery": "This board (USB serial 10:BD:A3:CC:01:94) was left unflashable by the security-device-02 run (esptool 'Write timeout' after every USB warm reset, including after a power cycle, because the old image's failed test run never applied the ROM UART0 clock repair). Programmed over JTAG with OpenOCD (openocd-flash.log): halt, set PCR_UART0_SCLK_EN (mmw 0x60096004 0x400000 0) before each program_esp step, bootloader and partition table already matched, application reprogrammed and verified. After this run, a plain esptool write-flash with --before default-reset succeeded again (the app_main repair holds).",
+  "sha256": {
+    "application": "5fd4602978f12bf18ad9a19e88836ff066450a0359092efb4b865192b9632eb5",
+    "bootloader": "93903cefa2bae3f5805a604ae744fabfdea78a866a1230ec3cc129190b93fe40",
+    "partition_table": "73c0b5c3e5fcba3a151cc70c453c93dd5f4798899e7f2f8cca76da1f32ffc501",
+    "sdkconfig": "caa03c6c8556d56b8ac848bc142ce68331b4a9cae3081590d4c7111338bc60a6"
+  }
+}

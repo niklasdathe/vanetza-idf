@@ -1,0 +1,13 @@
+-- test_trust_domain_and_pool (free heap 112192, largest block 81920)
+-- test_signing_profiles (free heap 111884, largest block 81920)
+-- test_fail_closed (free heap 111884, largest block 81920)
+-- test_fail_closed: unknown issuer (free heap 111884, largest block 81920)
+-- test_fail_closed: expired ticket (free heap 111884, largest block 81920)
+-- test_fail_closed: SN-DECAP (free heap 111884, largest block 81920)
+-- test_identifier_change (free heap 111884, largest block 81920)
+-- test_gn_core_identifier_change (free heap 111884, largest block 81920)
+-- test_sf_facilities_hook (free heap 111884, largest block 81920)
+-- test_ecies (free heap 111292, largest block 81920)
+-- test_enrolment_and_authorization (free heap 111292, largest block 81920)
+PASS: 503 checks (host/component tests, not ETSI ATS verdicts)
+VIDF_TEST_RESULT=0

@@ -17,6 +17,7 @@ port, not inferred from the upstream project or other firmware.
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
 | Host component regression, security on (Windows Debug, OpenSSL) | PASS, 629 checks | Security entity, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 806 checks; security off 117; access-only 55; Linux Release 629 |
 | ESP32-C5 component execution, security on (COM11) | PASS, 503 checks | PSA Crypto backend of mbedTLS 4.1.0; `CONFIG_VANETZA_IDF_PKI=y`; see [security-device-03](evidence/security-device-03/result.json) and the heap note below |
+| ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
 | Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below |
 | Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below |
 | Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-05](evidence/btp-host-05/result.json) |
@@ -304,8 +305,11 @@ test firmware leaves roughly 110 kB of the internal heap.
 ("Write timeout" from esptool): the ROM UART0 clock-enable repair described
 above lived in `run_hil_server()`, which a failed test run never reaches, so
 the next USB-triggered warm reset hung in ROM. `app_main` applies the repair
-first now. A board still running the older image needs one boot into the ROM
-download mode by hand (hold BOOT, press RST) before it can be flashed again.
+first now. The board still running the older image (COM20) was recovered over
+JTAG instead: OpenOCD halts the core, sets `PCR_UART0_SCLK_EN` before each
+`program_esp` step and programs the three images
+([security-device-04](evidence/security-device-04/result.json), `openocd-flash.log`);
+that board then passed the same 503 checks and accepts a plain esptool reset again.
 
 ### Independent C5 radio pair: a real bug in an "FCS" check that could never pass
 
