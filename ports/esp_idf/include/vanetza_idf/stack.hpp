@@ -1,5 +1,6 @@
 #pragma once
 #include <vanetza_idf/access.hpp>
+#include <vanetza_idf/id_change.hpp>
 #include <vanetza/common/manual_runtime.hpp>
 #include <vanetza/common/position_fix.hpp>
 #include <vanetza/geonet/data_request.hpp>
@@ -98,14 +99,29 @@ struct StackConfig {
  * Timer source is injectable for host tests, HIL and ESP-IDF esp_timer.
  * No FreeRTOS task, radio, BLE link, socket or filesystem is opened internally.
  * This is a port of the upstream router; see docs/idf/conformance.md for R2 gaps.
+ *
+ * Identifier change (TS 103 836-4-1 V2.2.1 clause 10.2.1.4, anonymous address
+ * configuration): with itsGnLocalAddrConfMethod == Anonymous and an
+ * IdChangeService, the GN core subscribes at construction and unsubscribes at
+ * destruction. On COMMIT the GN address MID becomes the 48 least significant
+ * bits of the new HashedId8 (TS 102 940 V2.1.1 clause 6.5), with the I/G bit
+ * cleared (a source address is individual) and the U/L bit set; the link-layer
+ * source follows because every request takes it from the GN address. Between
+ * PREPARE and COMMIT the forwarding buffers are flushed and request() returns
+ * Result::identity_change_pending (TS 102 723-8 clause 6.3.1.3). The access
+ * adapter is not notified by the stack: it may subscribe to the same service
+ * (TS 102 723-7 analogy for the IN-SAP side is not defined here).
  */
 class Stack {
 public:
     using Receive = std::function<void(BtpIndication)>;
     using ReceiveGn = std::function<void(GnIndication)>;
     using Report = std::function<void(Result)>;
+    /** id_change may be omitted: when security is a vanetza_idf::security::SecurityEntity
+     * its own identifier-change service is used. */
     Stack(StackConfig, vanetza::ManualRuntime&, Access&,
-          vanetza::security::SecurityEntity* security = nullptr);
+          vanetza::security::SecurityEntity* security = nullptr,
+          security::IdChangeService* id_change = nullptr);
     ~Stack();
     Stack(const Stack&) = delete;
     Stack& operator=(const Stack&) = delete;
@@ -118,6 +134,13 @@ public:
     void on_receive_gn(ReceiveGn);
     void on_access_result(Report);
     const StackConfig& config() const;
+    /// the identifier-change service this stack subscribed to, nullptr without one
+    security::IdChangeService* id_change();
+    vanetza::security::SecurityEntity* security_entity();
+    /// true between PREPARE and COMMIT (or ABORT) of an identifier change
+    bool identity_change_pending() const;
+    /// GeoNetworking address currently in use (MID follows the identifier change)
+    const vanetza::geonet::Address& address() const;
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;

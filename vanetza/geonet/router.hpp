@@ -235,6 +235,13 @@ public:
     const LongPositionVector& get_local_position_vector() const { return m_local_position_vector; }
 
     /**
+     * rief Flush the broadcast and unicast forwarding buffers now.
+     * TS 102 723-8 V1.1.1 clause 6.3.1.3: between an identifier change PREPARE and COMMIT
+     * "caches shall be flushed" so no packet with the old identifier stays queued.
+     */
+    void flush_forwarding_buffers();
+
+    /**
      * \brief Check if router is outside the sectorial contention area
      * See TS 102 636-4-1 v1.2.3 section E.4 and figure E.2 for details.
      *

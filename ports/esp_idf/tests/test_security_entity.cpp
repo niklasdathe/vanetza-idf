@@ -7,7 +7,9 @@
 #include <vanetza_idf/stack.hpp>
 #include <vanetza_idf/facilities.hpp>
 #include "test_backend.hpp"
+#include <vanetza/common/byte_view.hpp>
 #include <vanetza/common/manual_runtime.hpp>
+#include <vanetza/net/packet_variant.hpp>
 #include <vanetza/security/v3/asn1_conversions.hpp>
 #include <vanetza/security/v3/hash.hpp>
 #include <vanetza/security/v3/secured_message.hpp>
@@ -388,6 +390,74 @@ void test_identifier_change() {
     check(local.commands.back() == sec::IdChangeCommand::DEREG, "DEREG delivered when the entity shuts down");
     check(remote.commands.size() == remote_count, "no DEREG for an unsubscribed hook");
 }
+
+// TS 102 940 clause 6.5 / TS 103 836-4-1 clause 10.2.1.4: expected MID for an identifier.
+MacAddress mid_of(const sec::Identifier& id) {
+    MacAddress mid;
+    std::copy(id.begin() + 2, id.end(), mid.octets.begin());
+    mid.octets[0] = (mid.octets[0] & 0xfe) | 0x02;
+    return mid;
+}
+
+void test_gn_core_identifier_change() {
+    Station s;
+    auto at1 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    auto at2 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    s.pool.add(at1.certificate, at1.key);
+    s.pool.add(at2.certificate, at2.key);
+    const auto id1 = *at1.certificate.calculate_digest();
+    const auto id2 = *at2.certificate.calculate_digest();
+    s.cfg.mib.itsGnLocalAddrConfMethod = geonet::AddrConfMethod::Anonymous;
+    s.start();
+    auto& svc = s.entity->id_change();
+    check(s.stack->id_change() == &svc, "anonymous GN core subscribed to the identifier-change service");
+    check(s.stack->address().mid() == mid_of(id1), "initial MID = 48 LSB of the HashedId8, individual + local bits");
+    check(mid_of(id1) != MacAddress {2, 0, 0, 0, 0, 1}, "configured MID replaced by the derived one");
+    s.send(aid::VRU, {0x01});
+    auto frame = s.radio.packets.back();
+    check(frame.source == mid_of(id1), "link-layer source follows the derived MID");
+    auto m = secured_of(frame);
+    auto payload = m.payload();
+    const auto& pdu = boost::get<CohesivePacket>(payload);
+    // Payload = Common Header (8) + SHB header: SO PV starts with the 8-octet GN address, MID at +2.
+    auto view = create_byte_view(pdu, OsiLayer::Network, max_osi_layer());
+    check(view.size() >= 16 && std::equal(mid_of(id1).octets.begin(), mid_of(id1).octets.end(), view.begin() + 10),
+          "SO PV GN address MID carries the identifier");
+    // Remote subscriber keeps PREPARE open: the GN core refuses requests meanwhile.
+    Subscriber remote; remote.defer = true;
+    svc.subscribe(remote.hook());
+    check(svc.trigger() == Result::accepted && svc.change_pending() && s.stack->identity_change_pending(),
+          "PREPARE delivered to the GN core");
+    check(s.send(aid::VRU, {0x01}) == Result::identity_change_pending, "requests refused between PREPARE and COMMIT");
+    GnRequest gn; gn.its_aid = aid::GN_MGMT; gn.data = {1};
+    check(s.stack->request(gn) == Result::identity_change_pending, "raw GN requests refused as well");
+    auto respond = [&remote](bool rc) { auto r = remote.held; remote.held.reset(); r->respond(rc); };
+    respond(true); // PREPARE
+    respond(true); // COMMIT
+    check(!svc.change_pending() && !s.stack->identity_change_pending(), "change committed");
+    check(s.stack->address().mid() == mid_of(id2), "COMMIT applied the new MID to the GN address");
+    check(s.send(aid::VRU, {0x01}) == Result::accepted && s.radio.packets.back().source == mid_of(id2),
+          "packets after COMMIT carry the new link-layer source");
+    m = secured_of(s.radio.packets.back());
+    auto id = v3::get_certificate_id(m.signer_identifier());
+    check(id && *id == id2, "and are signed by the new AT");
+    // Abort leaves the address untouched and lifts the pending state.
+    remote.answer = false; remote.defer = false;
+    svc.trigger();
+    check(!s.stack->identity_change_pending() && s.stack->address().mid() == mid_of(id2), "ABORT keeps the address");
+    // Shutdown unsubscribes the GN core: the entity no longer notifies it.
+    s.stack.reset();
+    remote.answer = true;
+    check(svc.trigger() == Result::accepted && !svc.change_pending() && svc.current_identifier() == id1,
+          "after the stack is gone the change completes with the remaining subscriber only");
+    // Managed/auto address configuration does not subscribe.
+    Station m2;
+    auto at = m2.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    m2.pool.add(at.certificate, at.key);
+    m2.start();
+    check(m2.stack->id_change() == nullptr && m2.stack->address().mid() == MacAddress {2, 0, 0, 0, 0, 1},
+          "managed address configuration keeps the configured MID");
+}
 } // namespace
 
 void test_security_entity() {
@@ -395,4 +465,5 @@ void test_security_entity() {
     test_signing_profiles();
     test_fail_closed();
     test_identifier_change();
+    test_gn_core_identifier_change();
 }

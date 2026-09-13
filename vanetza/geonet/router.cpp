@@ -1267,6 +1267,12 @@ bool Router::decide_pass_up(bool within_destination, const GeoBroadcastHeader& g
     }
 }
 
+void Router::flush_forwarding_buffers()
+{
+    flush_broadcast_forwarding_buffer();
+    flush_unicast_forwarding_buffer(m_local_position_vector.gn_addr);
+}
+
 void Router::flush_broadcast_forwarding_buffer()
 {
     m_bc_forward_buffer.flush(m_runtime.now());

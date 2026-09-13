@@ -1,4 +1,7 @@
 #include <vanetza_idf/stack.hpp>
+#if VIDF_SECURITY
+#include <vanetza_idf/security.hpp>
+#endif
 #include <vanetza/access/access_category.hpp>
 #include <vanetza/btp/header.hpp>
 #include <vanetza/btp/header_conversion.hpp>
@@ -10,6 +13,7 @@
 #include <vanetza/net/packet.hpp>
 #include <vanetza/net/packet_variant.hpp>
 #include <vanetza/common/byte_view.hpp>
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <utility>
@@ -30,15 +34,19 @@ public:
     StackConfig cfg;
     ManualRuntime& runtime;
     Access& access;
-    security::SecurityEntity* security;
+    vanetza::security::SecurityEntity* security;
+    security::IdChangeService* id_change;
     gn::Router router;
     Receive receive;
     ReceiveGn receive_gn;
     Report report;
     bool position_valid = false;
+    bool change_pending = false;
+    std::optional<security::SubscriptionHandle> subscription;
 
-    Impl(StackConfig c, ManualRuntime& rt, Access& al, security::SecurityEntity* sec) :
-        cfg(std::move(c)), runtime(rt), access(al), security(sec), router(rt, cfg.mib) {
+    Impl(StackConfig c, ManualRuntime& rt, Access& al, vanetza::security::SecurityEntity* sec,
+         security::IdChangeService* ids) :
+        cfg(std::move(c)), runtime(rt), access(al), security(sec), id_change(ids), router(rt, cfg.mib) {
         router.set_access_interface(this);
         router.set_security_entity(sec);
         // MIB.itsGnLocalGnAddr is otherwise inert: Router::update_position only
@@ -54,6 +62,56 @@ public:
         router.set_transport_handler(gn::UpperProtocol::BTP_A, this);
         router.set_transport_handler(gn::UpperProtocol::BTP_B, this);
         router.set_transport_handler(gn::UpperProtocol::Unknown, this);
+        // TS 103 836-4-1 V2.2.1 clause 10.2.1.4: the GN core of an anonymously addressed
+        // station subscribes to the identifier-change service at startup (SN-IDCHANGE-SUBSCRIBE)
+        // and derives its MID from the identifier of the security entity (TS 102 940 clause 6.5).
+        if (cfg.mib.itsGnLocalAddrConfMethod == gn::AddrConfMethod::Anonymous && id_change) {
+            subscription = id_change->subscribe(
+                [this](security::IdChangeCommand command, const security::Identifier& id, const ByteBuffer&,
+                       std::shared_ptr<security::IdChangeResponder> responder) { on_id_change(command, id, responder); });
+            const auto current = id_change->current_identifier();
+            if (current != security::Identifier {}) apply_identifier(current);
+        }
+    }
+
+    ~Impl() override {
+        // clause 10.2.1.4: unsubscribe when the router shuts down (SN-IDCHANGE-UNSUBSCRIBE)
+        if (subscription && id_change) id_change->unsubscribe(*subscription);
+    }
+
+    // TS 102 940 V2.1.1 clause 6.5: the 48 least significant bits of the HashedId8 become the
+    // MAC-layer / GN MID identifier. A source address must be individual (IEEE Std 802 clause
+    // 8.2.2, I/G bit 0) and this one is not OUI-assigned (U/L bit 1).
+    void apply_identifier(const security::Identifier& id) {
+        MacAddress mid;
+        std::copy(id.begin() + 2, id.end(), mid.octets.begin());
+        mid.octets[0] = (mid.octets[0] & 0xfe) | 0x02;
+        cfg.mib.itsGnLocalGnAddr.mid(mid);
+        router.set_address(cfg.mib.itsGnLocalGnAddr);
+    }
+
+    // TS 102 723-8 V1.1.1 clauses 6.3.1.2 and 6.3.1.3: hook function of the GN core.
+    void on_id_change(security::IdChangeCommand command, const security::Identifier& id,
+                      const std::shared_ptr<security::IdChangeResponder>& responder) {
+        switch (command) {
+            case security::IdChangeCommand::PREPARE:
+                change_pending = true;
+                router.flush_forwarding_buffers(); // caches shall be flushed
+                if (responder) responder->respond(true);
+                break;
+            case security::IdChangeCommand::COMMIT:
+                apply_identifier(id);
+                change_pending = false;
+                if (responder) responder->respond(true);
+                break;
+            case security::IdChangeCommand::ABORT:
+                change_pending = false;
+                break;
+            case security::IdChangeCommand::DEREG:
+                change_pending = false;
+                subscription.reset();
+                break;
+        }
     }
 
     void request(const dcc::DataRequest& req, std::unique_ptr<ChunkPacket> packet) override {
@@ -100,16 +158,25 @@ public:
 };
 
 Stack::Stack(StackConfig config, ManualRuntime& runtime, Access& access,
-             security::SecurityEntity* security) {
+             vanetza::security::SecurityEntity* security, security::IdChangeService* id_change) {
     if (config.mib.itsGnMaxSduSize < 4 || config.mib.itsGnMaxSduSize > 65535 ||
         config.maximum_gnpdu < config.mib.itsGnMaxSduSize ||
         config.mib.itsGnIfType != gn::InterfaceType::ITS_G5 ||
         config.mib.itsGnSnDecapResultHandling != gn::SecurityDecapHandling::Strict)
         throw std::invalid_argument("Invalid ITS-G5 stack configuration");
-    impl_ = std::make_unique<Impl>(std::move(config), runtime, access, security);
+#if VIDF_SECURITY
+    if (!id_change) {
+        if (auto* own = dynamic_cast<security::SecurityEntity*>(security)) id_change = &own->id_change();
+    }
+#endif
+    impl_ = std::make_unique<Impl>(std::move(config), runtime, access, security, id_change);
 }
 Stack::~Stack() = default;
 const StackConfig& Stack::config() const { return impl_->cfg; }
+security::IdChangeService* Stack::id_change() { return impl_->subscription ? impl_->id_change : nullptr; }
+vanetza::security::SecurityEntity* Stack::security_entity() { return impl_->security; }
+bool Stack::identity_change_pending() const { return impl_->change_pending; }
+const gn::Address& Stack::address() const { return impl_->cfg.mib.itsGnLocalGnAddr; }
 void Stack::on_receive(Receive receive) { impl_->receive = std::move(receive); }
 void Stack::on_receive_gn(ReceiveGn receive) { impl_->receive_gn = std::move(receive); }
 void Stack::on_access_result(Report report) { impl_->report = std::move(report); }
@@ -146,6 +213,7 @@ Result Stack::request(BtpRequest req) {
         req.communication_profile != gn::CommunicationProfile::Unspecified) return Result::unsupported;
     if (req.security_profile && *req.security_profile != impl_->cfg.security_profile) return Result::unsupported;
     if (impl_->cfg.mib.itsGnSecurity && !impl_->security) return Result::security_unavailable;
+    if (impl_->change_pending) return Result::identity_change_pending;
     if (!impl_->position_valid) return Result::rejected;
     if (req.maximum_hop_limit && (*req.maximum_hop_limit == 0 || *req.maximum_hop_limit > 255))
         return Result::invalid_argument;
@@ -197,6 +265,7 @@ Result Stack::request(GnRequest req) {
     if (req.communication_profile != gn::CommunicationProfile::ITS_G5 &&
         req.communication_profile != gn::CommunicationProfile::Unspecified) return Result::unsupported;
     if (impl_->cfg.mib.itsGnSecurity && !impl_->security) return Result::security_unavailable;
+    if (impl_->change_pending) return Result::identity_change_pending;
     if (!impl_->position_valid) return Result::rejected;
     if (req.maximum_hop_limit && (*req.maximum_hop_limit == 0 || *req.maximum_hop_limit > 255))
         return Result::invalid_argument;

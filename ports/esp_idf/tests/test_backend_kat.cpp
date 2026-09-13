@@ -2,6 +2,9 @@
 // device against the PSA backend. The vectors come from pyca/cryptography.
 #include "check.hpp"
 #include "test_backend.hpp"
+#if VIDF_BACKEND_MBEDTLS
+#include <vanetza_idf/backend_mbedtls.hpp>
+#endif
 #include <vanetza_idf/ecc.hpp>
 #include <vanetza/security/backend.hpp>
 #include <vanetza/security/key_type.hpp>

@@ -8,7 +8,8 @@ namespace vanetza_idf {
 
 // Implementation result, NOT an additional ETSI AL-DATA.confirm primitive.
 enum class Result { accepted, invalid_argument, unsupported, wrong_entry_point,
-                    security_unavailable, resource_limit, rejected, time_regression };
+                    security_unavailable, resource_limit, rejected, time_regression,
+                    identity_change_pending /*< TS 102 723-8 clause 6.3.1.3: between PREPARE and COMMIT */ };
 
 // Named PHY modes avoid confusing legacy OFDM coding schemes with the SDK's
 // rate indices or HT/NGV MCS indices. EN 303 797 clauses 4.3.1 and 4.3.2.
