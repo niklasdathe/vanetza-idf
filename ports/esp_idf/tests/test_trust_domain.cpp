@@ -55,7 +55,26 @@ void issue_permissions(Certificate& ca) {
     v3::add_psid_group_permission(group, aid::DEN, {0x01, 0xff, 0xff, 0xff}, {0xff, 0x00, 0x00, 0x00});
     v3::add_psid_group_permission(group, aid::VRU, {0x01}, {0xff});
     v3::add_psid_group_permission(group, aid::GN_MGMT, {0x00}, {0xff});
+    v3::add_psid_group_permission(group, aid::SCR, {0x01, 0xc0}, {0xff, 0x3f});
     ca.add_cert_issue_permission(group);
+}
+
+// Clause 7.2.4: a subordinate CA carries an encryption key for the ECIES of TS 102 941 and
+// appPermissions to sign certificate responses (SCR).
+void authority_fields(Certificate& ca, const std::string& name, const PublicKey& encryption) {
+    ca->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
+    OCTET_STRING_fromBuf(&ca->toBeSigned.id.choice.name, name.data(), name.size());
+    issue_permissions(ca);
+    ca.add_app_permission(aid::SCR, {0x01, 0xc0});
+    auto* key = v3::asn1::allocate<v3::asn1::PublicEncryptionKey>();
+    key->supportedSymmAlg = Vanetza_Security_SymmAlgorithm_aes128Ccm;
+    key->publicKey.present = Vanetza_Security_BasePublicEncryptionKey_PR_eciesNistP256;
+    ecdsa256::PublicKey legacy;
+    std::copy(encryption.x.begin(), encryption.x.end(), legacy.x.begin());
+    std::copy(encryption.y.begin(), encryption.y.end(), legacy.y.begin());
+    assign_compressed_point visitor(&key->publicKey.choice.eciesNistP256);
+    boost::apply_visitor(visitor, compress_public_key(legacy));
+    ca->toBeSigned.encryptionKey = key;
 }
 
 } // namespace
@@ -117,15 +136,43 @@ TrustDomain::TrustDomain(Backend& backend, Clock::time_point now) : backend_(bac
     OCTET_STRING_fromBuf(&root.certificate->toBeSigned.id.choice.name, root_name.data(), root_name.size());
     issue_permissions(root.certificate);
     sign(root.certificate, nullptr, root.key);
-    // Authorization authority (clause 7.2.4): issued by the root.
+    // Authorization authority (clause 7.2.4): issued by the root, with an encryption key.
     auto aa_key = fresh_key();
+    auto aa_enc = fresh_key();
     aa.key = aa_key.priv;
+    aa_encryption_key = aa_enc.priv;
     common_fields(aa.certificate, aa_key.pub, start, 3, Vanetza_Security_Duration_PR_years);
-    static const std::string aa_name("vanetza-idf test AA");
-    aa.certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
-    OCTET_STRING_fromBuf(&aa.certificate->toBeSigned.id.choice.name, aa_name.data(), aa_name.size());
-    issue_permissions(aa.certificate);
+    authority_fields(aa.certificate, "vanetza-idf test AA", aa_enc.pub);
     sign(aa.certificate, &root.certificate, root.key);
+    // Enrolment authority (clause 7.2.4): issued by the root, with an encryption key.
+    auto ea_key = fresh_key();
+    auto ea_enc = fresh_key();
+    ea.key = ea_key.priv;
+    ea_encryption_key = ea_enc.priv;
+    common_fields(ea.certificate, ea_key.pub, start, 3, Vanetza_Security_Duration_PR_years);
+    authority_fields(ea.certificate, "vanetza-idf test EA", ea_enc.pub);
+    sign(ea.certificate, &root.certificate, root.key);
+}
+
+Certificate TrustDomain::issue_ticket_for(const PublicKey& verification, const Permissions& permissions,
+                                          Clock::time_point start, unsigned hours) const {
+    Certificate ticket;
+    common_fields(ticket, verification, start, hours, Vanetza_Security_Duration_PR_hours);
+    ticket->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_none; // clause 7.2.1
+    for (const auto& permission : permissions) ticket.add_app_permission(permission.first, permission.second);
+    sign(ticket, &aa.certificate, aa.key);
+    return ticket;
+}
+
+Certificate TrustDomain::issue_credential_for(const PublicKey& verification, const std::string& name,
+                                              Clock::time_point start, unsigned hours) const {
+    Certificate credential;
+    common_fields(credential, verification, start, hours, Vanetza_Security_Duration_PR_hours);
+    credential->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name; // clause 7.2.2
+    OCTET_STRING_fromBuf(&credential->toBeSigned.id.choice.name, name.data(), name.size());
+    credential.add_app_permission(aid::SCR, {0x01, 0xc0});
+    sign(credential, &ea.certificate, ea.key);
+    return credential;
 }
 
 Credential TrustDomain::issue_ticket(const Permissions& permissions, Clock::time_point start, unsigned hours) const {

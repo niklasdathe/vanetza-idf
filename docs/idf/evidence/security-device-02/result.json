@@ -1,0 +1,18 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "port": "COM20",
+  "status": "fail",
+  "checks": null,
+  "console_result_line": "VIDF_TEST_RESULT=1",
+  "failure": "FAIL: OER decoding failed - a std::runtime_error from vanetza/asn1/asn1c_wrapper.cpp copy() (encode/decode copy of an asn1c structure), raised on the device only; the same test binary passes on the host (626 checks, OpenSSL) and with the PSA backend on the host (803 checks). The build under test was the first with CONFIG_VANETZA_IDF_PKI=y; the failing section is unknown because the test runner did not yet print section markers (added afterwards as '-- <section>' lines) and the listen-only capture attached after the boot banner.",
+  "capture": "partial: attached in listen-only mode after esptool's post-flash reset; only the final lines were seen.",
+  "not_done": "re-run after a physical power cycle of the board (both boards, COM11 and COM20, hang in the ROM UART0 clock wait documented in docs/idf/validation.md after a DTR/RTS toggle): idf.py -B build-c5 -p COM20 flash, then immediately python ports/esp_idf/tools/device_checks.py --port COM20 --timeout 240 --no-reset --out docs/idf/evidence/security-device-03",
+  "sha256": {
+    "application": "05ea5985907c700e76be8c980c827ff1ce38d638ff22641254c06b366b6fd88c",
+    "bootloader": "93903cefa2bae3f5805a604ae744fabfdea78a866a1230ec3cc129190b93fe40",
+    "partition_table": "73c0b5c3e5fcba3a151cc70c453c93dd5f4798899e7f2f8cca76da1f32ffc501",
+    "sdkconfig": "caa03c6c8556d56b8ac848bc142ce68331b4a9cae3081590d4c7111338bc60a6"
+  }
+}

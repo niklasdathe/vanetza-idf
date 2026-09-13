@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdio>
 #include <stdexcept>
 #include <string>
 
@@ -6,6 +7,9 @@
 // translation units, failures throw so the first broken check stops the run.
 namespace vidf_test {
 inline unsigned checks = 0;
+inline const char* section_name = "";
+// Names the running test section so a device log shows where an exception came from.
+inline void section(const char* name) { section_name = name; std::printf("-- %s\n", name); std::fflush(stdout); }
 inline void check(bool ok, const char* description) {
     ++checks;
     if (!ok) throw std::runtime_error(description);

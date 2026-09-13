@@ -54,6 +54,7 @@ struct Facilities : MF_SAP::FacilitiesParameterSink {
 };
 
 void test_core_mmt() {
+    vidf_test::section("test_core_mmt");
     ManualRuntime runtime;
     Radio radio;
     StackConfig cfg;
@@ -105,6 +106,7 @@ void test_core_mmt() {
 }
 
 void test_parameter_saps() {
+    vidf_test::section("test_parameter_saps");
     DccAdapter adapter;
     // MN-GET: known parameters answered, unknown ones reported, no values invented.
     MN_SAP::MN_GET_request get {7, 1, {MN_SAP::N_Param_No::CHANNEL_NUMBER, MN_SAP::N_Param_No::GLOBAL_CBR,

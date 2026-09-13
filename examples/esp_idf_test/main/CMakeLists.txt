@@ -8,5 +8,8 @@ if(CONFIG_VANETZA_IDF_SECURITY)
     target_sources(${COMPONENT_LIB} PRIVATE "${_tests}/test_backend_kat.cpp" "${_tests}/test_security_entity.cpp"
         "${_tests}/test_trust_domain.cpp")
 endif()
+if(CONFIG_VANETZA_IDF_PKI)
+    target_sources(${COMPONENT_LIB} PRIVATE "${_tests}/test_pki.cpp")
+endif()
 target_compile_definitions(${COMPONENT_LIB} PRIVATE main=vidf_test_main)
 target_compile_features(${COMPONENT_LIB} PRIVATE cxx_std_17)

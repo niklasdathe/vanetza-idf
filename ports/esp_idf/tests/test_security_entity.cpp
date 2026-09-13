@@ -112,6 +112,7 @@ const vidf_test::TrustDomain::Permissions all_permissions {
     {aid::CA, {0x01, 0xff, 0xfc}}, {aid::DEN, {0x01, 0xff, 0xff, 0xff}}, {aid::VRU, {0x01}}, {aid::GN_MGMT, {}}};
 
 void test_trust_domain_and_pool() {
+    vidf_test::section("test_trust_domain_and_pool");
     Station s;
     check(s.domain.verify_chain_signature(s.domain.root.certificate, s.domain.root.certificate), "root self-signature verifies");
     check(s.domain.verify_chain_signature(s.domain.aa.certificate, s.domain.root.certificate), "AA signed by root");
@@ -141,6 +142,7 @@ void test_trust_domain_and_pool() {
 }
 
 void test_signing_profiles() {
+    vidf_test::section("test_signing_profiles");
     Station s;
     auto at = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
     check(s.pool.add(at.certificate, at.key) == Result::accepted, "AT provisioned");
@@ -252,6 +254,7 @@ void test_signing_profiles() {
 }
 
 void test_fail_closed() {
+    vidf_test::section("test_fail_closed");
     Station s;
     s.start(); // empty pool
     check(s.send(aid::VRU, {0x01}) == Result::accepted, "router accepts the request");
@@ -311,6 +314,7 @@ struct Subscriber {
 };
 
 void test_identifier_change() {
+    vidf_test::section("test_identifier_change");
     Station s;
     auto at1 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
     auto at2 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
@@ -401,6 +405,7 @@ MacAddress mid_of(const sec::Identifier& id) {
 }
 
 void test_gn_core_identifier_change() {
+    vidf_test::section("test_gn_core_identifier_change");
     Station s;
     auto at1 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
     auto at2 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
@@ -463,6 +468,7 @@ void test_gn_core_identifier_change() {
 // TS 103 300-3 V2.3.1 clause 5.3.5: the VRU basic service subscribes through the SF-SAP,
 // stops generating VAMs on PREPARE and resumes after COMMIT with new identifiers.
 void test_sf_facilities_hook() {
+    vidf_test::section("test_sf_facilities_hook");
     Station s;
     auto at1 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
     auto at2 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);

@@ -26,6 +26,9 @@ void test_crypto_backend_known_answers();
 void test_crypto_backends(); // host only: OpenSSL is the oracle
 #endif
 void test_security_entity();
+#if VIDF_PKI
+void test_pki();
+#endif
 #endif
 
 using namespace vanetza_idf;
@@ -281,8 +284,14 @@ int main() {
         test_crypto_backends();
 #endif
         test_security_entity();
+#if VIDF_PKI
+        test_pki();
+#endif
 #endif
         std::printf("PASS: %u checks (host/component tests, not ETSI ATS verdicts)\n", checks);
         return 0;
-    } catch (const std::exception& e) { std::fprintf(stderr, "FAIL: %s\n", e.what()); return 1; }
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "FAIL: %s (in %s)\n", e.what(), vidf_test::section_name);
+        return 1;
+    }
 }

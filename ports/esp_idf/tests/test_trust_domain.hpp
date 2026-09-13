@@ -10,6 +10,7 @@
 #include <vanetza/security/backend.hpp>
 #include <vanetza/security/private_key.hpp>
 #include <vanetza/security/v3/certificate.hpp>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -29,6 +30,14 @@ public:
 
     /// authorization ticket (clause 7.2.1) issued by the AA
     Credential issue_ticket(const Permissions&, vanetza::Clock::time_point start, unsigned hours) const;
+    /// AT for a verification key the station generated itself (TS 102 941 authorization); no private key
+    vanetza::security::v3::Certificate issue_ticket_for(const vanetza::security::PublicKey& verification,
+                                                        const Permissions&, vanetza::Clock::time_point start,
+                                                        unsigned hours) const;
+    /// enrolment credential (clause 7.2.2) issued by the EA for a station verification key
+    vanetza::security::v3::Certificate issue_credential_for(const vanetza::security::PublicKey& verification,
+                                                            const std::string& name, vanetza::Clock::time_point start,
+                                                            unsigned hours) const;
 
     /// IEEE 1609.2 clause 5.3.1 check of a certificate signature against its issuer (or itself)
     bool verify_chain_signature(const vanetza::security::v3::Certificate& subject,
@@ -36,6 +45,9 @@ public:
 
     Credential root;
     Credential aa;
+    Credential ea;                          // enrolment authority (clause 7.2.4), issued by the root
+    vanetza::security::PrivateKey aa_encryption_key; // private part of the AA encryptionKey
+    vanetza::security::PrivateKey ea_encryption_key; // private part of the EA encryptionKey
 
 private:
     struct KeyMaterial { vanetza::security::PrivateKey priv; vanetza::security::PublicKey pub; };
