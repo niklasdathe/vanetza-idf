@@ -75,13 +75,13 @@ read crosses the 9P filesystem boundary. Apt's Boost is missing
 `boost/core/invoke_swap.hpp`, which `boost/geometry/formulas/karney_inverse.hpp`
 needs; naively copying it from `external/esp-boost` redefines symbols already
 in apt Boost's `boost/core/swap.hpp` and fails to compile for a different
-reason. `ports/esp_idf/third_party/geometry/include/boost/core/invoke_swap.hpp`
+reason. `ports/esp_idf/compat/include/boost/core/invoke_swap.hpp`
 is a from-scratch compatibility shim (not a copy of upstream Boost) that
 builds `invoke_swap` on top of the already-present `boost::swap()` instead of
-redefining anything, so it works when combined with either Boost source. On
-Windows (`VIDF_BOOST_ROOT` pointing at `external/esp-boost`) only one Boost
-variant is ever in play, so this file is present but never actually reached
-by the include search there.
+redefining anything, so it works when combined with either Boost source. The
+`compat/include` directory is appended after every real Boost include root,
+so the shim is only reached when the selected Boost lacks the header; with
+`VIDF_BOOST_ROOT` pointing at a complete Boost it is never used.
 
 `build_etsi_geonetworking_adapter.py` also applies a disposable build overlay
 for a null-pointer bug in the external framework's own

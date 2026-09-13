@@ -85,6 +85,9 @@ if(VIDF_NETWORK)
         endif()
         target_include_directories(${VIDF_TARGET} SYSTEM PUBLIC "${VIDF_PORT}/third_party/${_module}/include")
     endforeach()
+    # Last-resort fallback headers for older system Boost releases (see
+    # docs/idf/test-campaigns.md); searched after every real Boost include root.
+    target_include_directories(${VIDF_TARGET} SYSTEM PUBLIC "${VIDF_PORT}/compat/include")
 endif()
 # Iostreams stream devices are header-only here; esp-boost omits these headers.
 if(VIDF_IOSTREAMS_ROOT)
