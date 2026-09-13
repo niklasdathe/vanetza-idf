@@ -3,6 +3,7 @@
 #include "check.hpp"
 #include "test_trust_domain.hpp"
 #include <vanetza_idf/security.hpp>
+#include <vanetza_idf/sf_sap.hpp>
 #include <vanetza_idf/sn_sap.hpp>
 #include <vanetza_idf/stack.hpp>
 #include <vanetza_idf/facilities.hpp>
@@ -458,6 +459,61 @@ void test_gn_core_identifier_change() {
     check(m2.stack->id_change() == nullptr && m2.stack->address().mid() == MacAddress {2, 0, 0, 0, 0, 1},
           "managed address configuration keeps the configured MID");
 }
+
+// TS 103 300-3 V2.3.1 clause 5.3.5: the VRU basic service subscribes through the SF-SAP,
+// stops generating VAMs on PREPARE and resumes after COMMIT with new identifiers.
+void test_sf_facilities_hook() {
+    Station s;
+    auto at1 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    auto at2 = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    s.pool.add(at1.certificate, at1.key);
+    s.pool.add(at2.certificate, at2.key);
+    s.cfg.mib.itsGnLocalAddrConfMethod = geonet::AddrConfMethod::Anonymous;
+    s.start();
+    auto& svc = s.entity->id_change();
+    struct Vbs {
+        bool generating = true;
+        std::uint32_t station_id = 1;
+        std::shared_ptr<sec::IdChangeResponder> pending; // answered from the facilities task later
+        std::vector<sec::IdChangeCommand> seen;
+    } vbs;
+    auto confirm = SF_SAP::SF_IDCHANGE_SUBSCRIBE_request_submit(svc, {
+        [&vbs](sec::IdChangeCommand command, const sec::Identifier& id, const ByteBuffer&,
+               std::shared_ptr<sec::IdChangeResponder> responder) {
+            vbs.seen.push_back(command);
+            if (command == sec::IdChangeCommand::PREPARE) { vbs.generating = false; vbs.pending = responder; }
+            if (command == sec::IdChangeCommand::COMMIT) {
+                // StationId derived from the new identifier (TS 102 940 clause 6.5 least significant bits)
+                vbs.station_id = (std::uint32_t(id[4]) << 24) | (std::uint32_t(id[5]) << 16) |
+                                 (std::uint32_t(id[6]) << 8) | id[7];
+                vbs.generating = true;
+                vbs.pending = responder;
+            }
+        }, {}});
+    check(confirm.subscription != 0, "SF-IDCHANGE-SUBSCRIBE.confirm returns a handle");
+    const auto id2 = *at2.certificate.calculate_digest();
+    check(SF_SAP::SF_IDCHANGE_TRIGGER_request_submit(svc, {}) == Result::accepted, "SF trigger accepted");
+    check(!vbs.generating && vbs.pending && s.stack->identity_change_pending(),
+          "facilities stopped generating on PREPARE, GN core prepared, commit waits for facilities");
+    auto responder = vbs.pending; vbs.pending.reset();
+    responder->respond(true); // late SF-IDCHANGE-EVENT.response(PREPARE)
+    check(vbs.seen.back() == sec::IdChangeCommand::COMMIT && vbs.generating, "COMMIT resumed generation");
+    responder = vbs.pending; vbs.pending.reset();
+    responder->respond(true); // late response to COMMIT
+    check(!svc.change_pending() && svc.current_identifier() == id2, "change completes after the late facilities response");
+    check(vbs.station_id == ((std::uint32_t(id2[4]) << 24) | (std::uint32_t(id2[5]) << 16) | (std::uint32_t(id2[6]) << 8) | id2[7]),
+          "facilities derived the StationId from the new identifier");
+    check(s.stack->address().mid() == mid_of(id2), "GN core and facilities changed together");
+    // Elevated-hazard lock from the facilities side (clause 5.3.5), released explicitly.
+    auto lock = SF_SAP::SF_ID_LOCK_request_submit(svc, {30});
+    check(SF_SAP::SF_IDCHANGE_TRIGGER_request_submit(svc, {}) == Result::accepted && !svc.change_pending() &&
+          vbs.seen.back() == sec::IdChangeCommand::COMMIT, "locked: no PREPARE reaches the facilities");
+    check(SF_SAP::SF_ID_UNLOCK_request_submit(svc, {lock.lock_handle}) == Result::accepted &&
+          vbs.seen.back() == sec::IdChangeCommand::PREPARE, "unlock runs the deferred change");
+    responder = vbs.pending; vbs.pending.reset(); responder->respond(true);
+    responder = vbs.pending; vbs.pending.reset(); responder->respond(true);
+    check(SF_SAP::SF_IDCHANGE_UNSUBSCRIBE_request_submit(svc, {confirm.subscription}) == Result::accepted, "SF unsubscribe");
+}
 } // namespace
 
 void test_security_entity() {
@@ -466,4 +522,5 @@ void test_security_entity() {
     test_fail_closed();
     test_identifier_change();
     test_gn_core_identifier_change();
+    test_sf_facilities_hook();
 }

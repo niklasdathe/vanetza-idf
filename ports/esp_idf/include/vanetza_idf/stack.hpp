@@ -141,6 +141,11 @@ public:
     bool identity_change_pending() const;
     /// GeoNetworking address currently in use (MID follows the identifier change)
     const vanetza::geonet::Address& address() const;
+    /** Managed address configuration (TS 103 836-4-1 V2.2.1 clause 10.2.1.3.3): the N&T
+     * management entity updates the GN address with an unsolicited CORE_MMT.response
+     * (MN_SAP::CORE_MMT_response_apply). Result::unsupported with Auto (10.2.1.2) or
+     * Anonymous (10.2.1.4) configuration, identity_change_pending during a change. */
+    Result set_address(const vanetza::geonet::Address&);
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;

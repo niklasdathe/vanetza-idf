@@ -72,7 +72,7 @@ target_compile_definitions(${VIDF_TARGET} PUBLIC
 set(_sources ${VIDF_BASE_SOURCES} "${VIDF_PORT}/src/its_g5_frame.cpp")
 if(VIDF_NETWORK)
     list(APPEND _sources ${VIDF_NETWORK_SOURCES} ${VIDF_SECURITY_ASN_SOURCES} "${VIDF_PORT}/src/stack.cpp"
-        "${VIDF_PORT}/src/sha.cpp")
+        "${VIDF_PORT}/src/management.cpp" "${VIDF_PORT}/src/sha.cpp")
     if(NOT ESP_PLATFORM)
         find_package(OpenSSL REQUIRED COMPONENTS Crypto)
         target_link_libraries(${VIDF_TARGET} PRIVATE OpenSSL::Crypto)
@@ -191,6 +191,9 @@ if(ESP_PLATFORM)
 elseif(VIDF_TESTS)
     enable_testing()
     add_executable(vidf_tests tests/test_main.cpp)
+    if(VIDF_NETWORK)
+        target_sources(vidf_tests PRIVATE tests/test_management.cpp)
+    endif()
     if(VIDF_SECURITY)
         target_sources(vidf_tests PRIVATE tests/test_security.cpp tests/test_backend_kat.cpp
             tests/test_security_entity.cpp tests/test_trust_domain.cpp)

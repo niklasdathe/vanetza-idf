@@ -177,6 +177,13 @@ security::IdChangeService* Stack::id_change() { return impl_->subscription ? imp
 vanetza::security::SecurityEntity* Stack::security_entity() { return impl_->security; }
 bool Stack::identity_change_pending() const { return impl_->change_pending; }
 const gn::Address& Stack::address() const { return impl_->cfg.mib.itsGnLocalGnAddr; }
+Result Stack::set_address(const gn::Address& address) {
+    if (impl_->cfg.mib.itsGnLocalAddrConfMethod != gn::AddrConfMethod::Managed) return Result::unsupported;
+    if (impl_->change_pending) return Result::identity_change_pending;
+    impl_->cfg.mib.itsGnLocalGnAddr = address;
+    impl_->router.set_address(address);
+    return Result::accepted;
+}
 void Stack::on_receive(Receive receive) { impl_->receive = std::move(receive); }
 void Stack::on_receive_gn(ReceiveGn receive) { impl_->receive_gn = std::move(receive); }
 void Stack::on_access_result(Report report) { impl_->report = std::move(report); }

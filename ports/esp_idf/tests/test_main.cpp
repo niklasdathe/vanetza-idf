@@ -17,6 +17,9 @@
 #include <vector>
 #include <limits>
 
+#if VIDF_NETWORK
+void test_management();
+#endif
 #if VIDF_SECURITY
 void test_crypto_backend_known_answers();
 #if VIDF_BACKEND_OPENSSL
@@ -268,6 +271,9 @@ int main() {
 #endif
 #if VIDF_CAM || VIDF_DENM || VIDF_VAM
         test_codecs();
+#endif
+#if VIDF_NETWORK
+        test_management();
 #endif
 #if VIDF_SECURITY
         test_crypto_backend_known_answers();
