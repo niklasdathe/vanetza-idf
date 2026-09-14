@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <esp_task_wdt.h>
+#include <nvs_flash.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 int vidf_test_main();
@@ -8,6 +9,13 @@ extern "C" void app_main() {
     // The ESP32-C5 ROM UART0 clock repair for warm resets is applied by the component
     // itself (ports/esp_idf/src/esp32c5_rom_uart_clock.c) before app_main runs.
     std::puts("vanetza-idf component tests beginning");
+    // NVS for the credential store tests (the application's job, credentials.hpp)
+    esp_err_t nvs = nvs_flash_init();
+    if (nvs == ESP_ERR_NVS_NO_FREE_PAGES || nvs == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        nvs = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(nvs);
     // The security tests run about a minute of software ECDSA without yielding; give the
     // idle-task watchdog that long instead of interleaving its reports with the output.
     esp_task_wdt_config_t watchdog = {};

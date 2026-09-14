@@ -1,12 +1,17 @@
 // Host SUT process: one hex command line in, one hex reply line out.
 //   vidf_sut [--security-pool DIR [--root NAME] [--aa NAME]... [--at NAME] [--anonymous]]
+//            [--security-bundle FILE]
 // With a pool the reset command builds the secured, beaconing profile from
 // DIR/<NAME>.oer and DIR/<at NAME>.vkey (the layout the ETSI ATS certificate
-// loader uses as well); without one the unsecured BTP/GN profile is used.
+// loader uses as well); a bundle file (credentials.hpp) provisions the same
+// through the path a device takes (diagnostic command 9); without either the
+// unsecured BTP/GN profile is used.
 #include "hil_sut.hpp"
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 int main(int argc, char** argv) {
     vidf_test::Sut sut;
@@ -23,6 +28,11 @@ int main(int argc, char** argv) {
         }
         else if (arg == "--at" && has_value) profile.ticket = argv[++i];
         else if (arg == "--anonymous") profile.anonymous_address = true;
+        else if (arg == "--security-bundle" && has_value) {
+            std::ifstream in(argv[++i], std::ios::binary);
+            const vanetza::ByteBuffer bundle((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            if (!in || sut.provision(bundle) != vanetza_idf::Result::accepted) { std::fprintf(stderr, "not a credential bundle: %s\n", argv[i]); return 2; }
+        }
         else { std::fprintf(stderr, "unknown argument: %s\n", arg.c_str()); return 2; }
     }
     sut.configure(profile);

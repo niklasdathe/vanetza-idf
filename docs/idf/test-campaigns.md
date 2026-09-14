@@ -227,6 +227,22 @@ mkdir ctl && cp chain/ROOT.oer ctl/root-ROOT.oer && cp chain/AA.oer ctl/aa-AA.oe
 RUST_LOG=info c-its-pcap sut.pcap          # one JSON line per frame: signature, chain, security_authorized
 ```
 
+The same from an ESP32-C5 running the test application: pack the chain into a
+credential bundle (`vanetza_idf/credentials.hpp` format, keys in the clear:
+keep the file like the keys) and let the capture provision the board over the
+USB serial diagnostic channel (command 9) before it resets and signs:
+
+```sh
+python3 ports/esp_idf/tools/credential_bundle.py build --pool chain --root ROOT --aa AA --at AT --out chain.vcr
+python3 ports/esp_idf/tools/capture_pcap.py --port COM11 --bundle chain.vcr --out device.pcap
+```
+
+`vidf_sut --security-bundle chain.vcr` (or `capture_pcap.py --sut ... --bundle`)
+takes the same bundle on the host; `serial_sut.py --bundle chain.vcr` provisions
+a device before relaying an ETSI campaign's commands. The device keeps the
+bundle in RAM for the session; persisting it is the application's
+`CredentialStore` (the component tests exercise the NVS store).
+
 Retained in `docs/idf/evidence/independent-verifier-01` (analysis there): with
 a ticket carrying CAM, DENM and VRU permissions c-its reports the message
 signature, the chain to the root and the CAM/DENM authorisation as valid; with

@@ -27,6 +27,7 @@ void test_crypto_backend_known_answers();
 void test_crypto_backends(); // host only: OpenSSL is the oracle
 #endif
 void test_security_entity();
+void test_credentials();
 #if VIDF_PKI
 void test_pki();
 #endif
@@ -286,6 +287,7 @@ int main() {
         test_crypto_backends();
 #endif
         test_security_entity();
+        test_credentials();
 #if VIDF_PKI
         test_pki();
 #endif

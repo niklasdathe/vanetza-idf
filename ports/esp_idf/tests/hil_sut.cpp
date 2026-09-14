@@ -2,6 +2,7 @@
 #include <vanetza_idf/nf_sap.hpp>
 #if VIDF_SECURITY
 #include <vanetza_idf/security.hpp>
+#include <vanetza_idf/credentials.hpp>
 #include "test_backend.hpp"
 #include <fstream>
 #include <iterator>
@@ -48,6 +49,14 @@ public:
         return ByteBuffer(std::istreambuf_iterator<char>(in), {});
     }
 
+    // run-time provisioning: everything the bundle carries, through the same checks
+    Result load(const ByteBuffer& bundle) {
+        security::Credentials credentials;
+        if (!security::decode(bundle, credentials) || credentials.roots.empty() || credentials.tickets.empty())
+            return Result::invalid_argument;
+        return security::apply(credentials, trust, pool).result;
+    }
+
     Result load(const SecurityProfile& profile) {
         const auto file = [&](const std::string& name, const char* ext) { return read(profile.pool + "/" + name + ext); };
         if (trust.add_root(file(profile.root, ".oer")) != Result::accepted) return Result::invalid_argument;
@@ -67,6 +76,17 @@ class Sut::Security {};
 Sut::Sut() = default;
 Sut::~Sut() = default;
 void Sut::configure(SecurityProfile profile) { profile_ = std::move(profile); }
+Result Sut::provision(const ByteBuffer& bundle) {
+#if VIDF_SECURITY
+    security::Credentials probe;
+    if (!security::decode(bundle, probe)) return Result::invalid_argument; // structure only; reset() applies it
+    bundle_ = bundle;
+    return Result::accepted;
+#else
+    (void)bundle;
+    return Result::unsupported;
+#endif
+}
 
 void Sut::record(std::uint8_t kind, ByteBuffer bytes) {
     if (record_bytes_ + bytes.size() + 3 > 3800 || records_.size() >= 32) { overflow_ = true; return; }
@@ -85,13 +105,13 @@ Result Sut::reset() {
     StackConfig config;
     config.mib.itsGnLocalGnAddr.mid({2, 0, 0, 0, 0, 1});
     vanetza::security::SecurityEntity* entity = nullptr;
-    if (profile_.pool.empty()) {
+    if (profile_.pool.empty() && bundle_.empty()) {
         config.mib.itsGnSecurity = false; // explicit unsecured BTP/GN test PICS
         config.mib.vanetzaDisableBeaconing = true;
     } else {
 #if VIDF_SECURITY
         security_ = std::make_unique<Security>();
-        const auto loaded = security_->load(profile_);
+        const auto loaded = bundle_.empty() ? security_->load(profile_) : security_->load(bundle_);
         if (loaded != Result::accepted) { security_.reset(); return loaded; }
         security_->entity = std::make_unique<security::SecurityEntity>(*runtime_, *security_, security_->backend,
                                                                        security_->pool, security_->trust);
@@ -188,6 +208,10 @@ ByteBuffer Sut::execute(const ByteBuffer& input) {
     Result result = Result::invalid_argument;
     try {
         if (input.size() == 1 && input[0] == 0) result = reset();
+        else if (input.size() > 1 && input[0] == 9) {
+            // credentials for the next reset: [9][credentials.hpp bundle]; allowed before any reset
+            result = provision(ByteBuffer(input.begin() + 1, input.end()));
+        }
         else if (!stack_) result = Result::rejected;
         else if (input.size() >= 6 && input[0] == 1 && input[1] <= 1) {
             NF_SAP::BTP_DATA_request request;
@@ -244,7 +268,7 @@ ByteBuffer Sut::execute(const ByteBuffer& input) {
             carrier_interval_[input[1]] = read16(input, 2);
             carrier_next_[input[1]] = runtime_->now();
             result = Result::accepted;
-        } else if (!input.empty() && input[0] > 8) result = Result::unsupported;
+        } else if (!input.empty() && input[0] > 9) result = Result::unsupported;
     } catch (const std::bad_alloc&) { result = Result::resource_limit; }
       catch (const std::exception&) { result = Result::rejected; }
     if (overflow_) result = Result::resource_limit;

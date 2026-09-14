@@ -79,12 +79,25 @@ def records(response):
     return response[0], decoded
 
 
+def provision(sut, bundle_path):
+    """Diagnostic command 9: a credential bundle (credentials.hpp) for the next reset."""
+    bundle = open(bundle_path, 'rb').read()
+    if len(bundle) > 4095:
+        raise ValueError('The bundle exceeds one diagnostic frame (4095 octets)')
+    result, _ = records(sut.execute(b'	' + bundle))
+    if result != 0:
+        raise RuntimeError('The device refused the credential bundle (result %d)' % result)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', required=True)
+    parser.add_argument('--bundle', help='credential bundle sent as diagnostic command 9 before relaying stdin')
     args = parser.parse_args()
     sut = SerialSut(args.port)
     try:
+        if args.bundle:
+            provision(sut, args.bundle)
         for line in sys.stdin:
             if len(line) > 8193:
                 raise ValueError('Oversized input line')

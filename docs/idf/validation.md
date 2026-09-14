@@ -15,14 +15,15 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 873 checks | Security entity incl. receive-side verification, chain and region consistency, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1050 checks; security off 150; access-only 88; Linux Release 873 |
-| ESP32-C5 component execution, security on (COM11) | PASS, 747 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`; [security-device-07](evidence/security-device-07/result.json) incl. the chain and region consistency tests (earlier: -06 668 checks, -05 537, -03/-04 503); heap and cost notes below |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 890 checks | Security entity incl. receive-side verification, chain and region consistency, credential bundle and stores, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1067 checks; security off 150; access-only 88; Linux Release 890 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 765 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`, `CONFIG_VANETZA_IDF_NVS_CREDENTIALS=y`; [security-device-08](evidence/security-device-08/result.json) incl. the chain/region consistency and the NVS credential store tests (earlier: -07 747, -06 668, -05 537, -03/-04 503); heap and cost notes below |
+| ESP32-C5 signing with run-time provisioned credentials, verified by c-its | **PASS**: signatures and chain (3/3 CAMs per capture), CAM authorisation with the SSP-carrying ticket | Bundle over the USB diagnostic channel (command 9), twin chain of a real EU root; [independent-verifier-03](evidence/independent-verifier-03/analysis.md) |
 | ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
 | Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below; rerun with the CPOC-shaped pool and the consistency checks: [security-host-09](evidence/security-host-09/result.json), same verdicts |
 | Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below; rerun [security-host-10](evidence/security-host-10/result.json), same verdicts |
-| Independent verifier (c-its) on SUT-signed CAM/DENM, host | **PASS**: signatures, chain, permissions, CAM/DENM authorisation | Lab chain from `vidf_issue`, frames from `capture_pcap.py`; [independent-verifier-01](evidence/independent-verifier-01/analysis.md); rehearsal on a twin of a real EU CCMS L0 root (its permission profile and EU region, throwaway key): [independent-verifier-02](evidence/independent-verifier-02/analysis.md) |
-| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-07](evidence/btp-host-07/result.json) (earlier -05, -06) |
-| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-04](evidence/geonetworking-host-04/result.json) (earlier -02, -03): no regression |
+| Independent verifier (c-its) on SUT-signed CAM/DENM, host | **PASS**: signatures, chain, permissions, CAM/DENM authorisation | Lab chain from `vidf_issue`, frames from `capture_pcap.py`; [independent-verifier-01](evidence/independent-verifier-01/analysis.md); rehearsal on a twin of a real EU CCMS L0 root (its permission profile and EU region, throwaway key): [independent-verifier-02](evidence/independent-verifier-02/analysis.md); the same from the board: [-03](evidence/independent-verifier-03/analysis.md) |
+| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-08](evidence/btp-host-08/result.json) (earlier -05, -06, -07) |
+| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-05](evidence/geonetworking-host-05/result.json) (earlier -02, -03, -04): no regression |
 | Official ETSI Security, receiving side, host | **PASS 24/26**; 2 errors (testcase defect, IUT-independent) | `TC_SEC_ITSS_RCV_MSG/CAM/DENM_*` with the SUT verifying (`VIDF_SECURITY_VERIFY`); see below; rerun with the consistency checks [security-host-08](evidence/security-host-08/result.json), same verdicts |
 | PKI ATS | Not executed | The TS 102 941 core has no transport (GAP-PKI-001) |
 | Complete facilities ATS | Not executed | Full services remain incomplete |
@@ -213,7 +214,7 @@ form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
 The host tests run the same backend against OpenSSL as an oracle (signature
 cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
 known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
-build (1050 checks); the device runs the PSA path natively (747 checks, the
+build (1067 checks); the device runs the PSA path natively (765 checks, the
 difference being the OpenSSL-only oracle tests).
 
 **Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
@@ -418,8 +419,28 @@ policy: INCONSISTENT_CHAIN, permissive: verifies), as `test_region_consistency`
 (its own test: at most two stations alive on the device): 873 host checks, 747 on
 the ESP32-C5.
 
+**Credentials at run time (2026-09-14, ACT-024).** `credentials.hpp` fixes what
+a provisioning path hands over: `Credentials` (root and CA certificates as
+COER, tickets with their private scalars), the `VCR1` bundle encoding,
+`apply()` into `TrustConfiguration`/`CertificatePool` through the entity's own
+checks (the first refused item stops it and is reported), the `CredentialStore`
+interface with `FileCredentialStore` and, on ESP-IDF, `NvsCredentialStore`
+(`CONFIG_VANETZA_IDF_NVS_CREDENTIALS`, one blob on the `nvs_flash` component;
+NVS initialisation and encryption are the application's). The split is
+deliberate: the octet format and the stores are generic to any ESP32 station
+and live in the component; the transport (serial, wireless, a TS 102 941
+client) and the policy of when to load or replace credentials are the
+application's, so the library never reads a bundle on its own. The test
+application's diagnostic command 9 is such a transport: `serial_sut.py
+--bundle` and `capture_pcap.py --port --bundle` provision a board before its
+reset. `test_credentials` (890 host checks, 765 on the device with the NVS
+round trip) covers the codec, the malformed cases, `apply()` and the stores;
+[independent-verifier-03](evidence/independent-verifier-03/analysis.md) is the
+ESP32-C5 signing with a chain it received this way, verified by c-its.
+
 **Independent verifier** ([independent-verifier-01](evidence/independent-verifier-01/analysis.md),
-[-02](evidence/independent-verifier-02/analysis.md) on a twin of a real EU CCMS L0 root).
+[-02](evidence/independent-verifier-02/analysis.md) on a twin of a real EU CCMS L0 root,
+[-03](evidence/independent-verifier-03/analysis.md) from the ESP32-C5).
 c-its (an unrelated Rust implementation with its own ASN.1 modules and
 crypto) verifies the frames the host SUT signs with a lab chain from
 `vidf_issue`, recorded as an 802.11 pcap by `tools/capture_pcap.py`: message

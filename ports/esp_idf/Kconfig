@@ -46,6 +46,17 @@ menu "Vanetza-IDF"
             time plausibility and replay detection). Without it SN-DECAP
             reports Configuration_Problem and a strict GeoNetworking receiver
             drops every secured packet (docs/idf/conformance.md GAP-SEC-001).
+    config VANETZA_IDF_NVS_CREDENTIALS
+        bool "Credential store on NVS"
+        default y
+        depends on VANETZA_IDF_SECURITY
+        help
+            NvsCredentialStore keeps the station's provisioned credentials
+            (root and CA certificates, authorization tickets with their
+            private keys, credentials.hpp bundle) as one blob in the
+            nvs_flash component's storage. The application initialises NVS
+            and decides on NVS encryption; without this option the
+            application supplies its own CredentialStore.
     config VANETZA_IDF_PKI
         bool "TS 102 941 enrolment and authorization request-response core"
         default n

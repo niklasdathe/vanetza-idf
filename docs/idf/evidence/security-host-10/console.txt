@@ -13,9 +13,9 @@ spawn /opt/microbu-ttcn/titan-9ff25f04c2a437716b91517bcd00b68d72fb8ea2/Install/b
 
 Using configuration file: test.cfg
 MC@framework-dathe: Unix server socket created successfully.
-MC@framework-dathe: Listening on TCP port 43809.
+MC@framework-dathe: Listening on TCP port 43949.
 MC2> framework-dathe. is the default
-spawn /root/vidf-ats-security/AtsSecurity framework-dathe. 43809
+spawn /root/vidf-ats-security/AtsSecurity framework-dathe. 43949
 TTCN-3 Host Controller (parallel mode), version 10.1.2
 MC@framework-dathe: New HC connected from 127.0.0.1 [127.0.0.1]. framework-dathe: Linux 5.15.167.4-microsoft-standard-WSL2 on x86_64.
 cmtc
@@ -203,7 +203,7 @@ HC@framework-dathe: Initialization of module http_www_w3_org_XML_1998_namespace 
 MC@framework-dathe: Configuration file was processed on all HCs.
 HC@framework-dathe: Configuration data was processed successfully.
 MC@framework-dathe: Creating MTC on host 127.0.0.1.
-HC@framework-dathe: MTC was created. Process id: 560.
+HC@framework-dathe: MTC was created. Process id: 505.
 MC@framework-dathe: MTC is created.
 MC2> smtc
 Executing all items of [EXECUTE] section.
@@ -211,12 +211,12 @@ MC2> MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_CAM_01_BV in modul
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: certificates_loader::load_certificate: Failed to open Private encryption key file
 MTC@framework-dathe: certificates_loader::load_certificate: Failed to open Private encryption key file
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460253709238 / 716460248710361, delta = 4998877.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466252644440 / 716466247646591, delta = 4997849.000000, comp = 0
 MTC@framework-dathe: certificates_loader::load_certificate: Failed to open Private encryption key file
 MTC@framework-dathe: Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460254809182 / 716460249811244, delta = 4997938.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460255809246 / 716460250810220, delta = 4999026.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460256809514 / 716460251812115, delta = 4997399.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466253744222 / 716466248745477, delta = 4998745.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466254744736 / 716466249747699, delta = 4997037.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466255844363 / 716466250845803, delta = 4998560.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -226,10 +226,10 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_CAM_02_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460256917196 / 716460251918864, delta = 4998332.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460258016992 / 716460253018121, delta = 4998871.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460259017104 / 716460254019354, delta = 4997750.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460260117098 / 716460255119764, delta = 4997334.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466255951562 / 716466250952933, delta = 4998629.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466257051268 / 716466252052311, delta = 4998957.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466258051518 / 716466253053314, delta = 4998204.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466259151596 / 716466254153211, delta = 4998385.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -239,10 +239,10 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_CAM_03_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460260232709 / 716460255234649, delta = 4998060.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460261332591 / 716460256334213, delta = 4998378.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460262332657 / 716460257333794, delta = 4998863.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460263332757 / 716460258333786, delta = 4998971.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466259258965 / 716466254260491, delta = 4998474.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466260358810 / 716466255359858, delta = 4998952.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466261359134 / 716466256360871, delta = 4998263.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466262459150 / 716466257461146, delta = 4998004.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -252,10 +252,10 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_CAM_04_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460263437369 / 716460258438276, delta = 4999093.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460264537195 / 716460259538192, delta = 4999003.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460265537771 / 716460260540296, delta = 4997475.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460266637597 / 716460261640331, delta = 4997266.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466262568691 / 716466257570716, delta = 4997975.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466263668388 / 716466258669532, delta = 4998856.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466264668729 / 716466259670780, delta = 4997949.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466265768469 / 716466260769454, delta = 4999015.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -265,10 +265,10 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_DENM_01_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460266756877 / 716460261759824, delta = 4997053.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460267856789 / 716460262861024, delta = 4995765.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460268857637 / 716460263860043, delta = 4997594.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460269257378 / 716460264259547, delta = 4997831.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466265872606 / 716466260874600, delta = 4998006.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466266972427 / 716466261973459, delta = 4998968.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466267972791 / 716466262974808, delta = 4997983.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466268372765 / 716466263374684, delta = 4998081.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 DENM Trigger(3)@framework-dathe: Final verdict of PTC: none
 MTC@framework-dathe: Waiting for PTCs to finish.
@@ -279,10 +279,10 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_DENM_02_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460269365293 / 716460264366412, delta = 4998881.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460270464896 / 716460265467089, delta = 4997807.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460271465467 / 716460266466635, delta = 4998832.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460271865295 / 716460266868006, delta = 4997289.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466268482512 / 716466263483971, delta = 4998541.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466269582314 / 716466264583279, delta = 4999035.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466270582520 / 716466265584064, delta = 4998456.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466270982507 / 716466265984102, delta = 4998405.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 DENM Trigger(4)@framework-dathe: Final verdict of PTC: none
 MTC@framework-dathe: Waiting for PTCs to finish.
@@ -293,10 +293,10 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_DENM_03_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460271985084 / 716460266987664, delta = 4997420.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460273085118 / 716460268088583, delta = 4996535.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460274085570 / 716460269088951, delta = 4996619.000000, comp = 0
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460274485337 / 716460269489968, delta = 4995369.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466271092139 / 716466266093606, delta = 4998533.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466272191923 / 716466267192945, delta = 4998978.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466273192248 / 716466268193866, delta = 4998382.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716466273592181 / 716466268594231, delta = 4997950.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 DENM Trigger(5)@framework-dathe: Final verdict of PTC: none
 MTC@framework-dathe: Waiting for PTCs to finish.

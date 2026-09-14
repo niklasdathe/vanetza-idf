@@ -41,11 +41,15 @@ public:
     ~Sut();
     /// configure the security profile used by the next reset; empty pool = unsecured
     void configure(SecurityProfile);
+    /// credentials handed over at run time (diagnostic command 9, a credentials.hpp
+    /// bundle): used by the next reset instead of the pool directory; empty = none
+    vanetza_idf::Result provision(const vanetza::ByteBuffer& bundle);
     vanetza::ByteBuffer execute(const vanetza::ByteBuffer&);
     vanetza_idf::Result request(vanetza_idf::AlDataRequest) override;
 private:
     class Security;
     SecurityProfile profile_;
+    vanetza::ByteBuffer bundle_;
     std::unique_ptr<vanetza::ManualRuntime> runtime_;
     std::unique_ptr<Security> security_;
     std::unique_ptr<vanetza_idf::Stack> stack_;

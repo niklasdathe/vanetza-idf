@@ -1,0 +1,13 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "port": "COM11",
+  "status": "pass",
+  "reset": "none",
+  "checks": 765,
+  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2) with CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY; 765 checks = 890 host checks minus the OpenSSL-only oracle tests",
+  "capture": "listen-only after the esptool post-flash reset",
+  "verifies": "as security-device-07 plus test_credentials: credential bundle round trip, malformed bundles refused, apply() through the entity's checks, NvsCredentialStore save/load/erase on the nvs_flash partition (CONFIG_VANETZA_IDF_NVS_CREDENTIALS=y, NVS initialised by the test application)",
+  "sha256": "ab9384f0150c90de84c5187a68363de4c13dc53781660cb4e8a473bdee69c3df"
+}

@@ -182,9 +182,30 @@ device through this library. The test trust domain of the component tests
 (`tests/test_trust_domain.*`, `vidf_test_pool`) is generated per run and is not
 a PKI. To issue a chain under a root of your own for lab use (root, AA,
 tickets in the pool layout, EU CCMS CPOC root profile) there is the host tool
-`vidf_issue`, and `tools/capture_pcap.py` records what the host SUT signs as
-an 802.11 pcap for an independent verifier; both are described in
-[test-campaigns.md](test-campaigns.md).
+`vidf_issue`, and `tools/capture_pcap.py` records what a host or device
+station signs as an 802.11 pcap for an independent verifier; both are
+described in [test-campaigns.md](test-campaigns.md).
+
+**Provisioning and storage: what is the library's and what is yours.**
+`vanetza_idf/credentials.hpp` fixes the octets between a provisioning path
+and the security entity: a `Credentials` value (root certificates,
+subordinate CA certificates, tickets with their private scalars, all COER or
+raw), its bundle encoding (`VCR1` records) and `apply()` into a
+`TrustConfiguration` and `CertificatePool` through the same checks the
+entity applies to anything it signs with. `CredentialStore` is the storage
+interface; the library ships `FileCredentialStore` (a bundle in one file,
+hosts or a mounted VFS) and, with `CONFIG_VANETZA_IDF_NVS_CREDENTIALS`
+(default on), `NvsCredentialStore` on the `nvs_flash` component: one blob
+under a namespace/key of your choosing. That much is generic to any ESP32
+station and therefore in the component. What stays with the application:
+initialising NVS and deciding whether it is encrypted (ESP-IDF NVS
+encryption; the bundle carries keys in the clear), the transport the bundle
+arrives over (a serial diagnostic channel, a wireless link, a TS 102 941
+client, a file) and the policy of when to load, replace or erase credentials.
+The test application shows the pattern: diagnostic command 9 hands a bundle to
+the SUT for its next reset (`serial_sut.py --bundle`), and the component tests
+exercise the NVS store on the device. Nothing in the library reads a bundle
+on its own initiative.
 
 ## Cross-layer SAPs
 

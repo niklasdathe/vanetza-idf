@@ -8,7 +8,7 @@ if(ESP_PLATFORM)
     idf_component_register(SRCS "${VIDF_PORT}/src/access.cpp"
         INCLUDE_DIRS "${VIDF_PORT}/include" "${VIDF_ROOT}" "${VIDF_ROOT}/vanetza/asn1/support"
         REQUIRES esp-boost mbedtls
-        PRIV_REQUIRES esp_wifi esp_phy esp_event)
+        PRIV_REQUIRES esp_wifi esp_phy esp_event nvs_flash)
     if(CMAKE_BUILD_EARLY_EXPANSION)
         return()
     endif()
@@ -24,6 +24,7 @@ if(ESP_PLATFORM)
     set(VIDF_SECURITY ${CONFIG_VANETZA_IDF_SECURITY})
     set(VIDF_SECURITY_VERIFY ${CONFIG_VANETZA_IDF_SECURITY_VERIFY})
     set(VIDF_PKI ${CONFIG_VANETZA_IDF_PKI})
+    set(VIDF_NVS_CREDENTIALS ${CONFIG_VANETZA_IDF_NVS_CREDENTIALS})
 else()
     project(vanetza_idf LANGUAGES C CXX)
     option(VIDF_NETWORK "GeoNetworking router, BTP and DCC" ON)
@@ -95,10 +96,15 @@ endif()
 if(VIDF_SECURITY)
     list(APPEND _sources ${VIDF_SECURITY_PROVIDER_SOURCES} "${VIDF_PORT}/src/ecc.cpp"
         "${VIDF_PORT}/src/security.cpp" "${VIDF_PORT}/src/identity_manager.cpp"
-        "${VIDF_PORT}/src/sign_header_policy.cpp")
+        "${VIDF_PORT}/src/sign_header_policy.cpp" "${VIDF_PORT}/src/credentials.cpp")
     if(ESP_PLATFORM)
         list(APPEND _sources "${VIDF_PORT}/src/backend_mbedtls.cpp")
         target_compile_definitions(${VIDF_TARGET} PUBLIC VIDF_BACKEND_MBEDTLS=1)
+        if(VIDF_NVS_CREDENTIALS)
+            # CredentialStore on nvs_flash (credentials.hpp); the application initialises NVS
+            list(APPEND _sources "${VIDF_PORT}/src/nvs_credential_store.cpp")
+            target_compile_definitions(${VIDF_TARGET} PUBLIC VIDF_NVS_CREDENTIALS=1)
+        endif()
     else()
         # persistence.hpp declares the OpenSSL loaders under this define: keep it PUBLIC.
         list(APPEND _sources ${VIDF_SECURITY_HOST_SOURCES})
@@ -207,7 +213,7 @@ elseif(VIDF_TESTS)
     endif()
     if(VIDF_SECURITY)
         target_sources(vidf_tests PRIVATE tests/test_security.cpp tests/test_backend_kat.cpp
-            tests/test_security_entity.cpp tests/test_trust_domain.cpp)
+            tests/test_security_entity.cpp tests/test_trust_domain.cpp tests/test_credentials.cpp)
         if(VIDF_PKI)
             target_sources(vidf_tests PRIVATE tests/test_pki.cpp)
         endif()
