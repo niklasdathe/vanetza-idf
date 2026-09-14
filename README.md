@@ -21,65 +21,95 @@ are distinct from complete Basic Services.
 ## Components and configurable boundaries
 
 The arrangement follows the facilities, networking/transport and access layers
-of the ETSI ITS station architecture, with management and security alongside
-them. It is an implementation map, inspired by
+of the ETSI ITS station architecture, with management and security as shared
+cross-layer services. It is an implementation map, inspired by
 [TS 102 723-11, clauses 4–5](https://www.etsi.org/deliver/etsi_ts/102700_102799/10272311/01.01.01_60/ts_10272311v010101p.pdf)
 and [EN 303 797, Annex B](https://www.etsi.org/deliver/etsi_en/303700_303799/303797/02.01.01_60/en_303797v020101p.pdf).
 It does not imply that every service in those figures is implemented.
 
 ```mermaid
 flowchart TB
-    application["Application or upper tester"]
     subgraph station["vanetza-idf"]
-        direction LR
-        management["Management inputs: position, clock, MIB and configuration"]
-        subgraph layers["Selectable protocol components"]
-            direction TB
-            subgraph facilities["Facilities profile"]
-                direction LR
-                cam["CAM Release 2 codec"]
-                denm["DENM Release 2 codec"]
-                vam["VAM Release 2 codec"]
-                services["CA, DEN and VRU Basic Services: pending"]
+        direction TB
+
+        subgraph entry["Application / test entry points"]
+            direction LR
+            application["Application or upper tester"]
+            f_entry["Facilities PDU entry"]
+            b_entry["BTP-DATA entry"]
+            a_entry["AL_DATA entry"]
+            application --> f_entry
+            application --> b_entry
+            application --> a_entry
+        end
+
+        subgraph dataplane["Protocol data plane"]
+            direction LR
+
+            subgraph facilities["Facilities"]
+                direction TB
+                codecs["CAM R2 / DENM R2 / VAM R2\nASN.1 codecs"]
+                basic_services["CA / DEN / VRU Basic Services\npending"]
             end
-            btp["Network profile: BTP-A and BTP-B"]
-            gn["GeoNetworking router: SHB and GBC; Release 2 gaps remain"]
-            access["Access profile: AL_DATA boundary and parameter validation"]
-            cam --> btp
-            denm --> btp
-            vam --> btp
-            btp --> gn
+
+            subgraph nt["Networking & Transport"]
+                direction TB
+                btp["BTP-A / BTP-B"]
+                gn["GeoNetworking\nSHB / GBC"]
+                btp --> gn
+            end
+
+            subgraph access_layer["Access boundary"]
+                direction TB
+                access["AL_DATA\nparameter validation"]
+            end
+
+            codecs --> btp
             gn --> access
         end
-        security["Security entity: TS 103 097 signing, ticket pool, identifier change; verification pending"]
-        saps["Cross-layer SAP bindings: SN, SF, MN, MF, MI"]
+
+        subgraph shared["Shared / cross-layer services"]
+            direction LR
+            position["Position + clock"]
+            management["Management\nMIB + configuration"]
+            security["Security entity\nTS 103 097 signing + ticket pool\nverification pending"]
+            saps["SAP bindings\nSN / SF / MN / MF / MI"]
+        end
+
+        f_entry --> codecs
+        b_entry --> btp
+        a_entry --> access
+
+        position -.-> gn
         management -.-> gn
         security -.-> gn
         saps -.-> security
         saps -.-> gn
     end
-    application -->|"Facilities PDU entry"| facilities
-    application -->|"BTP-DATA entry"| btp
-    application -->|"AL_DATA entry"| access
-    access <-->|"Owned GNPDU and metadata"| adapter["External Access adapter: software lower tester or radio"]
-    adapter -.-> radio["ESP32-C5 radio: experimental implementation; DCC and hardware validation pending"]
-    etsi["Separately installed ETSI TTCN-3 framework and SUT adapter"] -.-> application
+
+    subgraph integration["Platform / external integration"]
+        direction LR
+        etsi["External ETSI TTCN-3\nframework + SUT adapter"]
+        hil["Optional HIL framing\nbounded VID1 envelope"]
+        adapter["External access adapter\nsoftware lower tester / radio"]
+        radio["ESP32-C5 radio backend\nexperimental; DCC + HW validation pending"]
+
+        hil -.-> etsi
+        adapter -.-> radio
+    end
+
+    etsi -.-> application
     etsi -.-> adapter
-    hil["Optional HIL framing: bounded VID1 transport envelope"] -.-> etsi
-    classDef available fill:#e6f4ea,stroke:#237a3b,color:#17251b
-    classDef external fill:#e8f0fe,stroke:#4169a1,stroke-dasharray:5 4,color:#182439
-    classDef pending fill:#fff3cd,stroke:#9b7110,stroke-dasharray:5 4,color:#392c0a
-    class cam,denm,vam,btp,gn,access,management,hil,saps available
-    class application,adapter,etsi external
-    class services,security,radio pending
+    access <-->|"owned GNPDU + metadata"| adapter
 ```
 
-Green denotes available code, blue denotes application/test infrastructure,
-and amber denotes incomplete functionality. Dashed connections describe
-integration relationships. Reception travels back up the selected layers;
-the diagram emphasizes transmit entry points. The access profile omits the
-network and facilities layers; the network profile adds BTP/GeoNetworking;
-the facilities profile also enables the individually selectable codecs.
+The main transmit path is deliberately kept horizontal: Facilities → BTP →
+GeoNetworking → Access. Management, position/time and security are shown as
+shared services because they support protocol processing rather than form another
+encapsulation stage. Reception travels back up the selected layers. The access
+profile omits the network and facilities layers; the network profile adds
+BTP/GeoNetworking; the facilities profile also enables the individually
+selectable codecs. Complete CA, DEN and VRU Basic Services are still pending.
 The optional HIL envelope carries adapter payloads; it is not an ETSI protocol.
 
 ## External TTCN-3 and HIL
