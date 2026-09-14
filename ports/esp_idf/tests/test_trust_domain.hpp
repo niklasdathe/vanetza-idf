@@ -45,14 +45,26 @@ public:
                             unsigned hours, const CircularRegion& region) const;
     /// a further subordinate CA (clause 7.2.4) under the root, e.g. the test-system side authority
     Credential issue_authority(const std::string& name, vanetza::Clock::time_point start) const;
-    /// a subordinate CA (clause 7.2.4) under any issuer, e.g. an AA under an external root (vidf_issue)
+    /// a subordinate CA (clause 7.2.4) under any issuer, e.g. an AA under an external root (vidf_issue):
+    /// its certIssuePermissions are the issuer's groups that reach two certificates down (IEEE Std 1609.2
+    /// 6.4.28) with the defaults, its region the issuer's (6.4.17)
     Credential issue_authority(const Credential& issuer, const std::string& name, vanetza::Clock::time_point start,
                                unsigned years) const;
+    /// the ticket with an explicit GeographicRegion copied in (nullptr: none), e.g. the issuer's own region
+    Credential issue_ticket(const Credential& authority, const Permissions&, vanetza::Clock::time_point start,
+                            unsigned hours, const Vanetza_Security_GeographicRegion_t* region) const;
     /// a self-signed root (clause 7.2.3) from an existing key, e.g. a project root certificate (vidf_issue)
     vanetza::security::v3::Certificate issue_root(const vanetza::security::PrivateKey& key,
                                                   const vanetza::security::PublicKey& verification,
                                                   const std::string& name, vanetza::Clock::time_point start,
                                                   unsigned years) const;
+    /// a self-signed root with the appPermissions, certIssuePermissions and region of another root
+    /// certificate (a lab twin of a real root for rehearsals, vidf_issue root --like)
+    vanetza::security::v3::Certificate issue_root_like(const vanetza::security::PrivateKey& key,
+                                                       const vanetza::security::PublicKey& verification,
+                                                       const std::string& name, vanetza::Clock::time_point start,
+                                                       unsigned years,
+                                                       const vanetza::security::v3::Certificate& profile) const;
     /// AT for a verification key the station generated itself (TS 102 941 authorization); no private key
     vanetza::security::v3::Certificate issue_ticket_for(const vanetza::security::PublicKey& verification,
                                                         const Permissions&, vanetza::Clock::time_point start,

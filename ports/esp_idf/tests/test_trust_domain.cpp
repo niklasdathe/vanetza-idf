@@ -243,6 +243,44 @@ Credential TrustDomain::issue_authority(const std::string& name, Clock::time_poi
     return authority;
 }
 
+// A subordinate CA may issue what its issuer allows through it: every group of the issuer
+// whose chain-length window reaches two certificates down (IEEE Std 1609.2 6.4.28) and
+// whose eeType admits authorization certificates is copied as a group with the defaults
+// (chain length 1, app); the issuer's region, if any, is inherited (6.4.17: no part of
+// the subordinate's region may lie outside the issuer's; the same region is within).
+void derive_from_issuer(Certificate& ca, const Certificate& issuer) {
+    if (const auto* groups = issuer->toBeSigned.certIssuePermissions) {
+        for (int i = 0; i < groups->list.count; ++i) {
+            const auto* group = groups->list.array[i];
+            if (!group) continue;
+            const long min = group->minChainLength ? *group->minChainLength : 1;
+            const long range = group->chainLengthRange;
+            const bool reaches = min <= 2 && (range < 0 || min + range >= 2);
+            const bool app = !group->eeType || group->eeType->size == 0 || (group->eeType->buf[0] & 0x80);
+            if (!reaches || !app) continue;
+            auto* derived = v3::asn1::allocate<v3::asn1::PsidGroupPermissions>();
+            if (group->subjectPermissions.present == Vanetza_Security_SubjectPermissions_PR_all) {
+                derived->subjectPermissions.present = Vanetza_Security_SubjectPermissions_PR_all;
+            } else if (group->subjectPermissions.present == Vanetza_Security_SubjectPermissions_PR_explicit) {
+                derived->subjectPermissions.present = Vanetza_Security_SubjectPermissions_PR_explicit;
+                const auto& ranges = group->subjectPermissions.choice.Explicit.list;
+                for (int k = 0; k < ranges.count; ++k) {
+                    if (!ranges.array[k]) continue;
+                    auto* range = static_cast<v3::asn1::PsidSspRange*>(vanetza::asn1::copy(asn_DEF_Vanetza_Security_PsidSspRange, ranges.array[k]));
+                    ASN_SEQUENCE_ADD(&derived->subjectPermissions.choice.Explicit, range);
+                }
+            } else {
+                vanetza::asn1::free(asn_DEF_Vanetza_Security_PsidGroupPermissions, derived);
+                continue;
+            }
+            ca.add_cert_issue_permission(derived);
+        }
+    }
+    if (const auto* region = issuer->toBeSigned.region) {
+        ca->toBeSigned.region = static_cast<Vanetza_Security_GeographicRegion_t*>(vanetza::asn1::copy(asn_DEF_Vanetza_Security_GeographicRegion, region));
+    }
+}
+
 Credential TrustDomain::issue_authority(const Credential& issuer, const std::string& name, Clock::time_point start,
                                         unsigned years) const {
     Credential authority;
@@ -250,9 +288,36 @@ Credential TrustDomain::issue_authority(const Credential& issuer, const std::str
     auto enc = fresh_key();
     authority.key = key.priv;
     common_fields(authority.certificate, key.pub, start, years, Vanetza_Security_Duration_PR_years);
-    authority_fields(authority.certificate, name, enc.pub, AuthorityKind::aa);
+    // clause 7.2.4 fields as for the lab AA, but the issuing permissions and the region come
+    // from the issuer rather than from the lab profile
+    authority.certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
+    OCTET_STRING_fromBuf(&authority.certificate->toBeSigned.id.choice.name, name.data(), name.size());
+    derive_from_issuer(authority.certificate, issuer.certificate);
+    authority.certificate.add_app_permission(aid::SCR, {0x01, 0x30});
+    auto* enc_key = v3::asn1::allocate<v3::asn1::PublicEncryptionKey>();
+    enc_key->supportedSymmAlg = Vanetza_Security_SymmAlgorithm_aes128Ccm;
+    enc_key->publicKey.present = Vanetza_Security_BasePublicEncryptionKey_PR_eciesNistP256;
+    ecdsa256::PublicKey legacy;
+    std::copy(enc.pub.x.begin(), enc.pub.x.end(), legacy.x.begin());
+    std::copy(enc.pub.y.begin(), enc.pub.y.end(), legacy.y.begin());
+    assign_compressed_point visitor(&enc_key->publicKey.choice.eciesNistP256);
+    boost::apply_visitor(visitor, compress_public_key(legacy));
+    authority.certificate->toBeSigned.encryptionKey = enc_key;
     sign(authority.certificate, &issuer.certificate, issuer.key);
     return authority;
+}
+
+Credential TrustDomain::issue_ticket(const Credential& authority, const Permissions& permissions, Clock::time_point start,
+                                     unsigned hours, const Vanetza_Security_GeographicRegion_t* region) const {
+    Credential ticket;
+    auto ticket_key = fresh_key();
+    ticket.key = ticket_key.priv;
+    common_fields(ticket.certificate, ticket_key.pub, start, hours, Vanetza_Security_Duration_PR_hours);
+    ticket.certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_none;
+    for (const auto& permission : permissions) ticket.certificate.add_app_permission(permission.first, permission.second);
+    if (region) ticket.certificate->toBeSigned.region = static_cast<Vanetza_Security_GeographicRegion_t*>(vanetza::asn1::copy(asn_DEF_Vanetza_Security_GeographicRegion, region));
+    sign(ticket.certificate, &authority.certificate, authority.key);
+    return ticket;
 }
 
 Certificate TrustDomain::issue_root(const PrivateKey& key, const PublicKey& verification, const std::string& name,
@@ -260,6 +325,26 @@ Certificate TrustDomain::issue_root(const PrivateKey& key, const PublicKey& veri
     Certificate certificate;
     common_fields(certificate, verification, start, years, Vanetza_Security_Duration_PR_years);
     root_fields(certificate, name);
+    sign(certificate, nullptr, key);
+    return certificate;
+}
+
+Certificate TrustDomain::issue_root_like(const PrivateKey& key, const PublicKey& verification, const std::string& name,
+                                         Clock::time_point start, unsigned years, const Certificate& profile) const {
+    Certificate certificate;
+    common_fields(certificate, verification, start, years, Vanetza_Security_Duration_PR_years);
+    certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
+    OCTET_STRING_fromBuf(&certificate->toBeSigned.id.choice.name, name.data(), name.size());
+    // the profile's permissions and region, deep-copied; key, name and validity are ours
+    if (profile->toBeSigned.appPermissions)
+        certificate->toBeSigned.appPermissions = static_cast<v3::asn1::SequenceOfPsidSsp*>(
+            vanetza::asn1::copy(asn_DEF_Vanetza_Security_SequenceOfPsidSsp, profile->toBeSigned.appPermissions));
+    if (profile->toBeSigned.certIssuePermissions)
+        certificate->toBeSigned.certIssuePermissions = static_cast<v3::asn1::SequenceOfPsidGroupPermissions*>(
+            vanetza::asn1::copy(asn_DEF_Vanetza_Security_SequenceOfPsidGroupPermissions, profile->toBeSigned.certIssuePermissions));
+    if (profile->toBeSigned.region)
+        certificate->toBeSigned.region = static_cast<Vanetza_Security_GeographicRegion_t*>(
+            vanetza::asn1::copy(asn_DEF_Vanetza_Security_GeographicRegion, profile->toBeSigned.region));
     sign(certificate, nullptr, key);
     return certificate;
 }

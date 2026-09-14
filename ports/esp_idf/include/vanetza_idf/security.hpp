@@ -134,6 +134,23 @@ private:
  * and brainpoolP384r1 (SHA-384). */
 bool verify_certificate_signature(vanetza::security::Backend&, const Certificate& subject, const Certificate* issuer);
 
+/** IEEE Std 1609.2-2025 clause 5.1.2 permission consistency of a certificate chain, chain[0]
+ * the end entity and the last element the anchor: every appPermissions entry of the end
+ * entity is covered by a PsidGroupPermissions group of each ancestor whose chain-length
+ * window (6.4.28) reaches down to the end entity and whose eeType admits it, the SSP
+ * inside the group's range (6.4.29/6.4.30 SspRange, BitmapSspRange: a 1 bit of the mask
+ * fixes the subordinate's bit; an omitted SSP needs "all"); every subordinate CA's ranges
+ * nest inside its issuer's. Unknown CHOICE alternatives are critical (5.2.6): false.
+ * Used by the receive-side chain validator and by the issuing tools before they write. */
+bool chain_permissions_consistent(const std::vector<const Certificate*>& chain);
+
+/** IEEE Std 1609.2-2025 clause 6.4.17: no part of the subject's region may lie outside the
+ * issuer's. No issuer region: true; issuer region but none on the subject: false;
+ * geometric issuer regions by the upstream geometry; identifiedRegion issuer (6.4.21 to
+ * 6.4.24): identifier containment for an identifiedRegion subject, the
+ * permissive_identified_region policy for a geometric subject (no border database). */
+bool region_within(const Certificate& subject, const Certificate& issuer, bool permissive_identified_region);
+
 /** Receive-side parameters that TS 103 097 leaves to the station. generationTime
  * plausibility: IEEE Std 1609.2 clause 5.2.3.2 lists it among the relevance checks
  * without fixing values; the defaults are a 3 s clock tolerance into the future and the

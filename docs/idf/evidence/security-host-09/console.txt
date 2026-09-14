@@ -13,9 +13,9 @@ spawn /opt/microbu-ttcn/titan-9ff25f04c2a437716b91517bcd00b68d72fb8ea2/Install/b
 
 Using configuration file: test.cfg
 MC@framework-dathe: Unix server socket created successfully.
-MC@framework-dathe: Listening on TCP port 39195.
+MC@framework-dathe: Listening on TCP port 39667.
 framework-dathe. is the default
-MC2> spawn /root/vidf-ats-security/AtsSecurity framework-dathe. 39195
+MC2> spawn /root/vidf-ats-security/AtsSecurity framework-dathe. 39667
 TTCN-3 Host Controller (parallel mode), version 10.1.2
 MC@framework-dathe: New HC connected from 127.0.0.1 [127.0.0.1]. framework-dathe: Linux 5.15.167.4-microsoft-standard-WSL2 on x86_64.
 cmtc
@@ -203,7 +203,7 @@ HC@framework-dathe: Initialization of module http_www_w3_org_XML_1998_namespace 
 MC@framework-dathe: Configuration file was processed on all HCs.
 HC@framework-dathe: Configuration data was processed successfully.
 MC@framework-dathe: Creating MTC on host 127.0.0.1.
-HC@framework-dathe: MTC was created. Process id: 531.
+HC@framework-dathe: MTC was created. Process id: 542.
 MC@framework-dathe: MTC is created.
 MC2> smtc
 Executing all items of [EXECUTE] section.
@@ -212,7 +212,7 @@ MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: certificates_loader::load_certificate: Failed to open Private encryption key file
 MTC@framework-dathe: certificates_loader::load_certificate: Failed to open Private encryption key file
 MTC@framework-dathe: Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716457990020818 / 716457985021860, delta = 4998958.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460222843588 / 716460217846452, delta = 4997136.000000, comp = 0
 MTC@framework-dathe: certificates_loader::load_certificate: Failed to open Private encryption key file
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
@@ -223,7 +223,7 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_02_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716457993728392 / 716457988730813, delta = 4997579.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460226658675 / 716460221659571, delta = 4999104.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -233,7 +233,7 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_03_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716457997537370 / 716457992539580, delta = 4997790.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460230463696 / 716460225466616, delta = 4997080.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -243,7 +243,7 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_04_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716458001347635 / 716457996349032, delta = 4998603.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460234281006 / 716460229282687, delta = 4998319.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -253,9 +253,9 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_05_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716458005158404 / 716458000161902, delta = 4996502.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460238097752 / 716460233103501, delta = 4994251.000000, comp = 0
 MTC@framework-dathe: Warning: Stopping inactive timer tc_ac.
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716458008958087 / 716458003960983, delta = 4997104.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460241897324 / 716460236899444, delta = 4997880.000000, comp = 0
 MTC@framework-dathe: setverdict(fail): none -> fail
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -265,7 +265,7 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_06_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716458012770179 / 716458007773169, delta = 4997010.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460245606512 / 716460240609779, delta = 4996733.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -275,7 +275,7 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_07_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716458016586192 / 716458011587650, delta = 4998542.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460249431576 / 716460244432579, delta = 4998997.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.
@@ -285,7 +285,7 @@ MC@framework-dathe: Test execution finished.
 MTC@framework-dathe: Executing test case TC_SEC_ITSS_SND_GENMSG_08_BV in module ItsSecurity_TestCases.
 MTC@framework-dathe: security_services_its::setup: Already done
 MTC@framework-dathe: security_services_its::setup: Already done
-MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716458020396379 / 716458015398136, delta = 4998243.000000, comp = 0
+MTC@framework-dathe: security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716460253241520 / 716460248243268, delta = 4998252.000000, comp = 0
 MTC@framework-dathe: setverdict(pass): none -> pass
 MTC@framework-dathe: Waiting for PTCs to finish.
 MTC@framework-dathe: Setting final verdict of the test case.

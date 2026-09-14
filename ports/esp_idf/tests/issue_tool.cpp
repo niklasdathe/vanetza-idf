@@ -3,21 +3,29 @@
 // signatures), writing the pool layout the SUT, the test system and the device
 // provisioning read (<id>.oer, <id>.vkey raw private scalar, index.lst).
 //
-//   vidf_issue root      --key KEY --name NAME --id ID --out DIR [--start T] [--years N]
+//   vidf_issue root      --key KEY --name NAME --id ID --out DIR [--start T] [--years N] [--like ROOT.oer]
 //   vidf_issue authority --issuer CERT.oer --issuer-key KEY --name NAME --id ID --out DIR [--start T] [--years N]
 //   vidf_issue ticket    --issuer AA.oer --issuer-key KEY --id ID --out DIR [--start T] [--hours H]
-//                        [--permission PSID[:HEXSSP]]... [--region LAT,LON,RADIUS_M]
-//   vidf_issue show      CERT.oer                       digest, validity, permissions
-//   vidf_issue verify    CERT.oer [ISSUER.oer]          clause 5.3.1 signature check (self-signed without issuer)
+//                        [--permission PSID[:HEXSSP]]... [--region LAT,LON,RADIUS_M] [--root ROOT.oer]
+//   vidf_issue show      CERT.oer                       digest, validity, permissions, region
+//   vidf_issue verify    CERT.oer [ISSUER.oer [ROOT.oer]]  clause 5.3.1 signatures, IEEE 1609.2 clause 5.1.2
+//                                                       permission/region/time consistency of the chain
 //
 // KEY is a PEM private key (OpenSSL reads it; an encrypted PEM prompts for the pass
 // phrase on the terminal, nothing is echoed or written) or a raw 32-octet .vkey file.
 // T is an ISO 8601 UTC instant (2026-09-14T12:00:00Z); the default start is one hour
-// before now. Curves: NIST P-256 only. This is issuing for a lab or test environment,
-// not a certification authority: no CTL/CRL, no request/response protocol.
+// before now, never before the issuer's own start. An authority's issuing permissions
+// and region are derived from its issuer (IEEE Std 1609.2 6.4.28/6.4.17); a ticket
+// inherits the issuer's region unless --region names a circle. --like copies the
+// permissions and region of an existing root into a lab root with a throwaway key (a
+// rehearsal twin of a real root). Nothing is written when the result would not verify
+// as a consistent chain (the library's own rules).
+// Curves: NIST P-256 only. This is issuing for a lab or test environment, not a
+// certification authority: no CTL/CRL, no request/response protocol.
 #include "test_trust_domain.hpp"
 #include "test_backend.hpp"
 #include <vanetza_idf/its_time.hpp>
+#include <vanetza_idf/security.hpp>
 #include <vanetza/common/clock.hpp>
 #include <vanetza/security/v3/certificate.hpp>
 #include <openssl/bn.h>
@@ -185,7 +193,75 @@ void show(const Certificate& c) {
             std::printf("\n");
         }
     }
-    std::printf("region         %s\n", c->toBeSigned.region ? "restricted" : "none");
+    if (const auto* region = c->toBeSigned.region) {
+        switch (region->present) {
+            case Vanetza_Security_GeographicRegion_PR_circularRegion:
+                std::printf("region         circle %ld,%ld r=%ld m\n", static_cast<long>(region->choice.circularRegion.center.latitude),
+                            static_cast<long>(region->choice.circularRegion.center.longitude), static_cast<long>(region->choice.circularRegion.radius));
+                break;
+            case Vanetza_Security_GeographicRegion_PR_identifiedRegion: {
+                std::printf("region         identified (UN M49 country codes):");
+                const auto& list = region->choice.identifiedRegion.list;
+                for (int i = 0; i < list.count; ++i) {
+                    const auto* entry = list.array[i];
+                    if (!entry) continue;
+                    if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryOnly) std::printf(" %ld", static_cast<long>(entry->choice.countryOnly));
+                    else if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryAndRegions) std::printf(" %ld(regions)", static_cast<long>(entry->choice.countryAndRegions.countryOnly));
+                    else if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryAndSubregions) std::printf(" %ld(subregions)", static_cast<long>(entry->choice.countryAndSubregions.country));
+                    else std::printf(" ?");
+                }
+                std::printf("\n");
+                break;
+            }
+            default:
+                std::printf("region         restricted (rectangular/polygonal)\n");
+        }
+    } else {
+        std::printf("region         none\n");
+    }
+}
+
+// The chain the library would verify: signatures, permissions, regions and validity nesting.
+// chain[0] is the subject, then its issuer and so on. Prints each finding; false on any.
+bool chain_ok(vidf_test::TrustDomain& domain, const std::vector<const Certificate*>& chain) {
+    bool ok = true;
+    for (std::size_t i = 0; i < chain.size(); ++i) {
+        const Certificate& subject = *chain[i];
+        const Certificate& issuer = i + 1 < chain.size() ? *chain[i + 1] : subject;
+        if (i + 1 == chain.size() && !subject.issuer_is_self()) { std::printf("  chain ends at a certificate that is not self-signed (issuer not given)\n"); continue; }
+        const bool signature = domain.verify_chain_signature(subject, issuer);
+        std::printf("  signature of %zu: %s\n", i, signature ? "verifies" : "does NOT verify");
+        ok = ok && signature;
+        if (i + 1 < chain.size()) {
+            const auto s_valid = subject.get_start_and_end_validity();
+            const auto i_valid = issuer.get_start_and_end_validity();
+            const bool time = i_valid.start_validity <= s_valid.start_validity && i_valid.end_validity >= s_valid.end_validity;
+            std::printf("  validity of %zu inside %zu: %s\n", i, i + 1, time ? "yes" : "NO (IEEE 1609.2: a certificate is not valid outside its issuer's validity)");
+            const bool region = vanetza_idf::security::region_within(subject, issuer, true);
+            std::printf("  region of %zu inside %zu: %s\n", i, i + 1, region ? "yes (a geometric region under an identified one is accepted by policy only)" : "NO");
+            ok = ok && time && region;
+        }
+    }
+    if (chain.size() > 1) {
+        const bool permissions = vanetza_idf::security::chain_permissions_consistent(chain);
+        std::printf("  permissions consistent along the chain (IEEE 1609.2 5.1.2): %s\n", permissions ? "yes" : "NO");
+        ok = ok && permissions;
+    }
+    return ok;
+}
+
+// default start: an hour ago, but never before the issuer became valid
+Clock::time_point default_start(const Certificate* issuer) {
+    Clock::time_point start = now() - std::chrono::hours(1);
+    if (issuer) {
+        const auto issuer_start = Clock::time_point(std::chrono::seconds(issuer->get_start_and_end_validity().start_validity));
+        if (issuer_start > start) {
+            start = issuer_start;
+            std::printf("note: the issuer is valid from Time32 %u only; the start is set to that instant\n",
+                        static_cast<unsigned>(issuer->get_start_and_end_validity().start_validity));
+        }
+    }
+    return start;
 }
 
 using Options = std::map<std::string, std::vector<std::string>>;
@@ -218,18 +294,23 @@ int main(int argc, char** argv) try {
     }
     if (command == "verify") {
         const auto& args = options.at("positional");
-        const Certificate subject = load_certificate(args.at(0));
-        const Certificate issuer = args.size() > 1 ? load_certificate(args.at(1)) : subject;
-        const bool ok = domain.verify_chain_signature(subject, issuer);
-        std::printf("%s\n", ok ? "signature verifies" : "signature does NOT verify");
+        std::vector<Certificate> loaded;
+        for (const auto& path : args) loaded.push_back(load_certificate(path));
+        std::vector<const Certificate*> chain;
+        for (const auto& c : loaded) chain.push_back(&c);
+        const bool ok = chain_ok(domain, chain);
+        std::printf("%s\n", ok ? "chain verifies" : "chain does NOT verify");
         return ok ? 0 : 1;
     }
     const std::string dir = one(options, "--out");
     const std::string id = one(options, "--id");
-    const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : now() - std::chrono::hours(1);
     if (command == "root") {
+        const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : default_start(nullptr);
         const auto key = load_key(one(options, "--key"), backend);
-        const auto certificate = domain.issue_root(key.priv, key.pub, one(options, "--name"), start, std::stoul(one(options, "--years", "5")));
+        const unsigned years = std::stoul(one(options, "--years", "5"));
+        const auto certificate = options.count("--like")
+            ? domain.issue_root_like(key.priv, key.pub, one(options, "--name"), start, years, load_certificate(one(options, "--like")))
+            : domain.issue_root(key.priv, key.pub, one(options, "--name"), start, years);
         store(dir, id, certificate, nullptr); // the root key stays where it is
         return 0;
     }
@@ -237,9 +318,13 @@ int main(int argc, char** argv) try {
         vidf_test::Credential issuer;
         issuer.certificate = load_certificate(one(options, "--issuer"));
         issuer.key = load_key(one(options, "--issuer-key"), backend).priv;
-        if (!domain.verify_chain_signature(issuer.certificate, issuer.certificate) && issuer.certificate.issuer_is_self())
+        if (issuer.certificate.issuer_is_self() && !domain.verify_chain_signature(issuer.certificate, issuer.certificate))
             throw std::runtime_error("issuer certificate does not verify with itself");
+        const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : default_start(&issuer.certificate);
         const auto authority = domain.issue_authority(issuer, one(options, "--name"), start, std::stoul(one(options, "--years", "3")));
+        if (!authority.certificate.is_ca_certificate())
+            throw std::runtime_error("the issuer has no certIssuePermissions group reaching two certificates down; nothing to delegate");
+        if (!chain_ok(domain, {&authority.certificate, &issuer.certificate})) throw std::runtime_error("refusing to write an inconsistent authority certificate");
         store(dir, id, authority.certificate, &authority.key);
         return 0;
     }
@@ -259,6 +344,7 @@ int main(int argc, char** argv) try {
             }
         }
         const unsigned hours = std::stoul(one(options, "--hours", "24"));
+        const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : default_start(&issuer.certificate);
         vidf_test::Credential ticket;
         if (options.count("--region")) {
             long lat, lon, radius;
@@ -267,8 +353,12 @@ int main(int argc, char** argv) try {
             ticket = domain.issue_ticket(issuer, permissions, start, hours,
                                          vidf_test::TrustDomain::CircularRegion {static_cast<std::int32_t>(lat), static_cast<std::int32_t>(lon), static_cast<std::uint16_t>(radius)});
         } else {
-            ticket = domain.issue_ticket(issuer, permissions, start, hours);
+            ticket = domain.issue_ticket(issuer, permissions, start, hours, issuer.certificate->toBeSigned.region); // inherits the issuer's region
         }
+        std::vector<Certificate> more;
+        std::vector<const Certificate*> chain {&ticket.certificate, &issuer.certificate};
+        if (options.count("--root")) { more.push_back(load_certificate(one(options, "--root"))); chain.push_back(&more.back()); }
+        if (!chain_ok(domain, chain)) throw std::runtime_error("refusing to write a ticket the issuer cannot authorise (permissions, region or validity)");
         store(dir, id, ticket.certificate, &ticket.key);
         return 0;
     }

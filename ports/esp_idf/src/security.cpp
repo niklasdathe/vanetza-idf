@@ -223,26 +223,7 @@ VerificationReport check_profile(const v3::SecuredMessage& msg) {
     return VerificationReport::Success;
 }
 
-// ---- SecurityEntity ---------------------------------------------------------
-
-#if VIDF_SECURITY_VERIFY
 namespace {
-// Issuer lookup over the provisioned authorities and the ones learned by P2P distribution.
-class CombinedIssuerLookup : public v3::IssuerLookup {
-public:
-    explicit CombinedIssuerLookup(const v3::IssuerLookup& provisioned) : provisioned_(provisioned) {}
-    const Certificate* find_issuer(const HashedId8& digest) const override {
-        if (const auto* found = provisioned_.find_issuer(digest)) return found;
-        for (const auto& learned : learned_) {
-            if (learned.calculate_digest() == digest) return &learned;
-        }
-        return nullptr;
-    }
-    std::deque<Certificate> learned_;
-private:
-    const v3::IssuerLookup& provisioned_;
-};
-
 // IEEE Std 1609.2-2025 permission consistency along the chain, which the upstream
 // validator reduces to "the issuer lists the ITS-AID". TS 103 097 V2.2.1 clause 5.2
 // verifies an SPDU as IEEE Std 1609.2 clause 5.2 requires, and that includes the
@@ -430,18 +411,163 @@ bool chain_consistent(const std::vector<const Vanetza_Security_EtsiTs103097Certi
     }
     return true;
 }
-} // namespace consistency
 
-// TS 102 940 clause 6 chain: the upstream validator checks anchoring, time, ITS-AID,
-// assurance and region consistency; this adds the certificate signatures up the chain
-// (IEEE Std 1609.2 clause 5.3.1) and the permission consistency of clause 5.1.2 (above),
-// remembering tickets already verified.
+// IEEE Std 1609.2-2025 GeographicRegion (6.4.17): "a certificate is not valid if any part
+// of the region indicated in its scope field lies outside the region indicated in the
+// scope of its issuer". Geometric issuer regions are decided by the upstream geometry
+// (CertificateView::region_is_within). An identifiedRegion issuer (6.4.21 to 6.4.24:
+// countryOnly, countryAndRegions, countryAndSubregions) contains an identifiedRegion
+// subject when every subject entry lies in an issuer entry of the same country: a whole
+// country covers everything in it, regions cover their subregions, lists must nest.
+// Whether a circle, rectangle or polygon lies inside a country needs a border database
+// this library does not carry; that case follows the station's
+// VerificationPolicy::permissive_identified_region, as the location check does.
+using Identified = Vanetza_Security_IdentifiedRegion_t;
+
+bool contains_all(const Vanetza_Security_SequenceOfUint8_t& outer, const Vanetza_Security_SequenceOfUint8_t& inner) {
+    for (int i = 0; i < inner.list.count; ++i) {
+        bool found = false;
+        for (int j = 0; j < outer.list.count && !found; ++j) found = inner.list.array[i] && outer.list.array[j] && *inner.list.array[i] == *outer.list.array[j];
+        if (!found) return false;
+    }
+    return true;
+}
+bool contains_all(const Vanetza_Security_SequenceOfUint16_t& outer, const Vanetza_Security_SequenceOfUint16_t& inner) {
+    for (int i = 0; i < inner.list.count; ++i) {
+        bool found = false;
+        for (int j = 0; j < outer.list.count && !found; ++j) found = inner.list.array[i] && outer.list.array[j] && *inner.list.array[i] == *outer.list.array[j];
+        if (!found) return false;
+    }
+    return true;
+}
+// region r (with the given subregions, nullptr: the whole region) inside one issuer entry
+bool region_in_entry(long country, long region, const Vanetza_Security_SequenceOfUint16_t* subregions, const Identified& entry) {
+    switch (entry.present) {
+        case Vanetza_Security_IdentifiedRegion_PR_countryOnly:
+            return entry.choice.countryOnly == country;
+        case Vanetza_Security_IdentifiedRegion_PR_countryAndRegions: {
+            if (entry.choice.countryAndRegions.countryOnly != country) return false;
+            const auto& regions = entry.choice.countryAndRegions.regions.list;
+            for (int j = 0; j < regions.count; ++j) if (regions.array[j] && *regions.array[j] == region) return true;
+            return false;
+        }
+        case Vanetza_Security_IdentifiedRegion_PR_countryAndSubregions: {
+            if (entry.choice.countryAndSubregions.country != country || !subregions) return false;
+            const auto& entries = entry.choice.countryAndSubregions.regionAndSubregions.list;
+            for (int j = 0; j < entries.count; ++j) {
+                if (entries.array[j] && entries.array[j]->region == region) return contains_all(entries.array[j]->subregions, *subregions);
+            }
+            return false;
+        }
+        default:
+            return false;
+    }
+}
+bool identified_within(const Vanetza_Security_SequenceOfIdentifiedRegion_t& inner, const Vanetza_Security_SequenceOfIdentifiedRegion_t& outer) {
+    for (int i = 0; i < inner.list.count; ++i) {
+        const Identified* entry = inner.list.array[i];
+        if (!entry) return false;
+        bool covered = false;
+        for (int j = 0; j < outer.list.count && !covered; ++j) {
+            const Identified* candidate = outer.list.array[j];
+            if (!candidate) continue;
+            switch (entry->present) {
+                case Vanetza_Security_IdentifiedRegion_PR_countryOnly:
+                    covered = candidate->present == Vanetza_Security_IdentifiedRegion_PR_countryOnly &&
+                              candidate->choice.countryOnly == entry->choice.countryOnly;
+                    break;
+                case Vanetza_Security_IdentifiedRegion_PR_countryAndRegions: {
+                    const auto& regions = entry->choice.countryAndRegions.regions.list;
+                    covered = regions.count > 0;
+                    for (int r = 0; r < regions.count && covered; ++r)
+                        covered = regions.array[r] && region_in_entry(entry->choice.countryAndRegions.countryOnly, *regions.array[r], nullptr, *candidate);
+                    break;
+                }
+                case Vanetza_Security_IdentifiedRegion_PR_countryAndSubregions: {
+                    const auto& entries = entry->choice.countryAndSubregions.regionAndSubregions.list;
+                    covered = entries.count > 0;
+                    for (int r = 0; r < entries.count && covered; ++r)
+                        covered = entries.array[r] && region_in_entry(entry->choice.countryAndSubregions.country, entries.array[r]->region,
+                                                                       &entries.array[r]->subregions, *candidate);
+                    break;
+                }
+                default:
+                    covered = false;
+            }
+        }
+        if (!covered) return false;
+    }
+    return true;
+}
+bool region_within(const Vanetza_Security_EtsiTs103097Certificate_t& subject, const Vanetza_Security_EtsiTs103097Certificate_t& issuer,
+                   bool permissive_identified_region) {
+    const auto* outer = issuer.toBeSigned.region;
+    const auto* inner = subject.toBeSigned.region;
+    if (!outer) return true;
+    if (!inner) return false;
+    if (outer->present != Vanetza_Security_GeographicRegion_PR_identifiedRegion)
+        return v3::CertificateView(&subject).region_is_within(v3::CertificateView(&issuer)); // upstream geometry
+    switch (inner->present) {
+        case Vanetza_Security_GeographicRegion_PR_identifiedRegion:
+            return identified_within(inner->choice.identifiedRegion, outer->choice.identifiedRegion);
+        case Vanetza_Security_GeographicRegion_PR_circularRegion:
+        case Vanetza_Security_GeographicRegion_PR_rectangularRegion:
+        case Vanetza_Security_GeographicRegion_PR_polygonalRegion:
+            return permissive_identified_region; // no border database: policy
+        default:
+            return false;
+    }
+}
+} // namespace consistency
+} // namespace
+
+bool chain_permissions_consistent(const std::vector<const Certificate*>& chain) {
+    std::vector<const Vanetza_Security_EtsiTs103097Certificate_t*> raw;
+    for (const auto* certificate : chain) {
+        if (!certificate || !certificate->content()) return false;
+        raw.push_back(certificate->content());
+    }
+    return consistency::chain_consistent(raw);
+}
+
+bool region_within(const Certificate& subject, const Certificate& issuer, bool permissive_identified_region) {
+    if (!subject.content() || !issuer.content()) return false;
+    return consistency::region_within(*subject.content(), *issuer.content(), permissive_identified_region);
+}
+
+// ---- SecurityEntity ---------------------------------------------------------
+
+#if VIDF_SECURITY_VERIFY
+namespace {
+// Issuer lookup over the provisioned authorities and the ones learned by P2P distribution.
+class CombinedIssuerLookup : public v3::IssuerLookup {
+public:
+    explicit CombinedIssuerLookup(const v3::IssuerLookup& provisioned) : provisioned_(provisioned) {}
+    const Certificate* find_issuer(const HashedId8& digest) const override {
+        if (const auto* found = provisioned_.find_issuer(digest)) return found;
+        for (const auto& learned : learned_) {
+            if (learned.calculate_digest() == digest) return &learned;
+        }
+        return nullptr;
+    }
+    std::deque<Certificate> learned_;
+private:
+    const v3::IssuerLookup& provisioned_;
+};
+
+
+// TS 102 940 clause 6 chain: the upstream validator checks anchoring, time, ITS-AID and
+// assurance consistency; this adds the certificate signatures up the chain (IEEE Std
+// 1609.2 clause 5.3.1), the permission consistency of clause 5.1.2 and the region
+// consistency of 6.4.17 (above; the upstream region check knows no identifiedRegion
+// issuer and is switched off), remembering tickets already verified.
 class ChainValidator {
 public:
     using Verdict = v3::CertificateValidator::Verdict;
     ChainValidator(Backend& backend, v3::DefaultCertificateValidator& base, const v3::IssuerLookup& issuers) :
         backend_(backend), base_(base), issuers_(issuers) {}
     std::size_t capacity = 64;
+    bool permissive_identified_region = true;
     Verdict valid_for_signing(const Vanetza_Security_EtsiTs103097Certificate_t& signing_cert, ItsAid its_aid) {
         const v3::CertificateView view { &signing_cert };
         const auto verdict = base_.valid_for_signing(view, its_aid);
@@ -469,6 +595,9 @@ public:
         }
         if (!anchored) return Verdict::Untrusted;
         if (chain.size() > 1 && !consistency::chain_consistent(chain)) return Verdict::InconsistentChain;
+        for (std::size_t k = 0; k + 1 < chain.size(); ++k) {
+            if (!consistency::region_within(*chain[k], *chain[k + 1], permissive_identified_region)) return Verdict::InconsistentChain;
+        }
         if (verified_.size() >= capacity) verified_.clear();
         verified_.insert(*digest);
         return Verdict::Valid;
@@ -519,6 +648,10 @@ public:
         location_checker.set_permissive_identified_region(verification.permissive_identified_region);
 #if VIDF_SECURITY_VERIFY
         validator.use_issuer_lookup(&issuers);
+        // upstream's is_within() has no identifiedRegion issuer case (an EU root would make
+        // every chain inconsistent); ChainValidator applies the region rule of 6.4.17 instead
+        validator.disable_region_consistency_checks(true);
+        chain.permissive_identified_region = verification.permissive_identified_region;
 #else
         validator.use_issuer_lookup(&tc.issuers());
 #endif
@@ -747,6 +880,9 @@ DecapConfirm SecurityEntity::decapsulate_packet(DecapRequest&& request) {
 void SecurityEntity::set_verification_policy(const VerificationPolicy& policy) {
     impl_->verification = policy;
     impl_->location_checker.set_permissive_identified_region(policy.permissive_identified_region);
+#if VIDF_SECURITY_VERIFY
+    impl_->chain.permissive_identified_region = policy.permissive_identified_region;
+#endif
 #if VIDF_SECURITY_VERIFY
     impl_->chain.capacity = std::max<std::size_t>(1, policy.verified_chain_cache);
 #endif

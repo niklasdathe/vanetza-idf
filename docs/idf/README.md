@@ -147,10 +147,12 @@ SN-DECAP verifies received `EtsiTs103097Data-Signed` packets (IEEE Std 1609.2
 clause 5.2 as TS 103 097 clause 5.2 requires): the TS 103 097 clause 7.1
 structure for the ITS-AID, the signer (inline certificate or a digest learned
 earlier), the ticket's validity, permissions and region, every certificate
-signature up to a provisioned root, the permission consistency of the chain
-(IEEE Std 1609.2 clause 5.1.2: chain length windows, eeType, SSP ranges of
-every ancestor), the message signature, then the generationTime window and
-replay detection of `VerificationPolicy` (`set_verification_policy`). A CAM from an unknown station or with an unknown
+signature up to a provisioned root, the permission and region consistency of
+the chain (IEEE Std 1609.2 clause 5.1.2: chain length windows, eeType, SSP
+ranges of every ancestor; clause 6.4.17: every region inside its issuer's,
+identified regions by identifier), the message signature, then the
+generationTime window and replay detection of `VerificationPolicy`
+(`set_verification_policy`). A CAM from an unknown station or with an unknown
 AA triggers the P2P certificate distribution of clause 7.1.1 through the header
 policy, and an AA received in `requestedCertificate` is learned once it chains
 to a root. The GN router drops what does not verify (`itsGnSnDecapResultHandling`
@@ -158,8 +160,10 @@ STRICT) and passes report, ITS-AID and SSP of what does up to BTP. Without
 `CONFIG_VANETZA_IDF_SECURITY_VERIFY` the report is `Configuration_Problem` and
 nothing secured is passed up (docs/idf/conformance.md GAP-SEC-001). Revocation
 (CRL/CTL) and encryption are not implemented; identified regions (country
-codes) are accepted unless the application supplies a geodesy country
-database. Budget on the ESP32-C5: about 34 ms per verified message, 29 ms of
+codes) are accepted for the position check, and a circular/rectangular/
+polygonal region under an identified one is accepted in the chain, while
+`VerificationPolicy::permissive_identified_region` is true (no border database
+on the device); set it to false to reject both. Budget on the ESP32-C5: about 34 ms per verified message, 29 ms of
 which is the ECDSA peripheral (validation.md).
 
 `IdentityManager` implements the identifier change of TS 102 723-8 clause 6.3:

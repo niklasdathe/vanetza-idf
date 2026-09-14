@@ -15,12 +15,12 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 833 checks | Security entity incl. receive-side verification and chain consistency, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1010 checks; security off 150; access-only 88; Linux Release 833 |
-| ESP32-C5 component execution, security on (COM11) | PASS, 707 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`; [security-device-07](evidence/security-device-07/result.json) incl. the chain consistency test (earlier: -06 668 checks, -05 537, -03/-04 503); heap and cost notes below |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 873 checks | Security entity incl. receive-side verification, chain and region consistency, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1050 checks; security off 150; access-only 88; Linux Release 873 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 747 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`; [security-device-07](evidence/security-device-07/result.json) incl. the chain and region consistency tests (earlier: -06 668 checks, -05 537, -03/-04 503); heap and cost notes below |
 | ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
 | Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below; rerun with the CPOC-shaped pool and the consistency checks: [security-host-09](evidence/security-host-09/result.json), same verdicts |
 | Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below; rerun [security-host-10](evidence/security-host-10/result.json), same verdicts |
-| Independent verifier (c-its) on SUT-signed CAM/DENM, host | **PASS**: signatures, chain, permissions, CAM/DENM authorisation | Lab chain from `vidf_issue`, frames from `capture_pcap.py`; [independent-verifier-01](evidence/independent-verifier-01/analysis.md) |
+| Independent verifier (c-its) on SUT-signed CAM/DENM, host | **PASS**: signatures, chain, permissions, CAM/DENM authorisation | Lab chain from `vidf_issue`, frames from `capture_pcap.py`; [independent-verifier-01](evidence/independent-verifier-01/analysis.md); rehearsal on a twin of a real EU CCMS L0 root (its permission profile and EU region, throwaway key): [independent-verifier-02](evidence/independent-verifier-02/analysis.md) |
 | Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-07](evidence/btp-host-07/result.json) (earlier -05, -06) |
 | Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-04](evidence/geonetworking-host-04/result.json) (earlier -02, -03): no regression |
 | Official ETSI Security, receiving side, host | **PASS 24/26**; 2 errors (testcase defect, IUT-independent) | `TC_SEC_ITSS_RCV_MSG/CAM/DENM_*` with the SUT verifying (`VIDF_SECURITY_VERIFY`); see below; rerun with the consistency checks [security-host-08](evidence/security-host-08/result.json), same verdicts |
@@ -213,7 +213,7 @@ form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
 The host tests run the same backend against OpenSSL as an oracle (signature
 cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
 known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
-build (1010 checks); the device runs the PSA path natively (707 checks, the
+build (1050 checks); the device runs the PSA path natively (747 checks, the
 difference being the OpenSSL-only oracle tests).
 
 **Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
@@ -379,7 +379,7 @@ nest inside its issuer's. A violation is reported as `INCONSISTENT_CHAIN`
 (TS 102 723-8 Table 27) with `Inconsistent_With_Signer`. `test_chain_consistency` exercises a ticket
 whose CAM SSP sets bits the AA's mask fixes to zero, a root permitting a chain
 of length 1 only, and a root group with eeType enrol only, all with valid
-signatures (833 host checks, 707 on the device). On the device the same three
+signatures (873 host checks, 747 on the device). On the device the same three
 checks appended to `test_verification` failed at first: after that test's
 stations and a fourth trust configuration the heap was fragmented (largest
 free block 16 kB), an allocation failure inside `verify()` surfaced through
@@ -396,7 +396,30 @@ the new pool with identical verdicts ([security-host-08](evidence/security-host-
 receiving 24/26, [-09](evidence/security-host-09/result.json) GN-MGMT 7/8,
 [-10](evidence/security-host-10/result.json) CAM/DENM 7/7).
 
-**Independent verifier** ([independent-verifier-01](evidence/independent-verifier-01/analysis.md)).
+**Region consistency (2026-09-14, from the twin of the real root).** The
+upstream `is_within()` decides circles, rectangles and polygons only; an
+`identifiedRegion` issuer, which the EU CCMS CPOC Protocol Release 3.0 root
+profile prescribes (clause I.3.9: a root that is not globally valid carries
+`identifiedRegion`, countryOnly 65535 for the EU as a whole), made every
+subordinate "outside" and hence every chain under an EU root inconsistent.
+The upstream region consistency is switched off in the base validator and
+`ChainValidator` applies IEEE Std 1609.2 clause 6.4.17 itself
+(`region_within`): no issuer region, anything goes; issuer region but none on
+the subject, inconsistent; geometric issuer regions by the upstream geometry;
+identified issuer regions by identifier containment (a country covers its
+regions and subregions, lists must nest); a geometric subject region under an
+identified issuer region needs a border database the device does not carry
+and follows `VerificationPolicy::permissive_identified_region`, as the
+location check already did. `test_chain_consistency` adds a root with
+countryOnly 65535, an AA derived from it (`issue_authority`, the derivation
+`vidf_issue` uses), a ticket with the inherited region (verifies), an AA
+without region (INCONSISTENT_CHAIN) and a circular ticket region (strict
+policy: INCONSISTENT_CHAIN, permissive: verifies), as `test_region_consistency`
+(its own test: at most two stations alive on the device): 873 host checks, 747 on
+the ESP32-C5.
+
+**Independent verifier** ([independent-verifier-01](evidence/independent-verifier-01/analysis.md),
+[-02](evidence/independent-verifier-02/analysis.md) on a twin of a real EU CCMS L0 root).
 c-its (an unrelated Rust implementation with its own ASN.1 modules and
 crypto) verifies the frames the host SUT signs with a lab chain from
 `vidf_issue`, recorded as an 802.11 pcap by `tools/capture_pcap.py`: message

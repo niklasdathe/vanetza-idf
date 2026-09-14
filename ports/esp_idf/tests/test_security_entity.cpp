@@ -866,6 +866,102 @@ void test_chain_consistency() {
     expect_inconsistent(enrol_root, "root group with eeType enrol only, authorization ticket");
     check(b.entity->statistics().rejected_certificate == 3 && b.entity->statistics().failed == 0,
           "counted as rejected certificates, no exception on the way");
+
+}
+
+// IEEE Std 1609.2 clause 6.4.17 region consistency, its own test for the device heap.
+void test_region_consistency() {
+    vidf_test::section("test_region_consistency");
+    Station a;
+    auto at = a.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    a.pool.add(at.certificate, at.key);
+    a.start();
+    // Region consistency (IEEE Std 1609.2 clause 6.4.17) under a root with an identifiedRegion, as
+    // the EU CCMS CPOC Protocol Release 3.0 root profile has it (clause I.3.9: countryOnly 65535
+    // stands for the EU as a whole); the AA is derived from the root as vidf_issue derives it.
+    ByteBuffer eu_root_coer, eu_aa_coer, bare_aa_coer;
+    AlDataRequest eu_frame, circle_frame, bare_frame;
+    {
+        v3::Certificate root_eu = a.domain.root.certificate;
+        auto* region = vanetza::asn1::allocate<Vanetza_Security_GeographicRegion_t>();
+        region->present = Vanetza_Security_GeographicRegion_PR_identifiedRegion;
+        auto* entry = vanetza::asn1::allocate<Vanetza_Security_IdentifiedRegion_t>();
+        entry->present = Vanetza_Security_IdentifiedRegion_PR_countryOnly;
+        entry->choice.countryOnly = 65535;
+        ASN_SEQUENCE_ADD(&region->choice.identifiedRegion, entry);
+        root_eu->toBeSigned.region = region;
+        a.domain.sign(root_eu, nullptr, a.domain.root.key);
+        eu_root_coer = root_eu.encode();
+        const vidf_test::Credential root_credential {root_eu, a.domain.root.key};
+        auto aa_eu = a.domain.issue_authority(root_credential, "EU AA", t0 - 1h, 3);
+        check(aa_eu.certificate->toBeSigned.region != nullptr && aa_eu.certificate.is_ca_certificate() &&
+              sec::region_within(aa_eu.certificate, root_eu, false) &&
+              sec::chain_permissions_consistent({&aa_eu.certificate, &root_eu}) /* its own appPermissions (psid 623) under the root's second group */,
+              "derived AA inherits the root's region and issuing permissions");
+        eu_aa_coer = aa_eu.certificate.encode();
+        {   // ticket with the inherited identified region
+            auto ticket = a.domain.issue_ticket(aa_eu, all_permissions, t0 - 1h, 24, aa_eu.certificate->toBeSigned.region);
+            check(sec::chain_permissions_consistent({&ticket.certificate, &aa_eu.certificate, &root_eu}) &&
+                  sec::region_within(ticket.certificate, aa_eu.certificate, false), "EU ticket consistent with AA and root");
+            Station r;
+            r.trust.add_root(eu_root_coer); r.trust.add_authority(eu_aa_coer);
+            check(r.pool.add(std::move(ticket.certificate), ticket.key) == Result::accepted, "EU ticket accepted into the pool");
+            r.start();
+            check(r.send(aid::VRU, {0x01}) == Result::accepted && !r.radio.packets.empty(), "EU-region station signs");
+            eu_frame = r.radio.packets.back();
+        }
+        {   // ticket with a circle (containing the receiver's position) under the identified AA
+            auto ticket = a.domain.issue_ticket(aa_eu, all_permissions, t0 - 1h, 24,
+                                                vidf_test::TrustDomain::CircularRegion {525000000, 134000000, 5000});
+            check(!sec::region_within(ticket.certificate, aa_eu.certificate, false) && sec::region_within(ticket.certificate, aa_eu.certificate, true),
+                  "a circle under an identified region is decided by the permissive policy only");
+            Station r;
+            r.trust.add_root(eu_root_coer); r.trust.add_authority(eu_aa_coer);
+            check(r.pool.add(std::move(ticket.certificate), ticket.key) == Result::accepted, "circle ticket accepted into the pool");
+            r.start();
+            check(r.send(aid::VRU, {0x01}) == Result::accepted && !r.radio.packets.empty(), "circle-region station signs");
+            circle_frame = r.radio.packets.back();
+        }
+        {   // an AA without any region under the region-restricted root
+            v3::Certificate bare = aa_eu.certificate;
+            ASN_STRUCT_FREE(asn_DEF_Vanetza_Security_GeographicRegion, bare->toBeSigned.region);
+            bare->toBeSigned.region = nullptr;
+            a.domain.sign(bare, &root_eu, a.domain.root.key);
+            check(!sec::region_within(bare, root_eu, true), "an AA without region is not within a region-restricted root");
+            bare_aa_coer = bare.encode();
+            auto ticket = a.domain.issue_ticket({std::move(bare), aa_eu.key}, all_permissions, t0 - 1h, 24, nullptr);
+            Station r;
+            r.trust.add_root(eu_root_coer); r.trust.add_authority(bare_aa_coer);
+            check(r.pool.add(std::move(ticket.certificate), ticket.key) == Result::accepted, "ticket under the bare AA accepted into the pool");
+            r.start();
+            check(r.send(aid::VRU, {0x01}) == Result::accepted && !r.radio.packets.empty(), "bare-AA station signs");
+            bare_frame = r.radio.packets.back();
+        }
+    }
+    Receiver b(a);
+    // The outcome is named in the failure text so a device log shows what was reported instead.
+    const auto expect_inconsistent = [&](const AlDataRequest& frame, const char* what) {
+        const auto confirm = b.decap(frame);
+        const bool inconsistent = confirm.report == VerificationReport::Inconsistent_Chain && !confirm.certificate_validity &&
+                                  confirm.certificate_validity.reason() == CertificateInvalidReason::Inconsistent_With_Signer;
+        static std::string text;
+        const auto* report = boost::get<VerificationReport>(&confirm.report);
+        text = std::string(what) + ": INCONSISTENT_CHAIN, inconsistent with signer (report " +
+               (report ? std::to_string(static_cast<int>(*report)) : std::string("blank")) + ", validity reason " +
+               (confirm.certificate_validity ? std::string("valid") : std::to_string(static_cast<int>(confirm.certificate_validity.reason()))) + ")";
+        check(inconsistent, text.c_str());
+    };
+    check(b.trust.add_root(eu_root_coer) == Result::accepted && b.trust.add_authority(eu_aa_coer) == Result::accepted &&
+          b.trust.add_authority(bare_aa_coer) == Result::accepted, "receiver provisioned with the EU root and both AAs");
+    check(is_successful(b.decap(eu_frame).report), "ticket and AA carrying the root's identified region: verifies");
+    expect_inconsistent(bare_frame, "AA without region under a region-restricted root");
+    auto policy = b.entity->verification_policy();
+    policy.permissive_identified_region = false;
+    b.entity->set_verification_policy(policy);
+    expect_inconsistent(circle_frame, "circle under an identified AA with the strict region policy");
+    policy.permissive_identified_region = true;
+    b.entity->set_verification_policy(policy);
+    check(is_successful(b.decap(circle_frame).report), "the same circle under the permissive policy: verifies");
 }
 #endif
 
@@ -879,5 +975,6 @@ void test_security_entity() {
 #if VIDF_SECURITY_VERIFY
     test_verification();
     test_chain_consistency();
+    test_region_consistency();
 #endif
 }

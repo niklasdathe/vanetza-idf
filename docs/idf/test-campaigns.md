@@ -178,25 +178,33 @@ station's signed frames checked by tools that know nothing of this library:
 ```sh
 vidf_issue root      --key root.pem --name "Example Root CA" --id ROOT --out chain     # self-signed (clause 7.2.3)
 vidf_issue authority --issuer chain/ROOT.oer --issuer-key root.pem --name "Example AA" --id AA --out chain
-vidf_issue ticket    --issuer chain/AA.oer --issuer-key chain/AA.vkey --id AT \
-                     --permission 36:01FFFC --permission 37:01FFFFFF --permission 141 --permission 638:01 --out chain
-vidf_issue show chain/AT.oer                 # digest, issuer, validity, permissions, region
-vidf_issue verify chain/AT.oer chain/AA.oer  # IEEE Std 1609.2 clause 5.3.1 signature check
+vidf_issue ticket    --issuer chain/AA.oer --issuer-key chain/AA.vkey --root chain/ROOT.oer --id AT \
+                     --permission 36:01FFFC --permission 141 --permission 638:01 --out chain
+vidf_issue show chain/AT.oer                              # digest, issuer, validity, permissions, region
+vidf_issue verify chain/AT.oer chain/AA.oer chain/ROOT.oer  # signatures, validity/region nesting, permission consistency
 ```
 
 `--key`/`--issuer-key` accept a PEM private key (an encrypted PKCS#8 file is
 opened with OpenSSL's pass-phrase prompt; the pass phrase is never an argument)
 or a raw 32-octet `.vkey` as the pool writes it; `--start`/`--years`/`--hours`
-set the validity, `--region LAT,LON,RADIUS_M` (1/10 microdegrees, metres) a
-circular region. The root
-profile is the EU CCMS CPOC Protocol Release 3.0 one (certIssuePermissions with
-minChainLength 2 and eeType app+enrol for CA/DEN/VRU/GN-MGMT and the end-entity
-part of psid 623, a second group for the authorities' psid 623 SSPs; CRL/CTL
-appPermissions), the AA and ticket profiles those of TS 103 097 V2.2.1 clauses
-7.2.4 and 7.2.1 with the SSPs of TS 102 941 V2.2.1 Table B.6. The output
-directory gets `<id>.oer`, `<id>.vkey` (except for `root`, whose key stays where
-it was) and an `index.lst`, i.e. a pool `vidf_sut --security-pool` loads with
-`--root ROOT --aa AA --at AT`.
+set the validity (the default start is an hour ago but never before the
+issuer's own start), `--region LAT,LON,RADIUS_M` (1/10 microdegrees, metres) a
+circular ticket region. `root` writes the EU CCMS CPOC Protocol Release 3.0
+profile (certIssuePermissions with minChainLength 2 and eeType app+enrol for
+CA/DEN/VRU/GN-MGMT and the end-entity part of psid 623, a second group for the
+authorities' psid 623 SSPs; CRL/CTL appPermissions), or with `--like
+OTHER.oer` the permissions and region of an existing root (a rehearsal twin of
+a real root with a throwaway key). `authority` derives its issuing
+permissions from the issuer (every group that reaches two certificates down,
+IEEE Std 1609.2 6.4.28, with chain length 1) and inherits the issuer's region
+(6.4.17); `ticket` inherits the issuer's region unless `--region` is given and
+carries the SSPs of TS 102 941 V2.2.1 Table B.6 for psid 623 where relevant.
+Every command checks the result the way the receive-side verifier will
+(signatures, validity nesting, region nesting, permission consistency, with
+`--root` over the full chain) and writes nothing that would fail. The output
+directory gets `<id>.oer`, `<id>.vkey` (except for `root`, whose key stays
+where it was) and an `index.lst`, i.e. a pool `vidf_sut --security-pool`
+loads with `--root ROOT --aa AA --at AT`.
 
 Rules for a production root: run the tool where the root key lives, never copy
 the encrypted PEM or its pass phrase anywhere, and keep the generated `.vkey`
@@ -225,6 +233,9 @@ signature, the chain to the root and the CAM/DENM authorisation as valid; with
 the standard ticket that also lists psid 141 without an SSP, c-its verifies
 every signature but does not validate the permissions because it treats an
 omitted SSP as unsupported (its limitation, not a standard's requirement).
+`independent-verifier-02` repeats the run under a twin of a real EU CCMS L0
+root (`root --like`), i.e. with the CPOC permission profile and the EU
+identified region.
 
 ## Independent radio reception
 
