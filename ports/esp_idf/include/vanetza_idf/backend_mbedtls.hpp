@@ -13,9 +13,11 @@ namespace vanetza_idf {
  * Algorithms are those TS 103 097 V2.2.1 clause 5.2 selects through IEEE Std
  * 1609.2: ECDSA over NIST P-256, brainpoolP256r1 (SHA-256) and brainpoolP384r1
  * (SHA-384), clauses 5.3.1, 5.3.3, 6.3.38/6.3.39. ECDSA is randomized
- * (PSA_ALG_ECDSA_ANY over a caller-supplied digest); IEEE Std 1609.2 does not
- * require RFC 6979. Compressed points are recovered by vanetza_idf::ecc, since
- * PSA imports Weierstrass public keys only in SEC 1 uncompressed form.
+ * (PSA_ALG_ECDSA(SHA-256/SHA-384) over the caller-supplied digest of that
+ * length, which lets ESP-IDF's PSA driver use the ESP32-C5 ECDSA peripheral for
+ * verification; IEEE Std 1609.2 does not require RFC 6979). Compressed points
+ * are recovered by vanetza_idf::ecc, since PSA imports Weierstrass public keys
+ * only in SEC 1 uncompressed form.
  *
  * Private keys are imported as volatile PSA keys the first time they are used
  * and kept in a small bounded cache until the backend is destroyed. Every

@@ -302,8 +302,14 @@ void test_fail_closed() {
         check(e.radio.packets.empty(), "expired AT is refused");
     }
     {
-        // SN-DECAP never reports success.
+        // SN-DECAP: with verification the station's own message verifies (it trusts its own
+        // domain); without VIDF_SECURITY_VERIFY the report never claims success.
         vidf_test::section("test_fail_closed: SN-DECAP");
+#if VIDF_SECURITY_VERIFY
+        constexpr auto expected_report = VerificationReport::Success;
+#else
+        constexpr auto expected_report = VerificationReport::Configuration_Problem;
+#endif
         Station r;
         auto at = r.domain.issue_ticket(all_permissions, t0 - 1h, 24);
         r.pool.add(at.certificate, at.key);
@@ -312,18 +318,20 @@ void test_fail_closed() {
         auto message = r.last();
         vanetza::security::SecuredMessage variant {message};
         auto decap = r.entity->decapsulate_packet(DecapRequest {SecuredMessageView {variant}});
-        check(!is_successful(decap.report) && decap.report == VerificationReport::Configuration_Problem &&
-              decap.its_aid == aid::VRU, "SN-DECAP reports the missing verification, not success");
-        // The same through the SN-SAP octet binding (TS 102 723-8 Tables 26/27).
+        check(decap.report == expected_report && decap.its_aid == aid::VRU,
+              "SN-DECAP report matches the build's verification capability");
+        // The same through the SN-SAP octet binding (TS 102 723-8 Tables 26/27); the replay
+        // window makes the repeated message a DUPLICATE_MESSAGE when verification is built.
         const auto& frame = r.radio.packets.back().data;
         SN_SAP::SN_DECAP_request request;
         request.sec_packet.assign(frame.begin() + 4, frame.end());
         request.sec_packet_length = request.sec_packet.size();
         SN_SAP::SN_DECAP_confirm confirm;
         check(SN_SAP::SN_DECAP_request_submit(*r.entity, request, confirm) == Result::accepted &&
-              confirm.report == VerificationReport::Configuration_Problem && confirm.its_aid == aid::VRU &&
+              (confirm.report == expected_report || confirm.report == VerificationReport::Duplicate_Message) &&
+              confirm.its_aid == aid::VRU &&
               confirm.plaintext_packet_length == confirm.plaintext_packet.size() && !confirm.plaintext_packet.empty(),
-              "SN_DECAP_request_submit carries the report and the claimed ITS-AID");
+              "SN_DECAP_request_submit carries the report and the ITS-AID");
         request.sec_packet_length += 1;
         check(SN_SAP::SN_DECAP_request_submit(*r.entity, request, confirm) == Result::invalid_argument,
               "SN-DECAP length mismatch is rejected");
@@ -563,6 +571,226 @@ void test_sf_facilities_hook() {
 }
 } // namespace
 
+#if VIDF_SECURITY_VERIFY
+namespace {
+// A receiver trusting the sender's domain: same root and AA, its own ticket.
+struct Receiver : Station {
+    explicit Receiver(const Station& sender) {
+        check(trust.add_root(sender.domain.root.certificate.encode()) == Result::accepted, "receiver trusts the sender's root");
+        check(trust.add_authority(sender.domain.aa.certificate.encode()) == Result::accepted, "receiver knows the sender's AA");
+        auto own = domain.issue_ticket(all_permissions, t0 - 1h, 24);
+        pool.add(own.certificate, own.key);
+        cfg.mib.itsGnLocalGnAddr.mid({2, 0, 0, 0, 0, 9});
+        start();
+        stack->on_receive([this](BtpIndication received) { indications.push_back(std::move(received)); });
+    }
+    std::vector<BtpIndication> indications;
+    // SN-DECAP directly (Table 26) on a captured frame, optionally tampered
+    DecapConfirm decap(AlDataRequest frame, std::function<void(v3::SecuredMessage&)> edit = {}) {
+        auto message = secured_of(frame);
+        if (edit) edit(message);
+        vanetza::security::SecuredMessage variant {std::move(message)};
+        return entity->decapsulate_packet(DecapRequest {SecuredMessageView {variant}});
+    }
+    // the same through the GN core (SN-DECAP inside Router::indicate)
+    Result indicate(const AlDataRequest& frame) {
+        AlDataIndication indication;
+        indication.source = frame.source;
+        indication.destination = frame.destination;
+        indication.data = frame.data;
+        return stack->indicate(std::move(indication));
+    }
+};
+// Re-sign a message with a key that does not belong to its signer certificate.
+void forge_signature(v3::SecuredMessage& m, Backend& backend, const PrivateKey& key) {
+    const auto digest = backend.calculate_hash(HashAlgorithm::SHA256, m.signing_payload());
+    const auto signature = backend.sign_digest(key, digest);
+    EcdsaSignature ecdsa;
+    ecdsa.R = X_Coordinate_Only {signature.r};
+    ecdsa.s = signature.s;
+    m.set_signature(ecdsa);
+}
+}
+
+void test_verification() {
+    vidf_test::section("test_verification");
+    // At most two stations exist at any time (device heap, see test_fail_closed): the
+    // messages of the other senders are produced first, each sender in its own block.
+    Station a;
+    auto at = a.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    a.pool.add(at.certificate, at.key);
+    a.start();
+    AlDataRequest stranger_certificate, stranger_digest, forged, limited_cam, c_first, c_answer, c_again;
+    vidf_test::Credential other_aa;
+    {   // an unknown domain (own root and AA)
+        Station stranger;
+        auto stranger_at = stranger.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+        stranger.pool.add(stranger_at.certificate, stranger_at.key);
+        stranger.start();
+        stranger.send(aid::CA, {0x01, 0xff, 0xfc}); stranger_certificate = stranger.radio.packets.back();
+        stranger.advance(300ms); stranger.send(aid::CA, {0x01, 0xff, 0xfc}); stranger_digest = stranger.radio.packets.back();
+    }
+    {   // a forged ticket: correct AA issuer digest and consistent fields, but signed with the wrong key
+        Station forger;
+        auto forged_key = forger.domain.fresh_key();
+        auto ticket = a.domain.issue_ticket_for(forged_key.pub, all_permissions, t0 - 1h, 24); // properly issued ...
+        forger.domain.sign(ticket, &a.domain.aa.certificate, forged_key.priv);                 // ... then re-signed by the forger
+        forger.trust.add_root(a.domain.root.certificate.encode()); forger.trust.add_authority(a.domain.aa.certificate.encode());
+        PrivateKey key = forged_key.priv;
+        forger.pool.add(ticket, key);
+        forger.start();
+        forger.send(aid::VRU, {0x01}); forged = forger.radio.packets.back();
+    }
+    {   // a ticket with CAM permissions only
+        auto cam_only = a.domain.issue_ticket({{aid::CA, {0x01, 0xff, 0xfc}}}, t0 - 1h, 24);
+        Station limited;
+        limited.trust.add_root(a.domain.root.certificate.encode()); limited.trust.add_authority(a.domain.aa.certificate.encode());
+        limited.pool.add(cam_only.certificate, cam_only.key);
+        limited.start();
+        limited.send(aid::CA, {0x01, 0xff, 0xfc}); limited_cam = limited.radio.packets.back();
+    }
+    {   // a station of a second AA under the same root, answering a P2P request for that AA
+        other_aa = a.domain.issue_authority("second AA", t0 - 1h);
+        Station c;
+        c.trust.add_root(a.domain.root.certificate.encode()); c.trust.add_authority(other_aa.certificate.encode());
+        auto c_at = a.domain.issue_ticket(other_aa, all_permissions, t0 - 1h, 24);
+        c.pool.add(c_at.certificate, c_at.key);
+        c.start();
+        c.send(aid::CA, {0x01, 0xff, 0xfc}); c_first = c.radio.packets.back();
+        c.entity->header_policy().enqueue_p2p_request(truncate(*other_aa.certificate.calculate_digest()));
+        c.advance(300ms); c.send(aid::CA, {0x01, 0xff, 0xfc}); c_answer = c.radio.packets.back(); // digest + requestedCertificate
+        c.advance(800ms); c.send(aid::CA, {0x01, 0xff, 0xfc}); c_again = c.radio.packets.back();  // certificate again (1 s rule)
+    }
+    Receiver b(a);
+    // 1. A valid VAM with the certificate attached verifies and reaches BTP with its metadata.
+    a.send(aid::VRU, {0x01});
+    const auto with_certificate = a.radio.packets.back();
+    auto confirm = b.decap(with_certificate);
+    check(is_successful(confirm.report), "valid message with certificate: SUCCESS");
+    check(confirm.its_aid == aid::VRU && confirm.permissions == ByteBuffer {0x01}, "ITS-AID and SSP come from the verified ticket");
+    check(confirm.certificate_id && *confirm.certificate_id == *at.certificate.calculate_digest(), "certificate_id is the signer's HashedId8");
+    check(b.entity->statistics().verified == 1, "counted as verified");
+    // 2. Replay of the very same message is rejected.
+    confirm = b.decap(with_certificate);
+    check(confirm.report == VerificationReport::Duplicate_Message && b.entity->statistics().replayed == 1, "replayed message: DUPLICATE_MESSAGE");
+    // 3. Digest signer after the certificate was learned.
+    a.advance(300ms); a.send(aid::VRU, {0x01});
+    const auto with_digest = a.radio.packets.back();
+    check(has_digest(secured_of(with_digest)), "second VAM carries the digest");
+    b.advance(300ms);
+    check(is_successful(b.decap(with_digest).report), "digest signer resolved from the certificate cache");
+    // 4. The same through the GN core: BTP indication with the verified metadata.
+    a.advance(300ms); a.send(aid::VRU, {0x01});
+    b.advance(300ms);
+    check(b.indicate(a.radio.packets.back()) == Result::accepted && b.indications.size() == 1, "secured packet passes SN-DECAP inside the router");
+    if (!b.indications.empty()) {
+        const auto& gn = b.indications.back().gn;
+        check(gn.its_aid == aid::VRU && is_successful(gn.security_report) && gn.permissions == ByteBuffer {0x01},
+              "GN-DATA.indication carries report, ITS-AID and permissions (GAP-SEC-002 path)");
+    }
+    // 5. Tampered payload: the signature no longer matches.
+    a.advance(300ms); a.send(aid::VRU, {0x01});
+    auto tampered = a.radio.packets.back();
+    tampered.data[tampered.data.size() - 40] ^= 0x01; // inside the signature
+    b.advance(300ms);
+    check(b.decap(tampered).report == VerificationReport::False_Signature, "tampered signature: FALSE_SIGNATURE");
+    // 6. Unknown signer digest: not found (and a P2P request for it is queued for the next CAM).
+    check(b.decap(stranger_digest).report == VerificationReport::Signer_Certificate_Not_Found,
+          "digest of an unknown station: SIGNER_CERTIFICATE_NOT_FOUND");
+    // 7. A certificate whose chain is not anchored (foreign root/AA): rejected.
+    check(b.decap(stranger_certificate).report == VerificationReport::Invalid_Certificate, "AT of an unknown AA: INVALID_CERTIFICATE");
+    // 8. The forged ticket.
+    check(b.decap(forged).report == VerificationReport::Invalid_Certificate,
+          "ticket whose signature was not made by its issuer: INVALID_CERTIFICATE (chain signature check)");
+    // 9. ITS-AID outside the ticket's permissions.
+    check(is_successful(b.decap(limited_cam).report), "CAM from a CAM-only ticket verifies");
+    check(b.decap(limited_cam, [](v3::SecuredMessage& m) { m->content->choice.signedData->tbsData->headerInfo.psid = aid::VRU; }).report
+              == VerificationReport::Invalid_Certificate, "ITS-AID outside the ticket's appPermissions: INVALID_CERTIFICATE");
+    // 10. Profile checks (TS 103 097 clause 7.1.1/7.1.2) on the structure before any cryptography.
+    a.advance(300ms); a.send(aid::CA, {0x01, 0xff, 0xfc});
+    auto cam = a.radio.packets.back();
+    b.runtime.trigger(a.runtime.now() + 100ms);
+    check(is_successful(b.decap(cam).report), "CAM verifies");
+    check(b.decap(cam, [](v3::SecuredMessage& m) { m->protocolVersion = 2; }).report == VerificationReport::Incompatible_Protocol, "protocolVersion 2: INCOMPATIBLE_PROTOCOL");
+    check(b.decap(cam, [](v3::SecuredMessage& m) {
+              auto& header = m->content->choice.signedData->tbsData->headerInfo;
+              header.expiryTime = vanetza::asn1::allocate<Vanetza_Security_Time64_t>();
+              asn_umax2INTEGER(header.expiryTime, 1);
+          }).report == VerificationReport::Incompatible_Protocol, "CAM with expiryTime: INCOMPATIBLE_PROTOCOL");
+    check(b.decap(cam, [](v3::SecuredMessage& m) { m->content->choice.signedData->hashId = Vanetza_Security_HashAlgorithm_sha384; }).report
+              == VerificationReport::Incompatible_Protocol, "hashId not matching the signature algorithm: INCOMPATIBLE_PROTOCOL");
+    check(b.decap(cam, [](v3::SecuredMessage& m) {
+              auto& signer = m->content->choice.signedData->signer;
+              ASN_STRUCT_RESET(asn_DEF_Vanetza_Security_SignerIdentifier, &signer);
+              signer.present = Vanetza_Security_SignerIdentifier_PR_self;
+          }).report == VerificationReport::Unsupported_Signer_Identifier_Type, "signer self: UNSUPPORTED_SIGNER_IDENTIFIER_TYPE");
+    a.advance(300ms); a.send(aid::DEN, {0x01, 0xff, 0xff, 0xff});
+    auto denm = a.radio.packets.back();
+    b.runtime.trigger(a.runtime.now() + 100ms);
+    check(is_successful(b.decap(denm).report), "DENM verifies");
+    check(b.decap(denm, [](v3::SecuredMessage& m) {
+              auto& header = m->content->choice.signedData->tbsData->headerInfo;
+              ASN_STRUCT_FREE(asn_DEF_Vanetza_Security_ThreeDLocation, header.generationLocation);
+              header.generationLocation = nullptr;
+          }).report == VerificationReport::Incompatible_Protocol, "DENM without generationLocation: INCOMPATIBLE_PROTOCOL");
+    const auto& st = b.entity->statistics();
+    check(st.rejected_profile == 5 && st.rejected_signature == 1 && st.rejected_signer == 1 && st.rejected_certificate == 3,
+          "SN-DECAP statistics count each outcome");
+    // 11. Learning an AA through requestedCertificate (clause 7.1.1).
+    check(b.decap(c_first).report == VerificationReport::Invalid_Certificate, "AT of an AA unknown to the receiver is rejected");
+    auto answer = secured_of(c_answer);
+    check(has_digest(answer) && answer->content->choice.signedData->tbsData->headerInfo.requestedCertificate != nullptr,
+          "requested AA certificate attached to the next digest-signed CAM");
+    const auto learned = b.decap(c_answer);
+    check(b.entity->learned_authorities().size() == 1 && b.entity->statistics().learned_authorities == 1, "AA learned from requestedCertificate");
+    check(learned.report == VerificationReport::Signer_Certificate_Not_Found,
+          "that CAM's own signer (digest) is still unknown: the receiver asks for the AT");
+    check(has_certificate(secured_of(c_again)) && is_successful(b.decap(c_again).report), "the CAM verifies once AA and AT are known");
+    // 12. Cost per verification on this platform (informative; docs/idf/validation.md records the
+    //     device figures): a certificate-signed message (chain + message signature) and a
+    //     digest-signed one from a known station (message signature only).
+    {
+        const auto tick = [] { return std::chrono::steady_clock::now(); };
+        a.advance(1100ms); a.send(aid::VRU, {0x01});
+        auto certificate_signed = a.radio.packets.back();
+        check(has_certificate(secured_of(certificate_signed)), "timing: certificate signer");
+        b.runtime.trigger(a.runtime.now() + 100ms);
+        auto begin = tick();
+        check(is_successful(b.decap(certificate_signed).report), "timing: certificate-signed message verifies");
+        const auto first = std::chrono::duration_cast<std::chrono::microseconds>(tick() - begin).count();
+        a.advance(300ms); a.send(aid::VRU, {0x01});
+        auto digest_signed = a.radio.packets.back();
+        b.runtime.trigger(a.runtime.now() + 100ms);
+        begin = tick();
+        check(is_successful(b.decap(digest_signed).report), "timing: digest-signed message verifies");
+        const auto second = std::chrono::duration_cast<std::chrono::microseconds>(tick() - begin).count();
+        // the ECDSA verification alone (message hash prepared beforehand), for the platform record
+        auto message = secured_of(digest_signed);
+        const auto public_key = v3::get_public_key(*at.certificate.content());
+        const auto message_hash = v3::calculate_message_hash(b.backend, HashAlgorithm::SHA256, message.signing_payload(), at.certificate);
+        const auto signature = message.signature();
+        begin = tick();
+        check(public_key && signature && b.backend.verify_digest(*public_key, message_hash, *signature), "timing: raw ECDSA verify");
+        const auto ecdsa = std::chrono::duration_cast<std::chrono::microseconds>(tick() - begin).count();
+        std::printf("-- verification cost: certificate-signed %lld us (chain + message), digest-signed %lld us (message only), ECDSA verify alone %lld us\n",
+                    static_cast<long long>(first), static_cast<long long>(second), static_cast<long long>(ecdsa));
+    }
+    // 13. generationTime plausibility (VerificationPolicy: 3 s future tolerance, 5 min age), last
+    //     because the clocks only move forward.
+    a.advance(300ms); a.send(aid::VRU, {0x01});
+    auto fresh = a.radio.packets.back();
+    b.runtime.trigger(a.runtime.now() + 10min);
+    check(b.decap(fresh).report == VerificationReport::Invalid_Timestamp, "message older than the policy window: INVALID_TIMESTAMP");
+    a.advance(10min + 10s); a.send(aid::VRU, {0x01}); // now 10 s ahead of the receiver
+    check(b.decap(a.radio.packets.back()).report == VerificationReport::Invalid_Timestamp, "generationTime beyond the future tolerance: INVALID_TIMESTAMP");
+    b.runtime.trigger(a.runtime.now() + 100ms);
+    check(is_successful(b.decap(a.radio.packets.back()).report), "the same message inside the window verifies");
+    // 14. An expired ticket (the receiver's clock passes the validity end).
+    b.runtime.trigger(t0 + 30h);
+    check(b.decap(with_certificate).report == VerificationReport::Invalid_Certificate, "expired ticket: INVALID_CERTIFICATE");
+}
+#endif
+
 void test_security_entity() {
     test_trust_domain_and_pool();
     test_signing_profiles();
@@ -570,4 +798,7 @@ void test_security_entity() {
     test_identifier_change();
     test_gn_core_identifier_change();
     test_sf_facilities_hook();
+#if VIDF_SECURITY_VERIFY
+    test_verification();
+#endif
 }

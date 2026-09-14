@@ -7,9 +7,13 @@
 //
 // Scope: sending behaviour of the IUT (GN-MGMT beacons through the GN core,
 // CAM and DENM carriers emitted by the test application, TS 103 097 security
-// profiles). Receiving-side cases need SN-DECAP verification (GAP-SEC-001) and
-// are not wired; etsi_security_gn.cfg and etsi_security_facilities.cfg keep the
-// PICS honest and select the stimulus configuration (CAM carrier on or off).
+// profiles) and, with a SUT built with VIDF_SECURITY_VERIFY, the receiving
+// behaviour: secured packets the test system sends through the GeoNetworking
+// port are injected as AL_DATA.indication and whatever the SUT passes up after
+// SN-DECAP is reported as UtGnEventInd. The test system signs those packets in
+// TTCN-3 (fx_signWithEcdsa*), not in this adapter. etsi_security_gn.cfg,
+// etsi_security_facilities.cfg and etsi_security_receive.cfg keep the PICS honest
+// and select the stimulus configuration (CAM carrier on or off).
 //
 // Time: the SUT owns an ITS clock that this adapter advances to wall-clock
 // ITS time every 100 ms (timerfd on the GeoNetworking port); spontaneous
@@ -47,6 +51,9 @@ namespace {
 using Bytes = std::vector<unsigned char>;
 using namespace LibItsGeoNetworking__TypesAndValues;
 std::function<void(const GeoNetworkingInd&)> lower_indication;
+// GN upper tester event: what the SUT passed up to its facilities layer (UtGnEventInd, the
+// receiving-side testcases compare its rawPayload with the GN payload they sent).
+std::function<void(const UtGnEventInd&)> upper_indication;
 unsigned read16(const Bytes& b, unsigned i) { return (b.at(i) << 8) | b.at(i + 1); }
 
 // GN layer parameters of the test system, taken from the geoNetworkingPort "params"
@@ -229,9 +236,27 @@ bool transact(const Bytes& command) {
             if (params.count(params_its::its_aid)) indication.its__aid() = INTEGER(std::stoi(params[params_its::its_aid]));
             else indication.its__aid() = OMIT_VALUE;
             if (lower_indication) lower_indication(indication);
-        } else if (kind != 2 && kind != 3) {
+        } else if (kind == 2 || kind == 3) {
+            // A packet the SUT accepted (SN-DECAP success, or an unsecured one in the unsecured
+            // profile) and delivered to its upper layer: BTP-DATA.indication (kind 2, [type][dest
+            // port][source port or destination port info][SDU]) or a raw GN-DATA.indication (kind 3).
+            // Reported as the GN payload the test system compares against: for BTP the 4-octet
+            // BTP-A/B header in front of the SDU (TS 103 836-5-1 clause 7), else the payload as is.
+            Bytes raw;
+            if (kind == 2) {
+                if (b.size() < 5) throw std::runtime_error("Truncated BTP indication record");
+                raw.assign(b.begin() + 1, b.end());
+            } else {
+                raw = b;
+            }
+            if (upper_indication) {
+                UtGnEventInd event;
+                event.rawPayload() = OCTETSTRING(static_cast<int>(raw.size()), raw.data());
+                upper_indication(event);
+            }
+        } else {
             throw std::runtime_error("Unexpected SUT record kind");
-        } // kinds 2/3: BTP/GN indications of received packets, not observed by this campaign
+        }
     }
     if (offset != reply.size()) throw std::runtime_error("Trailing SUT response bytes");
     return reply[0] == 0;
@@ -270,8 +295,10 @@ void UpperTesterPort::Handle_Fd_Event_Error(int) {}
 void UpperTesterPort::Handle_Fd_Event_Writable(int) {}
 void UpperTesterPort::Handle_Fd_Event_Readable(int) {}
 void UpperTesterPort::receiveMsg(const Base_Type&, const params&) {}
-void UpperTesterPort::user_map(const char*) {}
-void UpperTesterPort::user_unmap(const char*) {}
+void UpperTesterPort::user_map(const char*) {
+    upper_indication = [this](const UtGnEventInd& event) { incoming_message(event); };
+}
+void UpperTesterPort::user_unmap(const char*) { upper_indication = {}; }
 void UpperTesterPort::user_start() {}
 void UpperTesterPort::user_stop() {}
 void UpperTesterPort::outgoing_send(const UtGnInitialize&) {

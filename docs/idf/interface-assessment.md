@@ -21,7 +21,7 @@ units, presence conditions and confirmation semantics must remain explicit.
 | BTP-DATA.indication (Annex A.3) | BtpIndication includes payload, ports and GN metadata | Publish the full indication contract; a use-case extraction containing only received_fl_sdu is not the complete general BTP primitive. |
 | GN-DATA.request/.indication (TS 103 836-4-1 clause 9.3 N-SAP) | `Stack::request(GnRequest)`/`on_receive_gn`: raw SDU, SHB and GBC only, Common Header next_header "Any" | GUC/GAC/TSB remain Result::unsupported, matching BTP-DATA's router. The GeoNetworking adapter exercises SHB only (one official case, docs/idf/validation.md); GBC is exercised by the Security campaign's DENM carrier, not by AtsGeoNetworking. |
 | GN address configuration (TS 103 836-4-1 clauses 10.2.1.2 to 10.2.1.4) | AUTO from the MIB, MANAGED through `Stack::set_address`/`CORE_MMT_response_apply`, ANONYMOUS by subscribing the GN core to the security entity's identifier change (MID from the ticket's HashedId8, locally administered bit set) | Duplicate address detection and the R2 ALI/MCO address handling remain upstream gaps (GAP-GN-001). |
-| SN-ENCAP / SN-DECAP (TS 102 723-8 Tables 22 to 27) | `sn_sap.hpp` binds both primitives; `security::SecurityEntity` signs with the TS 103 097 V2.2.1 profiles (CAM, DENM, generic, VAM individual/cluster through `context_information`), a provisioned ticket pool and a trust configuration; refuses without a valid ticket, permission or anchored chain; SN-DECAP returns the report of the missing verification, never `Success` | Verification of received messages (certificate chain, signature, permissions, replay/time/location plausibility) and the P2P certificate distribution are not implemented (GAP-SEC-001); `VIDF_SECURITY_VERIFY` fails the build rather than pretending. Encrypted messages (SN-ENCRYPT/-DECRYPT) are not bound. |
+| SN-ENCAP / SN-DECAP (TS 102 723-8 Tables 22 to 27) | `sn_sap.hpp` binds both primitives; `security::SecurityEntity` signs with the TS 103 097 V2.2.1 profiles (CAM, DENM, generic, VAM individual/cluster through `context_information`), a provisioned ticket pool and a trust configuration; refuses without a valid ticket, permission or anchored chain. SN-DECAP (with `VIDF_SECURITY_VERIFY`, default on) verifies received messages: TS 103 097 clause 7.1 structure, certificate chain with every signature checked up to a provisioned root, ticket validity/permissions/region, message signature, generationTime window and replay; P2P certificate distribution learns AAs from `requestedCertificate` and requests unknown digests. Official AtsSecurity receiving-side cases: 24/26 pass, 2 errors are testcase defects | Encrypted messages (SN-ENCRYPT/-DECRYPT) are not bound; CTL/CRL revocation input is absent (the upstream revocation lookup is wired but never fed); identified regions (country codes) are accepted unless a country database is supplied. On the ESP32-C5 a verification costs about 34 ms (29 ms of it the ECDSA peripheral), i.e. roughly 25 to 30 verified messages per second. |
 | SN-IDCHANGE-* / SN-ID-LOCK (TS 102 723-8 clauses 5.2.5 to 5.2.10, 6.3) | `security::IdentityManager`: subscription with subscriber data, PREPARE/COMMIT/ABORT/DEREG two-phase commit with a response timeout, lock 0..255 s with expiry, trigger; the GN core is a subscriber; every layer holding an identifier derives it from the HashedId8 (TS 102 940 clause 6.5) | Pseudonym change policy (when to change, TS 102 941 clause 6.3 / TS 103 097 profile timing) is the application's; the library changes on trigger and after a lock expires. No station-wide policy engine. |
 | SF-IDCHANGE-* / SF-ID-LOCK (TS 102 723-9 Tables 10 to 21) | `sf_sap.hpp` exposes the same `IdChangeService` to the facilities layer (clause 4.1.5); the VRU basic service subscriber behaviour of TS 103 300-3 clause 5.3.5 is bound and component-tested | SF-SIGN/-VERIFY/-ENCRYPT/-DECRYPT/-ENCAP/-DECAP exist as parameter types only: facilities messages over BTP are secured in the GN core, and a facilities-level security service is not implemented. |
 | MN (TS 102 723-4; TS 103 836-4-1 Annex K; TS 103 175 clause 8.3) | `mn_sap.hpp`: CORE_MMT.request/.response applied to the stack (time, position vector, GN address, TC mapping), MN-GET/MN-SET of the DCC N-Params through a `NetworkParameterProvider`, MN-COMMAND/-REQUEST envelope with ErrStatus 5 for an undefined number | DCC N-Param values come only from the application's provider (ErrStatus 250 when none); the management entity itself, notifications and the DCC cross-layer algorithm are not part of the library. |
@@ -49,9 +49,10 @@ provisions. Edition and incorporated clause references must be retained together
 * **Security:** signing, ticket selection, trust anchoring and the identifier
   change are implemented and tested on the host (OpenSSL and PSA) and on the
   ESP32-C5 (PSA Crypto of mbedTLS 4.1); the official AtsSecurity sending-side
-  cases pass with the framework verifying every signature (validation.md).
-  Verification of received messages is absent and the build refuses to
-  pretend otherwise. The TS 102 941 enrolment/authorization core builds and
+  cases pass with the framework verifying every signature, and the receiving
+  side verifies against the provisioned trust anchors (24 of 26 official
+  receiving-side cases pass, validation.md). Revocation and encryption remain
+  absent. The TS 102 941 enrolment/authorization core builds and
   parses the messages; it has no transport, CTL/CRL handling or scheduling.
   The test trust domain (`vidf_test_pool`, `TrustDomain`) is generated per run,
   isolated and named as such; the thesis project's root CA key is never used
@@ -72,10 +73,11 @@ disabling it first, one FAIL from an unimplemented multi-component (PTC) gap.
 The AtsSecurity sending-side campaigns (15 official cases, two stimulus
 configurations) pass except `TC_SEC_ITSS_SND_GENMSG_05_BV`, whose failing
 branch is an IUT-independent unit defect of the testcase itself; see
-[security-host-03/analysis.md](evidence/security-host-03/analysis.md). The
-receiving-side cases were not executed because SN-DECAP verification does
-not exist. Access behavior tests and independent two-radio tests remain
-necessary.
+[security-host-06/analysis.md](evidence/security-host-06/analysis.md). The
+receiving-side campaign (26 cases) passes 24; the two DENM BV cases fail on a
+declaration-order defect of the testcases themselves
+([security-host-05/analysis.md](evidence/security-host-05/analysis.md)).
+Access behavior tests and independent two-radio tests remain necessary.
 Physical-layer conformance requires appropriate measurement equipment;
 reception by a second C5 alone cannot establish it.
 

@@ -33,7 +33,7 @@ else()
     option(VIDF_HIL "Hardware independent upper/lower tester boundary" ON)
     option(VIDF_TESTS "Build port regression tests" ON)
     option(VIDF_SECURITY "TS 103 097 signing security entity and TS 102 723-8 identifier-change service" ON)
-    option(VIDF_SECURITY_VERIFY "SN-DECAP signature verification (not implemented, GAP-SEC-001)" OFF)
+    option(VIDF_SECURITY_VERIFY "SN-DECAP verification of received secured packets (IEEE 1609.2 clause 5.2, TS 103 097 clause 7.1)" ON)
     option(VIDF_PKI "TS 102 941 enrolment/authorization request-response core" OFF)
     set(VIDF_MBEDTLS_ROOT "" CACHE PATH
         "Host only: mbedTLS (>= 3.6 or 4.x/TF-PSA-Crypto) source tree; builds the PSA backend for testing against OpenSSL")
@@ -58,9 +58,8 @@ set_target_properties(${VIDF_TARGET} PROPERTIES C_STANDARD 11 CXX_STANDARD 17 CX
 if(VIDF_SECURITY AND NOT VIDF_NETWORK)
     message(FATAL_ERROR "The security entity serves the GeoNetworking layer: VIDF_SECURITY requires VIDF_NETWORK")
 endif()
-if(VIDF_SECURITY_VERIFY)
-    # Reserved option: never build a configuration that would pass unverified packets as verified.
-    message(FATAL_ERROR "SN-DECAP verification is not implemented (docs/idf/conformance.md GAP-SEC-001)")
+if(VIDF_SECURITY_VERIFY AND NOT VIDF_SECURITY)
+    message(FATAL_ERROR "VIDF_SECURITY_VERIFY requires VIDF_SECURITY")
 endif()
 if(VIDF_PKI AND NOT VIDF_SECURITY)
     message(FATAL_ERROR "VIDF_PKI requires VIDF_SECURITY")
@@ -68,7 +67,8 @@ endif()
 target_compile_definitions(${VIDF_TARGET} PUBLIC
     VIDF_NETWORK=$<BOOL:${VIDF_NETWORK}> VIDF_CAM=$<BOOL:${VIDF_CAM}>
     VIDF_DENM=$<BOOL:${VIDF_DENM}> VIDF_VAM=$<BOOL:${VIDF_VAM}> VIDF_HIL=$<BOOL:${VIDF_HIL}>
-    VIDF_SECURITY=$<BOOL:${VIDF_SECURITY}> VIDF_PKI=$<BOOL:${VIDF_PKI}>)
+    VIDF_SECURITY=$<BOOL:${VIDF_SECURITY}> VIDF_SECURITY_VERIFY=$<BOOL:${VIDF_SECURITY_VERIFY}>
+    VIDF_PKI=$<BOOL:${VIDF_PKI}>)
 set(_sources ${VIDF_BASE_SOURCES} "${VIDF_PORT}/src/its_g5_frame.cpp")
 if(VIDF_NETWORK)
     list(APPEND _sources ${VIDF_NETWORK_SOURCES} ${VIDF_SECURITY_ASN_SOURCES} "${VIDF_PORT}/src/stack.cpp"

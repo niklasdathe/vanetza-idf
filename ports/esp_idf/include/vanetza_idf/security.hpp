@@ -14,6 +14,7 @@
 #include <vanetza/security/v3/location_checker.hpp>
 #include <vanetza/security/v3/sign_header_policy.hpp>
 #include <vanetza/security/v3/trust_store.hpp>
+#include <chrono>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -27,8 +28,11 @@
  * AA -> authorization ticket, clause 6.5 identity management), TS 102 941
  * V2.2.1 (credential life cycle), TS 102 723-8 V2.0.0/V1.1.1 (SN-SAP
  * primitives), TS 103 300-3 V2.3.1 clause 6.5 (VAM signing and certificate
- * attachment). Verification of received messages (SN-DECAP) is not
- * implemented; see docs/idf/conformance.md GAP-SEC-001.
+ * attachment). Verification of received messages (SN-DECAP) follows IEEE Std
+ * 1609.2 clause 5.2 as TS 103 097 clause 5.2 requires, with the profile checks of
+ * clause 7.1 and the chain checks of TS 102 940 clause 6; it is built when
+ * VIDF_SECURITY_VERIFY is set (default with the security feature), otherwise
+ * SN-DECAP reports Configuration_Problem (docs/idf/conformance.md GAP-SEC-001).
  */
 namespace vanetza_idf::security {
 
@@ -122,6 +126,40 @@ private:
     std::vector<Certificate> authorities_;
 };
 
+/** IEEE Std 1609.2 clause 5.3.1 certificate signature: Hash(Hash(toBeSigned) || Hash(issuer
+ * certificate)) with the hash algorithm of the IssuerIdentifier choice (sha256AndDigest /
+ * sha384AndDigest, or the algorithm named in the self choice with the empty string as
+ * issuer hash), verified with the issuer's verification key; issuer == nullptr means
+ * self-signed. TS 103 097 V2.2.1 clause 6 admits NIST P-256, brainpoolP256r1 (SHA-256)
+ * and brainpoolP384r1 (SHA-384). */
+bool verify_certificate_signature(vanetza::security::Backend&, const Certificate& subject, const Certificate* issuer);
+
+/** Receive-side parameters that TS 103 097 leaves to the station. generationTime
+ * plausibility: IEEE Std 1609.2 clause 5.2.3.2 lists it among the relevance checks
+ * without fixing values; the defaults are a 3 s clock tolerance into the future and the
+ * 5 min window the TS 103 096-2 test purposes apply to generation times (the CAM/DENM
+ * services apply their own, tighter freshness rules on top). Replay: a message whose
+ * (signer digest, generationTime) pair was already accepted is DUPLICATE_MESSAGE
+ * (TS 102 723-8 Table 27 report). */
+struct VerificationPolicy {
+    std::chrono::seconds generation_time_future_tolerance {3};
+    std::chrono::seconds generation_time_max_age {300};
+    std::size_t replay_window = 256;        // remembered accepted (signer, time) pairs, 0 disables
+    std::size_t verified_chain_cache = 64;  // authorization tickets whose chain signature was verified
+    std::size_t certificate_cache_limit = 32; // learned certificates kept (the cache is emptied beyond it)
+    std::size_t learned_authority_limit = 8;  // AA certificates learned through P2P distribution
+    bool permissive_identified_region = true; // identifiedRegion without a country database: accept (see docs)
+};
+
+/** TS 103 097 V2.2.1 clause 5.2 and 7.1.1 to 7.1.3 structural checks of a received
+ * signed message, before any cryptography: protocolVersion 3 on both levels, hashId
+ * consistent with the signature choice, generationTime present, p2pcdLearningRequest and
+ * missingCrlIdentifier absent, per ITS-AID: CAM without expiryTime, generationLocation
+ * and encryptionKey; DENM with generationLocation and with a certificate as signer,
+ * without expiryTime and encryptionKey; signer digest or certificate (not self).
+ * Returns Success when the structure is admissible, otherwise the report to give. */
+vanetza::security::VerificationReport check_profile(const vanetza::security::v3::SecuredMessage&);
+
 /** Header fields and signer identifier per message profile.
  *
  * TS 103 097 V2.2.1 clause 5.2: psid and generationTime always present,
@@ -198,11 +236,22 @@ public:
      * (clause 6.3.1.3: messages with old identifiers shall be avoided). */
     vanetza::security::EncapConfirm encapsulate_packet(vanetza::security::EncapRequest&&) override;
 
-    /** SN-DECAP.request/.confirm (Tables 26/27). Verification is not implemented: unsigned
-     * messages report UNSIGNED_MESSAGE, signed messages report Configuration_Problem (the
-     * entity is not configured to verify) with the payload and unverified ITS-AID attached
-     * so a receiver with itsGnSnDecapResultHandling = STRICT drops them. Never a success. */
+    /** SN-DECAP.request/.confirm (Tables 26/27). With VIDF_SECURITY_VERIFY: check_profile(),
+     * then IEEE Std 1609.2 clause 5.2 verification (signer lookup in the learned-certificate
+     * cache or the inline certificate, authorization ticket validity, permissions for the
+     * ITS-AID, chain to a trust anchor with verified certificate signatures, region, message
+     * signature), generationTime plausibility and replay detection per VerificationPolicy;
+     * a CAM/DENM from an unknown station or with an unknown AA drives the P2P certificate
+     * distribution of TS 103 097 clause 7.1.1 through the header policy, and an AA carried
+     * in requestedCertificate is learned once its signature chains to a trust anchor.
+     * Without VIDF_SECURITY_VERIFY: unsigned messages report UNSIGNED_MESSAGE, signed ones
+     * Configuration_Problem, never success (GAP-SEC-001); a receiver with
+     * itsGnSnDecapResultHandling = STRICT drops them either way. */
     vanetza::security::DecapConfirm decapsulate_packet(vanetza::security::DecapRequest&&) override;
+    void set_verification_policy(const VerificationPolicy&);
+    const VerificationPolicy& verification_policy() const;
+    /// authorities learned through P2P certificate distribution (requestedCertificate), verified
+    const std::deque<Certificate>& learned_authorities() const;
 
     /// SN-LOG-SECURITY-EVENT.request (Table 22); .confirm has no parameters (Table 23)
     void log_security_event(SecurityEvent);
@@ -214,7 +263,10 @@ public:
      * (TS 103 836-4-1 clause 10.3.10.2 step 2 happens at transmission), so a refused
      * encapsulation is visible here and in the absence of a packet, not in Stack::request. */
     struct Statistics { unsigned signed_messages = 0, refused_no_ticket = 0, refused_change_pending = 0,
-                        refused_permission = 0, failed = 0; };
+                        refused_permission = 0, failed = 0;
+                        // SN-DECAP outcomes (VIDF_SECURITY_VERIFY)
+                        unsigned verified = 0, rejected_profile = 0, rejected_signer = 0, rejected_certificate = 0,
+                                 rejected_signature = 0, rejected_time = 0, replayed = 0, learned_authorities = 0; };
     const Statistics& statistics() const;
 
     IdChangeService& id_change();

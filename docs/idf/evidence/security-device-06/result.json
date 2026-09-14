@@ -1,0 +1,18 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "port": "COM11",
+  "status": "pass",
+  "reset": "none",
+  "checks": 668,
+  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2) with CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY; 668 checks = 794 host checks minus the OpenSSL-only oracle tests",
+  "capture": "listen-only after the esptool post-flash reset",
+  "verifies": "receive-side verification (test_verification) on the device; verification cost line: digest-signed message 34.6 ms end to end, raw ECDSA P-256 verify 29.7 ms on the ECDSA peripheral (control build without the peripheral: 57.6 ms raw, 62 ms end to end, not retained)",
+  "sha256": {
+    "application": "2a14764ceb3062010f9d466b80a1a2dbd178611d52adf8dc479d5933d82e32a4",
+    "bootloader": "93903cefa2bae3f5805a604ae744fabfdea78a866a1230ec3cc129190b93fe40",
+    "partition_table": "73c0b5c3e5fcba3a151cc70c453c93dd5f4798899e7f2f8cca76da1f32ffc501",
+    "sdkconfig": "e793777a0f878c17d97d1a34de6c9a136b9239b52cb23d17874790951b4bd752"
+  }
+}

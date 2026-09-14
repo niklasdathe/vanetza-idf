@@ -1,0 +1,73 @@
+05:31:41.212359 TTCN-3 Parallel Test Component started on framework-dathe. Component reference: NodeB(3), component type: LibItsGeoNetworking_TestSystem.ItsGeoNetworking, component name: NodeB. Version: 10.1.2.
+05:31:41.212516 TTCN Logger v2.2 options: TimeStampFormat:=Time; LogEntityName:=No; LogEventTypes:=No; SourceInfoFormat:=None; LogSensitiveData:=No; *.FileMask:=LOG_ALL; *.ConsoleMask:=ERROR | EXECUTOR | VERDICTOP | WARNING; LogFileSize:=0; LogFileNumber:=1; DiskFullAction:=Error
+05:31:41.212888 Connected to MC.
+05:31:41.212967 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_GEONW_PON_SHB_BV_01.
+05:31:41.213263 Port utPort was started.
+05:31:41.213299 Port acPort was started.
+05:31:41.213307 Port geoNetworkingPort was started.
+05:31:41.213313 Port syncSendPort was started.
+05:31:41.213320 Port syncPort was started.
+05:31:41.213326 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:31:41.218288 Port acPort was mapped to system:acPort.
+05:31:41.218860 Port utPort was mapped to system:utPort.
+05:31:41.219497 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:31:41.220586 Port syncPort has established the connection with mtc:syncPort using transport type UNIX.
+05:31:42.225647 Starting function f_initialiseComponent({ { key := "IUT", position := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } }, { key := "NodeA", position := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000A'O }, timestamp_ := 3476930088, latitude := 520100000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } }, { key := "NodeB", position := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476930088, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } }, { key := "NodeC", position := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000C'O }, timestamp_ := 3476930088, latitude := 519940000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } }, { key := "NodeD", position := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000D'O }, timestamp_ := 3476930088, latitude := 520010000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } }, { key := "NodeE", position := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000E'O }, timestamp_ := 3476930088, latitude := 519990000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } }, { key := "NodeF", position := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000F'O }, timestamp_ := 3476930088, latitude := 520020000, longitude := 129970000, pai := '1'B, speed := 0, heading := 0 } } }, { { key := "AREA1", geoArea := { shape := e_geoCircle (0), area := { geoAreaPosLatitude := 520010000, geoAreaPosLongitude := 130000000, distanceA := 556, distanceB := 0, angle := 0 } } }, { key := "AREA2", geoArea := { shape := e_geoCircle (0), area := { geoAreaPosLatitude := 520020000, geoAreaPosLongitude := 130000000, distanceA := 166, distanceB := 0, angle := 0 } } } }, "NodeB").
+05:31:42.226039 Function f_initialiseComponent finished. PTC remains alive and is waiting for next start.
+05:31:42.227069 Starting function f_GEONW_PON_SHB_BV_01_nodeB().
+05:31:42.227146 Altstep a_default was activated as default, id 1
+05:31:42.227183 Altstep a_utDefault was activated as default, id 2
+05:31:42.227195 Altstep a_neighbourDefault was activated as default, id 3
+05:31:42.227537 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476930088, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:31:42.232872 Start timer t: 1 s
+05:31:42.232969 Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
+05:31:43.232970 Timeout t: 1 s
+05:31:43.233046 Start timer t: 0.5 s
+05:31:43.735864 Timeout t: 0.5 s
+05:31:43.736014 f_setVerdictPreamble: This function is deprecated. Use f_setVerdictPreOrPostamble instead. 
+05:31:43.736057 Sent on syncPort to mtc @LibCommon_Sync.SyncCmd : { clientReady := { syncPointId := "preambleDone" } }
+05:31:43.736125 Start timer tc_sync: 120 s
+05:31:43.736826 Message enqueued on syncPort from mtc @LibCommon_Sync.SyncCmd : { serverReady := { syncPointId := "preambleDone" } } id 1
+05:31:43.736884 Receive operation on port syncPort succeeded, message from mtc: @LibCommon_Sync.SyncCmd : { serverReady := { syncPointId := "preambleDone" } } id 1
+05:31:43.736897 Message with id 1 was extracted from the queue of syncPort.
+05:31:43.736905 Stop timer tc_sync: 120 s
+05:31:43.736919 **** f_clientSync: Sync client successfully passed PREAMBLE synchronization point. ****
+05:31:43.736964 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnTrigger : { shb := { trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, payload := ''O } }
+05:31:43.737349 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnTriggerResult := false } id 1
+05:31:43.737400 Start timer tc_wait: 120 s
+05:31:43.737426 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnTriggerResult := false } id 1
+05:31:43.737437 Message with id 1 was extracted from the queue of utPort.
+05:31:43.737444 Stop timer tc_wait: 120 s
+05:31:43.737451 *** UtGnTriggerResult: INFO: UT trigger was not successful ***
+05:31:43.737459 setverdict(fail): none -> fail
+05:31:43.737576 **** f_clientSync: Execution status indicates that execution of test component behavior was not successful - sync client will ask sync server to stop test case! ****
+05:31:43.737587 **** f_clientSendStop: Sync client requesting from server to stop test case (including itself). ****
+05:31:43.737598 Sent on syncPort to mtc @LibCommon_Sync.SyncCmd : { clientStop := { } }
+05:31:43.737642 Start timer tc_sync: 120 s
+05:32:13.746805 Message enqueued on syncPort from mtc @LibCommon_Sync.SyncCmd : { serverStop := { } } id 2
+05:32:13.746865 Receive operation on port syncPort succeeded, message from mtc: @LibCommon_Sync.SyncCmd : { serverStop := { } } id 2
+05:32:13.746879 Message with id 2 was extracted from the queue of syncPort.
+05:32:13.746888 Stop timer tc_sync: 120 s
+05:32:13.746902 **** a_shutdown: Test component received STOP signal from MTC **** 
+05:32:13.746909 *** a_default: INFO: TEST COMPONENT NOW STOPPING ITSELF! ***
+05:32:13.746916 Stopping test component execution.
+05:32:13.747424 Function f_GEONW_PON_SHB_BV_01_nodeB was stopped. PTC remains alive and is waiting for next start.
+05:32:13.748796 Port utPort was unmapped from system:utPort.
+05:32:13.749784 Port acPort was unmapped from system:acPort.
+05:32:13.750466 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:32:13.751012 Terminating the connection of port syncPort to mtc:syncPort. No more messages can be sent through this connection.
+05:32:13.751229 Port syncPort was disconnected from mtc:syncPort.
+05:32:13.757149 Kill was requested from MC. Terminating idle PTC.
+05:32:13.757219 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:32:13.757233 Default with id 1 (altstep a_default) was deactivated.
+05:32:13.757244 Default with id 2 (altstep a_utDefault) was deactivated.
+05:32:13.757252 Default with id 3 (altstep a_neighbourDefault) was deactivated.
+05:32:13.757261 Port utPort was stopped.
+05:32:13.757274 Port acPort was stopped.
+05:32:13.757281 Port geoNetworkingPort was stopped.
+05:32:13.757289 Port syncSendPort was stopped.
+05:32:13.757296 Port syncPort was stopped.
+05:32:13.757302 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_GEONW_PON_SHB_BV_01.
+05:32:13.757393 Final verdict of PTC: fail
+05:32:13.757776 Disconnected from MC.
+05:32:13.757803 TTCN-3 Parallel Test Component finished.

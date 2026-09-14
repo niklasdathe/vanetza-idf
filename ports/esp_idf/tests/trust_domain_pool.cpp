@@ -8,7 +8,7 @@
 //
 // Names follow the ATS defaults (LibItsSecurity_TypesAndValues.ttcn /
 // LibItsSecurity_Pixits.ttcn): the IUT chain CERT_IUT_A_RCA -> CERT_IUT_A_AA
-// -> CERT_IUT_A_AT and the test-system chain CERT_TS_A_AA -> CERT_TS_A_AT
+// -> CERT_IUT_A_AT and the test-system chain CERT_TS_A_AA -> CERT_TS_A_AT, CERT_TS_B_AT (region)
 // under the same root. Tickets carry CA, DEN, GN-MGMT and VRU permissions
 // and start one minute before generation (TC_SEC_ITSS_SND_GENMSG_05_BV expects
 // the start within five minutes of the current time). This is not a PKI.
@@ -60,6 +60,10 @@ int main(int argc, char** argv) {
     const auto iut_at = domain.issue_ticket(permissions, start, hours);
     const auto ts_aa = domain.issue_authority("vanetza-idf test-system AA", now - std::chrono::hours(1));
     const auto ts_at = domain.issue_ticket(ts_aa, permissions, start, hours);
+    // PX_AT_CERTIFICATE of the receiving-side cases (DENM_02_BV_XX: "certificate containing region
+    // restriction"): a 5 km circle around the SUT position hil_sut.cpp uses (52.0 N, 13.0 E).
+    const auto ts_b_at = domain.issue_ticket(ts_aa, permissions, start, hours,
+                                             vidf_test::TrustDomain::CircularRegion {520000000, 130000000, 5000});
     struct Entry { const char* name; const Certificate* certificate; const vanetza::security::PrivateKey* key; };
     const std::vector<Entry> entries {
         {"CERT_IUT_A_RCA", &domain.root.certificate, &domain.root.key},
@@ -67,6 +71,7 @@ int main(int argc, char** argv) {
         {"CERT_IUT_A_AT", &iut_at.certificate, &iut_at.key},
         {"CERT_TS_A_AA", &ts_aa.certificate, &ts_aa.key},
         {"CERT_TS_A_AT", &ts_at.certificate, &ts_at.key},
+        {"CERT_TS_B_AT", &ts_b_at.certificate, &ts_b_at.key},
     };
     std::string index;
     for (const auto& entry : entries) {

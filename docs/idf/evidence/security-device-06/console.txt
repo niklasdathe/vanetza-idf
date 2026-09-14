@@ -1,0 +1,15 @@
+-- test_trust_domain_and_pool (free heap 112008, largest block 81920)
+-- test_signing_profiles (free heap 111700, largest block 81920)
+-- test_fail_closed (free heap 111700, largest block 81920)
+-- test_fail_closed: unknown issuer (free heap 111700, largest block 81920)
+-- test_fail_closed: expired ticket (free heap 111700, largest block 81920)
+-- test_fail_closed: SN-DECAP (free heap 111700, largest block 81920)
+-- test_identifier_change (free heap 111700, largest block 81920)
+-- test_gn_core_identifier_change (free heap 111700, largest block 81920)
+-- test_sf_facilities_hook (free heap 111700, largest block 81920)
+-- test_verification (free heap 111700, largest block 81920)
+-- verification cost: certificate-signed 34664 us (chain + message), digest-signed 34612 us (message only), ECDSA verify alone 29666 us
+-- test_ecies (free heap 111108, largest block 81920)
+-- test_enrolment_and_authorization (free heap 111108, largest block 81920)
+PASS: 668 checks (host/component tests, not ETSI ATS verdicts)
+VIDF_TEST_RESULT=0

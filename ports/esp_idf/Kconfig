@@ -36,14 +36,16 @@ menu "Vanetza-IDF"
             the GN core, access adapter and facilities subscribe to. Without
             it a stack with itsGnSecurity enabled fails closed.
     config VANETZA_IDF_SECURITY_VERIFY
-        bool "SN-DECAP signature verification (not implemented)"
-        default n
+        bool "SN-DECAP verification of received secured packets"
+        default y
         depends on VANETZA_IDF_SECURITY
         help
-            Reserved. Verification of received secured packets is not
-            implemented (docs/idf/conformance.md GAP-SEC-001). Enabling this
-            option fails the build rather than reporting unverified packets
-            as verified.
+            Verify received EtsiTs103097Data-Signed packets (IEEE 1609.2
+            clause 5.2 with the TS 103 097 clause 7.1 profile checks, the
+            certificate chain to the provisioned trust anchors, generation
+            time plausibility and replay detection). Without it SN-DECAP
+            reports Configuration_Problem and a strict GeoNetworking receiver
+            drops every secured packet (docs/idf/conformance.md GAP-SEC-001).
     config VANETZA_IDF_PKI
         bool "TS 102 941 enrolment and authorization request-response core"
         default n

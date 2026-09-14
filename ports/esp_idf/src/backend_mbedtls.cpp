@@ -47,12 +47,25 @@ vanetza::ByteBuffer public_key_octets(const PublicKey& key) {
     return ecc::encode_uncompressed(point);
 }
 
+// The digest handed in is the SHA-256/SHA-384 output IEEE Std 1609.2 clause 5.3.1 prescribes
+// for the curve, so the operation names that hash: implementations that accelerate ECDSA
+// (ESP-IDF's PSA driver for the ESP32-C5 ECDSA peripheral, CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY)
+// only take PSA_ALG_ECDSA(PSA_ALG_SHA_256/384), never PSA_ALG_ECDSA_ANY, which falls back to
+// software. Keys are imported with the wildcard policy so either form is permitted.
+psa_algorithm_t ecdsa_algorithm(std::size_t digest_octets) {
+    switch (digest_octets) {
+        case 32: return PSA_ALG_ECDSA(PSA_ALG_SHA_256);
+        case 48: return PSA_ALG_ECDSA(PSA_ALG_SHA_384);
+        default: return PSA_ALG_ECDSA_ANY;
+    }
+}
+
 mbedtls_svc_key_id_t import_public(KeyType type, const vanetza::ByteBuffer& sec1) {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_set_key_type(&attributes, PSA_KEY_TYPE_ECC_PUBLIC_KEY(family(type)));
     psa_set_key_bits(&attributes, curve_bits(type));
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_VERIFY_HASH);
-    psa_set_key_algorithm(&attributes, PSA_ALG_ECDSA_ANY);
+    psa_set_key_algorithm(&attributes, PSA_ALG_ECDSA(PSA_ALG_ANY_HASH));
     mbedtls_svc_key_id_t id = 0;
     if (psa_import_key(&attributes, sec1.data(), sec1.size(), &id) != PSA_SUCCESS)
         throw std::runtime_error("PSA public key import failed");
@@ -62,7 +75,7 @@ mbedtls_svc_key_id_t import_public(KeyType type, const vanetza::ByteBuffer& sec1
 vanetza::ByteBuffer raw_signature(mbedtls_svc_key_id_t key, KeyType type, const vanetza::ByteBuffer& digest) {
     vanetza::ByteBuffer signature(2 * key_length(type));
     std::size_t length = 0;
-    const auto status = psa_sign_hash(key, PSA_ALG_ECDSA_ANY, digest.data(), digest.size(),
+    const auto status = psa_sign_hash(key, ecdsa_algorithm(digest.size()), digest.data(), digest.size(),
                                       signature.data(), signature.size(), &length);
     if (status != PSA_SUCCESS || length != signature.size()) throw std::runtime_error("PSA ECDSA signing failed");
     return signature;
@@ -78,7 +91,7 @@ bool verify_raw(KeyType type, const vanetza::ByteBuffer& sec1, const vanetza::By
     signature.insert(signature.end(), s.begin(), s.end());
     ScopedKey key;
     try { key.id = import_public(type, sec1); } catch (const std::runtime_error&) { return false; }
-    return psa_verify_hash(key.id, PSA_ALG_ECDSA_ANY, digest.data(), digest.size(),
+    return psa_verify_hash(key.id, ecdsa_algorithm(digest.size()), digest.data(), digest.size(),
                            signature.data(), signature.size()) == PSA_SUCCESS;
 }
 } // namespace
@@ -105,7 +118,7 @@ public:
         psa_set_key_type(&attributes, PSA_KEY_TYPE_ECC_KEY_PAIR(family(type)));
         psa_set_key_bits(&attributes, curve_bits(type));
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH);
-        psa_set_key_algorithm(&attributes, PSA_ALG_ECDSA_ANY);
+        psa_set_key_algorithm(&attributes, PSA_ALG_ECDSA(PSA_ALG_ANY_HASH));
         mbedtls_svc_key_id_t id = 0;
         if (psa_import_key(&attributes, secret.data(), secret.size(), &id) != PSA_SUCCESS)
             throw std::runtime_error("PSA private key import failed");

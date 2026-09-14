@@ -151,11 +151,22 @@ the certificate the *test system* would sign with; the adapter accepts it when
 it exists in the pool and applies the enforcement flag, but signs no
 test-system packets.
 
-Expected outcome with this library (retained in `docs/idf/evidence/security-host-01`
-and `-02`): 14 of 15 cases pass; `TC_SEC_ITSS_SND_GENMSG_05_BV` fails on a unit
-defect of the testcase itself (docs/idf/validation.md). Device execution of this
-suite has not been attempted; the device runs the same security entity in the
-component tests (`security-device-03`).
+A third configuration, `etsi_security_receive.cfg` with
+`etsi_security_receive_cases.json` (26 receiving-side cases), needs a SUT built
+with `VIDF_SECURITY_VERIFY` (the default). The test system signs its CAMs and
+DENMs in TTCN-3 with `CERT_TS_A_AT`, or with `CERT_TS_B_AT` (a ticket restricted
+to a 5 km circle around the SUT position) where the testcase uses
+`PX_AT_CERTIFICATE`; the adapter injects them and reports what the SUT passes up
+after SN-DECAP as `UtGnEventInd`. The SUT trusts both AAs of the pool
+(`--aa` is repeatable; the defaults are `CERT_IUT_A_AA` and `CERT_TS_A_AA`).
+
+Expected outcome with this library (retained in `docs/idf/evidence/security-host-06`,
+`-07` and `-05`): sending side 14 of 15 (`TC_SEC_ITSS_SND_GENMSG_05_BV` fails on a
+unit defect of the testcase), receiving side 24 of 26 (`TC_SEC_ITSS_RCV_DENM_01_BV`
+and `DENM_02_BV_XX` error on a declaration-order defect of the testcases);
+docs/idf/validation.md has both analyses. Device execution of this suite has not
+been attempted; the device runs the same security entity in the component tests
+(`security-device-06`).
 
 ## Independent radio reception
 

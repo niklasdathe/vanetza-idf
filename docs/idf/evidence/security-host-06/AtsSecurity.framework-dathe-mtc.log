@@ -1,0 +1,790 @@
+05:30:22.374397 TTCN-3 Main Test Component started on framework-dathe. Version: 10.1.2.
+05:30:22.374480 TTCN Logger v2.2 options: TimeStampFormat:=Time; LogEntityName:=No; LogEventTypes:=No; SourceInfoFormat:=None; LogSensitiveData:=No; *.FileMask:=LOG_ALL; *.ConsoleMask:=ERROR | EXECUTOR | VERDICTOP | WARNING; LogFileSize:=0; LogFileNumber:=1; DiskFullAction:=Error
+05:30:22.374773 Connected to MC.
+05:30:22.375753 Executing test case TC_SEC_ITSS_SND_GENMSG_01_BV in module ItsSecurity_TestCases.
+05:30:22.375954 Test case TC_SEC_ITSS_SND_GENMSG_01_BV started.
+05:30:22.375992 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_01_BV.
+05:30:22.376216 Port syncSendPort was started.
+05:30:22.376250 Port syncPort was started.
+05:30:22.376254 Port utPort was started.
+05:30:22.376257 Port acPort was started.
+05:30:22.376260 Port geoNetworkingPort was started.
+05:30:22.376263 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:22.376291 Mapping port mtc:acPort to system:acPort.
+05:30:22.376430 Port acPort was mapped to system:acPort.
+05:30:22.376559 Map operation of mtc:acPort to system:acPort finished.
+05:30:22.376579 Mapping port mtc:utPort to system:utPort.
+05:30:22.377424 Port utPort was mapped to system:utPort.
+05:30:22.377594 Map operation of mtc:utPort to system:utPort finished.
+05:30:22.377626 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:22.379400 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:22.379573 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:22.379605 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:22.379677 Port syncPort has established the connection with local port syncSendPort.
+05:30:22.379686 Port syncSendPort has established the connection with local port syncPort.
+05:30:22.379734 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:22.379748 Altstep a_cf01Down was activated as default, id 1
+05:30:22.379771 security_services_its::setup: Already done
+05:30:22.379871 certificates_loader::load_certificate: Failed to open Private encryption key file
+05:30:22.380079 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:22.380128 certificates_loader::load_certificate: Failed to open Private encryption key file
+05:30:22.380398 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:22.382833 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:22.382881 Start timer tc_wait: 120 s
+05:30:22.382899 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:22.382906 Message with id 1 was extracted from the queue of utPort.
+05:30:22.382910 Stop timer tc_wait: 120 s
+05:30:22.382913 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:22.382918 Start timer t: 1 s
+05:30:23.382929 Timeout t: 1 s
+05:30:23.383094 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:23.383140 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:23.383163 Start timer tc_ac: 30 s
+05:30:23.383199 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:23.383226 Message with id 1 was extracted from the queue of acPort.
+05:30:23.383240 Stop timer tc_ac: 30 s
+05:30:23.383425 Altstep a_default was activated as default, id 2
+05:30:23.383449 Altstep a_utDefault was activated as default, id 3
+05:30:23.383458 Altstep a_neighbourDefault was activated as default, id 4
+05:30:23.383708 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476851247, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:23.383997 Start timer t: 1 s
+05:30:23.384016 Warning: An [else] branch of an alt construct has been reached. Re-configuring the snapshot manager to call the event handlers even when taking the first snapshot.
+05:30:24.384020 Timeout t: 1 s
+05:30:24.384114 Start timer t: 0.5 s
+05:30:24.884396 Timeout t: 0.5 s
+05:30:24.884578 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:24.884610 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:24.884620 Start timer tc_ac: 30 s
+05:30:26.181046 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441431179606 / 716441426181045, delta = 4998561.000000, comp = 0
+05:30:26.181568 certificates_loader::load_certificate: Failed to open Private encryption key file
+05:30:26.182567 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476859943, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CAC271EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441431179606, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '40E9F9C30CFE1673AA20DF6721FA4296CA6FC573088818E927E3014BBDC13DF5'O }, sSig := 'C1E7071213EC7E649AC503223EDC41B47F84558813EFFB3B7D7F81A3C8FD1158'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:26.182766 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476859943, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CAC271EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441431179606, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '40E9F9C30CFE1673AA20DF6721FA4296CA6FC573088818E927E3014BBDC13DF5'O }, sSig := 'C1E7071213EC7E649AC503223EDC41B47F84558813EFFB3B7D7F81A3C8FD1158'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:26.182796 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:26.182817 Stop timer tc_ac: 30 s
+05:30:26.182833 *** TC_SEC_ITSS_SND_GENMSG_01_BV: PASS: The GN message is secured ***
+05:30:26.182847 setverdict(pass): none -> pass
+05:30:26.182931 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:26.182951 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:26.182967 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:26.182975 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:26.183004 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:26.183013 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:26.183023 Start timer tc_ac: 30 s
+05:30:26.183037 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:26.183045 Message with id 2 was extracted from the queue of acPort.
+05:30:26.183051 Stop timer tc_ac: 30 s
+05:30:26.183060 Unmapping port mtc:acPort from system:acPort.
+05:30:26.183251 Port acPort was unmapped from system:acPort.
+05:30:26.183438 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:26.183463 Unmapping port mtc:utPort from system:utPort.
+05:30:26.183651 Port utPort was unmapped from system:utPort.
+05:30:26.183842 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:26.183900 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:26.184110 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:26.184235 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:26.184251 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:26.184358 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:26.184372 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:26.184469 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:26.184486 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:26.184498 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:26.184506 Default with id 2 (altstep a_default) was deactivated.
+05:30:26.184512 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:26.184518 Port syncSendPort was stopped.
+05:30:26.184528 Port syncPort was stopped.
+05:30:26.184534 Port utPort was stopped.
+05:30:26.184539 Port acPort was stopped.
+05:30:26.184545 Port geoNetworkingPort was stopped.
+05:30:26.184551 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_01_BV.
+05:30:26.184559 Waiting for PTCs to finish.
+05:30:26.184722 Setting final verdict of the test case.
+05:30:26.184774 Local verdict of MTC: pass
+05:30:26.184794 No PTCs were created.
+05:30:26.184829 Test case TC_SEC_ITSS_SND_GENMSG_01_BV finished. Verdict: pass
+05:30:26.185036 Executing test case TC_SEC_ITSS_SND_GENMSG_02_BV in module ItsSecurity_TestCases.
+05:30:26.185142 Test case TC_SEC_ITSS_SND_GENMSG_02_BV started.
+05:30:26.185157 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_02_BV.
+05:30:26.185232 Port syncSendPort was started.
+05:30:26.185241 Port syncPort was started.
+05:30:26.185246 Port utPort was started.
+05:30:26.185252 Port acPort was started.
+05:30:26.185257 Port geoNetworkingPort was started.
+05:30:26.185263 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:26.185274 Mapping port mtc:acPort to system:acPort.
+05:30:26.185410 Port acPort was mapped to system:acPort.
+05:30:26.185588 Map operation of mtc:acPort to system:acPort finished.
+05:30:26.185608 Mapping port mtc:utPort to system:utPort.
+05:30:26.186002 Port utPort was mapped to system:utPort.
+05:30:26.186207 Map operation of mtc:utPort to system:utPort finished.
+05:30:26.186259 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:26.186765 security_services_its::setup: Already done
+05:30:26.186920 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:26.187134 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:26.187155 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:26.187391 Port syncPort has established the connection with local port syncSendPort.
+05:30:26.187438 Port syncSendPort has established the connection with local port syncPort.
+05:30:26.187620 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:26.187671 Altstep a_cf01Down was activated as default, id 1
+05:30:26.187699 security_services_its::setup: Already done
+05:30:26.187865 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:26.188037 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:26.189701 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:26.189751 Start timer tc_wait: 120 s
+05:30:26.189778 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:26.189789 Message with id 1 was extracted from the queue of utPort.
+05:30:26.189798 Stop timer tc_wait: 120 s
+05:30:26.189805 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:26.189814 Start timer t: 1 s
+05:30:27.189824 Timeout t: 1 s
+05:30:27.189919 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:27.189938 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:27.189948 Start timer tc_ac: 30 s
+05:30:27.189971 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:27.189977 Message with id 1 was extracted from the queue of acPort.
+05:30:27.189983 Stop timer tc_ac: 30 s
+05:30:27.190045 Altstep a_default was activated as default, id 2
+05:30:27.190051 Altstep a_utDefault was activated as default, id 3
+05:30:27.190054 Altstep a_neighbourDefault was activated as default, id 4
+05:30:27.190169 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476855054, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:27.190413 Start timer t: 1 s
+05:30:28.190431 Timeout t: 1 s
+05:30:28.190486 Start timer t: 0.5 s
+05:30:28.690778 Timeout t: 0.5 s
+05:30:28.690966 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:28.690999 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:28.691009 Start timer tc_ac: 30 s
+05:30:29.989175 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441434987157 / 716441429989174, delta = 4997983.000000, comp = 0
+05:30:29.990744 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476863751, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CBB071EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441434987157, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '407EE46D7A4B99B1418F3AE0E7D0127344BB7FA02A12E75CEBE8A5D8AC07ABBE'O }, sSig := 'DBED528919347428E6F14B3B5144EE2AF479E4F7932EC5123D2F02E5FC2BD5DE'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:29.991151 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476863751, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CBB071EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441434987157, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '407EE46D7A4B99B1418F3AE0E7D0127344BB7FA02A12E75CEBE8A5D8AC07ABBE'O }, sSig := 'DBED528919347428E6F14B3B5144EE2AF479E4F7932EC5123D2F02E5FC2BD5DE'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:29.991235 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:29.991271 Stop timer tc_ac: 30 s
+05:30:29.991298 *** TC_SEC_ITSS_SND_GENMSG_02_BV: PASS: The GN message is secured ***
+05:30:29.991320 setverdict(pass): none -> pass
+05:30:29.991501 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:29.991535 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:29.991557 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:29.991570 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:29.991602 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:29.991615 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:29.991629 Start timer tc_ac: 30 s
+05:30:29.991655 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:29.991667 Message with id 2 was extracted from the queue of acPort.
+05:30:29.991678 Stop timer tc_ac: 30 s
+05:30:29.991696 Unmapping port mtc:acPort from system:acPort.
+05:30:29.992129 Port acPort was unmapped from system:acPort.
+05:30:29.992521 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:29.992600 Unmapping port mtc:utPort from system:utPort.
+05:30:29.992917 Port utPort was unmapped from system:utPort.
+05:30:29.993203 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:29.993245 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:29.993470 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:29.993834 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:29.993907 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:29.994148 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:29.994181 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:29.994369 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:29.994406 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:29.994425 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:29.994439 Default with id 2 (altstep a_default) was deactivated.
+05:30:29.994446 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:29.994456 Port syncSendPort was stopped.
+05:30:29.994470 Port syncPort was stopped.
+05:30:29.994480 Port utPort was stopped.
+05:30:29.994489 Port acPort was stopped.
+05:30:29.994496 Port geoNetworkingPort was stopped.
+05:30:29.994504 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_02_BV.
+05:30:29.994518 Waiting for PTCs to finish.
+05:30:29.994982 Setting final verdict of the test case.
+05:30:29.995087 Local verdict of MTC: pass
+05:30:29.995108 No PTCs were created.
+05:30:29.995121 Test case TC_SEC_ITSS_SND_GENMSG_02_BV finished. Verdict: pass
+05:30:29.995365 Executing test case TC_SEC_ITSS_SND_GENMSG_03_BV in module ItsSecurity_TestCases.
+05:30:29.995562 Test case TC_SEC_ITSS_SND_GENMSG_03_BV started.
+05:30:29.995601 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_03_BV.
+05:30:29.995695 Port syncSendPort was started.
+05:30:29.995715 Port syncPort was started.
+05:30:29.995727 Port utPort was started.
+05:30:29.995805 Port acPort was started.
+05:30:29.995828 Port geoNetworkingPort was started.
+05:30:29.995998 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:29.996025 Mapping port mtc:acPort to system:acPort.
+05:30:29.996270 Port acPort was mapped to system:acPort.
+05:30:29.996537 Map operation of mtc:acPort to system:acPort finished.
+05:30:29.996590 Mapping port mtc:utPort to system:utPort.
+05:30:29.997130 Port utPort was mapped to system:utPort.
+05:30:29.997490 Map operation of mtc:utPort to system:utPort finished.
+05:30:29.997569 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:29.998136 security_services_its::setup: Already done
+05:30:29.998387 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:29.998601 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:29.998675 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:29.998928 Port syncPort has established the connection with local port syncSendPort.
+05:30:29.998985 Port syncSendPort has established the connection with local port syncPort.
+05:30:29.999137 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:29.999188 Altstep a_cf01Down was activated as default, id 1
+05:30:29.999242 security_services_its::setup: Already done
+05:30:29.999546 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:30.000330 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:30.002602 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:30.002709 Start timer tc_wait: 120 s
+05:30:30.002747 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:30.002760 Message with id 1 was extracted from the queue of utPort.
+05:30:30.002793 Stop timer tc_wait: 120 s
+05:30:30.002802 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:30.002814 Start timer t: 1 s
+05:30:31.002826 Timeout t: 1 s
+05:30:31.003027 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:31.003061 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:31.003081 Start timer tc_ac: 30 s
+05:30:31.003122 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:31.003144 Message with id 1 was extracted from the queue of acPort.
+05:30:31.003155 Stop timer tc_ac: 30 s
+05:30:31.003279 Altstep a_default was activated as default, id 2
+05:30:31.003295 Altstep a_utDefault was activated as default, id 3
+05:30:31.003305 Altstep a_neighbourDefault was activated as default, id 4
+05:30:31.003497 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476858867, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:31.003999 Start timer t: 1 s
+05:30:32.004059 Timeout t: 1 s
+05:30:32.004137 Start timer t: 0.5 s
+05:30:32.504147 Timeout t: 0.5 s
+05:30:32.504346 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:32.504379 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:32.504390 Start timer tc_ac: 30 s
+05:30:33.802204 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441438799642 / 716441433802203, delta = 4997439.000000, comp = 0
+05:30:33.803628 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476867563, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CC9EB1EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441438799642, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '338960BC1929AA5D5A7CD897CD444043A632CBC903B80A7D4CEF7B85C84A64C8'O }, sSig := '9392ECC686E40A711323EB48E570A3AEEAEA8576E218E6834B82A77BC163DFDE'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:33.803976 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476867563, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CC9EB1EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441438799642, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '338960BC1929AA5D5A7CD897CD444043A632CBC903B80A7D4CEF7B85C84A64C8'O }, sSig := '9392ECC686E40A711323EB48E570A3AEEAEA8576E218E6834B82A77BC163DFDE'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:33.804029 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:33.804064 Stop timer tc_ac: 30 s
+05:30:33.804093 *** TC_SEC_ITSS_SND_GENMSG_03_BV: PASS: The GN message is secured ***
+05:30:33.804107 setverdict(pass): none -> pass
+05:30:33.804279 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:33.804310 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:33.804332 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:33.804343 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:33.804374 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:33.804389 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:33.804404 Start timer tc_ac: 30 s
+05:30:33.804430 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:33.804442 Message with id 2 was extracted from the queue of acPort.
+05:30:33.804452 Stop timer tc_ac: 30 s
+05:30:33.804464 Unmapping port mtc:acPort from system:acPort.
+05:30:33.804795 Port acPort was unmapped from system:acPort.
+05:30:33.805270 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:33.805345 Unmapping port mtc:utPort from system:utPort.
+05:30:33.805614 Port utPort was unmapped from system:utPort.
+05:30:33.806054 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:33.806122 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:33.806583 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:33.806896 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:33.806935 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:33.807233 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:33.807330 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:33.807717 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:33.807796 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:33.807822 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:33.807842 Default with id 2 (altstep a_default) was deactivated.
+05:30:33.807856 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:33.807871 Port syncSendPort was stopped.
+05:30:33.807894 Port syncPort was stopped.
+05:30:33.807909 Port utPort was stopped.
+05:30:33.807924 Port acPort was stopped.
+05:30:33.807938 Port geoNetworkingPort was stopped.
+05:30:33.807952 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_03_BV.
+05:30:33.807974 Waiting for PTCs to finish.
+05:30:33.808548 Setting final verdict of the test case.
+05:30:33.808783 Local verdict of MTC: pass
+05:30:33.808822 No PTCs were created.
+05:30:33.808842 Test case TC_SEC_ITSS_SND_GENMSG_03_BV finished. Verdict: pass
+05:30:33.809061 Executing test case TC_SEC_ITSS_SND_GENMSG_04_BV in module ItsSecurity_TestCases.
+05:30:33.809198 Test case TC_SEC_ITSS_SND_GENMSG_04_BV started.
+05:30:33.809222 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_04_BV.
+05:30:33.809340 Port syncSendPort was started.
+05:30:33.809358 Port syncPort was started.
+05:30:33.809366 Port utPort was started.
+05:30:33.809375 Port acPort was started.
+05:30:33.809382 Port geoNetworkingPort was started.
+05:30:33.809390 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:33.809408 Mapping port mtc:acPort to system:acPort.
+05:30:33.809663 Port acPort was mapped to system:acPort.
+05:30:33.809995 Map operation of mtc:acPort to system:acPort finished.
+05:30:33.810058 Mapping port mtc:utPort to system:utPort.
+05:30:33.810700 Port utPort was mapped to system:utPort.
+05:30:33.811197 Map operation of mtc:utPort to system:utPort finished.
+05:30:33.811269 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:33.811856 security_services_its::setup: Already done
+05:30:33.812077 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:33.812606 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:33.812684 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:33.813119 Port syncPort has established the connection with local port syncSendPort.
+05:30:33.813188 Port syncSendPort has established the connection with local port syncPort.
+05:30:33.813456 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:33.813525 Altstep a_cf01Down was activated as default, id 1
+05:30:33.813570 security_services_its::setup: Already done
+05:30:33.813899 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:33.814209 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:33.816957 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:33.817176 Start timer tc_wait: 120 s
+05:30:33.817281 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:33.817308 Message with id 1 was extracted from the queue of utPort.
+05:30:33.817317 Stop timer tc_wait: 120 s
+05:30:33.817328 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:33.817341 Start timer t: 1 s
+05:30:34.817355 Timeout t: 1 s
+05:30:34.817510 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:34.817542 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:34.817561 Start timer tc_ac: 30 s
+05:30:34.817602 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:34.817614 Message with id 1 was extracted from the queue of acPort.
+05:30:34.817624 Stop timer tc_ac: 30 s
+05:30:34.817734 Altstep a_default was activated as default, id 2
+05:30:34.817745 Altstep a_utDefault was activated as default, id 3
+05:30:34.817751 Altstep a_neighbourDefault was activated as default, id 4
+05:30:34.817937 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476862681, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:34.818368 Start timer t: 1 s
+05:30:35.818393 Timeout t: 1 s
+05:30:35.818456 Start timer t: 0.5 s
+05:30:36.318466 Timeout t: 0.5 s
+05:30:36.318642 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:36.318664 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:36.318672 Start timer tc_ac: 30 s
+05:30:37.614100 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441442612263 / 716441437614099, delta = 4998164.000000, comp = 0
+05:30:37.614985 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476871376, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CD8D01EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441442612263, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '67CD5711B4A9FDC5BD6B52E60D587ED3B57CFA00548E5E814FD4E7513A09FA49'O }, sSig := '5E9B11E200E790830CAFB8C3BACAC013E74B81EEF14E56CC285ECCBCF0A9CEB1'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:37.615316 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476871376, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CD8D01EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441442612263, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '67CD5711B4A9FDC5BD6B52E60D587ED3B57CFA00548E5E814FD4E7513A09FA49'O }, sSig := '5E9B11E200E790830CAFB8C3BACAC013E74B81EEF14E56CC285ECCBCF0A9CEB1'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:37.615351 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:37.615384 Stop timer tc_ac: 30 s
+05:30:37.615400 *** TC_SEC_ITSS_SND_GENMSG_04_BV: PASS: Correct secured packet received, containing digest ***
+05:30:37.615408 setverdict(pass): none -> pass
+05:30:37.615496 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:37.615515 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:37.615536 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:37.615544 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:37.615566 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:37.615575 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:37.615584 Start timer tc_ac: 30 s
+05:30:37.615600 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:37.615608 Message with id 2 was extracted from the queue of acPort.
+05:30:37.615615 Stop timer tc_ac: 30 s
+05:30:37.615622 Unmapping port mtc:acPort from system:acPort.
+05:30:37.615840 Port acPort was unmapped from system:acPort.
+05:30:37.616083 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:37.616120 Unmapping port mtc:utPort from system:utPort.
+05:30:37.616304 Port utPort was unmapped from system:utPort.
+05:30:37.616557 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:37.616579 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:37.616769 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:37.617050 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:37.617099 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:37.617313 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:37.617330 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:37.617487 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:37.617537 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:37.617549 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:37.617558 Default with id 2 (altstep a_default) was deactivated.
+05:30:37.617564 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:37.617571 Port syncSendPort was stopped.
+05:30:37.617580 Port syncPort was stopped.
+05:30:37.617586 Port utPort was stopped.
+05:30:37.617592 Port acPort was stopped.
+05:30:37.617597 Port geoNetworkingPort was stopped.
+05:30:37.617603 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_04_BV.
+05:30:37.617614 Waiting for PTCs to finish.
+05:30:37.617962 Setting final verdict of the test case.
+05:30:37.618107 Local verdict of MTC: pass
+05:30:37.618132 No PTCs were created.
+05:30:37.618145 Test case TC_SEC_ITSS_SND_GENMSG_04_BV finished. Verdict: pass
+05:30:37.618362 Executing test case TC_SEC_ITSS_SND_GENMSG_05_BV in module ItsSecurity_TestCases.
+05:30:37.618455 Test case TC_SEC_ITSS_SND_GENMSG_05_BV started.
+05:30:37.618469 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_05_BV.
+05:30:37.618539 Port syncSendPort was started.
+05:30:37.618549 Port syncPort was started.
+05:30:37.618554 Port utPort was started.
+05:30:37.618559 Port acPort was started.
+05:30:37.618564 Port geoNetworkingPort was started.
+05:30:37.618585 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:37.618609 Mapping port mtc:acPort to system:acPort.
+05:30:37.618733 Port acPort was mapped to system:acPort.
+05:30:37.618953 Map operation of mtc:acPort to system:acPort finished.
+05:30:37.619001 Mapping port mtc:utPort to system:utPort.
+05:30:37.619489 Port utPort was mapped to system:utPort.
+05:30:37.619765 Map operation of mtc:utPort to system:utPort finished.
+05:30:37.619818 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:37.620287 security_services_its::setup: Already done
+05:30:37.620407 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:37.620747 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:37.620808 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:37.621059 Port syncPort has established the connection with local port syncSendPort.
+05:30:37.621085 Port syncSendPort has established the connection with local port syncPort.
+05:30:37.621240 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:37.621277 Altstep a_cf01Down was activated as default, id 1
+05:30:37.621303 security_services_its::setup: Already done
+05:30:37.621481 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:37.621656 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:37.623278 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:37.623332 Start timer tc_wait: 120 s
+05:30:37.623360 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:37.623372 Message with id 1 was extracted from the queue of utPort.
+05:30:37.623380 Stop timer tc_wait: 120 s
+05:30:37.623389 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:37.623398 Start timer t: 1 s
+05:30:38.623409 Timeout t: 1 s
+05:30:38.623525 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:38.623551 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:38.623568 Start timer tc_ac: 30 s
+05:30:38.623601 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:38.623611 Message with id 1 was extracted from the queue of acPort.
+05:30:38.623620 Stop timer tc_ac: 30 s
+05:30:38.623710 Altstep a_default was activated as default, id 2
+05:30:38.623720 Altstep a_utDefault was activated as default, id 3
+05:30:38.623726 Altstep a_neighbourDefault was activated as default, id 4
+05:30:38.623887 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476866487, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:38.624251 Start timer t: 1 s
+05:30:39.624297 Timeout t: 1 s
+05:30:39.624351 Start timer t: 0.5 s
+05:30:40.124361 Timeout t: 0.5 s
+05:30:40.124511 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:41.422504 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441446421209 / 716441441422503, delta = 4998706.000000, comp = 0
+05:30:41.423275 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476875185, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CE7B11EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441446421209, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := 'D91FB7E337D2986B86449B9EC25B32489E253937B6AA0D6568808D90216AA490'O }, sSig := '140A3222508F9ADD4D85CD1C41B6C4CACCE9293A94A8E6B78519DD6E60F7EECF'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:41.423475 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476875185, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CE7B11EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441446421209, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := 'D91FB7E337D2986B86449B9EC25B32489E253937B6AA0D6568808D90216AA490'O }, sSig := '140A3222508F9ADD4D85CD1C41B6C4CACCE9293A94A8E6B78519DD6E60F7EECF'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:41.423510 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:41.423532 Warning: Stopping inactive timer tc_ac.
+05:30:41.423607 *** TC_SEC_ITSS_SND_GENMSG_05_BV: INFO: Initial conditions: First GN message with certificate received ***
+05:30:41.423620 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:41.423626 Start timer tc_ac: 30 s
+05:30:45.223362 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441450220842 / 716441445223360, delta = 4997482.000000, comp = 0
+05:30:45.224824 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476878985, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CF6891EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441450220842, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '6262E6F2DE2509BFA9E1EE9C7C266005EA872ECBF7D9AD2697B29B814EDE985C'O }, sSig := 'A63298C6716434BB0128D88B3DE066D4127F1134B4A401DC5FCB71AC5BB155B1'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 2
+05:30:45.225248 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476878985, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3CF6891EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441450220842, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '6262E6F2DE2509BFA9E1EE9C7C266005EA872ECBF7D9AD2697B29B814EDE985C'O }, sSig := 'A63298C6716434BB0128D88B3DE066D4127F1134B4A401DC5FCB71AC5BB155B1'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 2
+05:30:45.225300 Message with id 2 was extracted from the queue of geoNetworkingPort.
+05:30:45.225342 Stop timer tc_ac: 30 s
+05:30:45.225639 *** f_getCurrentTime: INFO: calling fx_getCurrentTime() ***
+05:30:45.225706 v_curTime (us)=716441445225000
+05:30:45.225831 *** TC_SEC_ITSS_SND_GENMSG_05_BV: FAIL: GN certificate validity period is not in 5 min range
+05:30:45.225864 setverdict(fail): none -> fail
+05:30:45.226210 **** f_selfSyncStop: MTC requests to stop test case (itself). ****
+05:30:45.226265 Sent on syncSendPort to mtc @LibCommon_Sync.SyncCmd : { serverStop := { } }
+05:30:45.226295 Message enqueued on syncPort from mtc @LibCommon_Sync.SyncCmd : { serverStop := { } } id 1
+05:30:45.226316 Start timer tc_sync: 120 s
+05:30:45.226756 Receive operation on port syncPort succeeded, message from mtc: @LibCommon_Sync.SyncCmd : { serverStop := { } } id 1
+05:30:45.226785 Message with id 1 was extracted from the queue of syncPort.
+05:30:45.226805 Stop timer tc_sync: 120 s
+05:30:45.226819 **** a_shutdown: Test component received STOP signal from MTC **** 
+05:30:45.226830 *** a_default: INFO: TEST COMPONENT NOW STOPPING ITSELF! ***
+05:30:45.226839 Stopping test component execution.
+05:30:45.229173 Test case TC_SEC_ITSS_SND_GENMSG_05_BV was stopped.
+05:30:45.229308 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:45.229335 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:45.229351 Default with id 2 (altstep a_default) was deactivated.
+05:30:45.229360 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:45.229369 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:45.229379 Removing unterminated connection between port syncSendPort and mtc:syncPort.
+05:30:45.229550 Port syncSendPort was stopped.
+05:30:45.229574 Removing unterminated connection between port syncPort and mtc:syncSendPort.
+05:30:45.229598 Port syncPort was stopped.
+05:30:45.229609 Removing unterminated mapping between port utPort and system:utPort.
+05:30:45.229623 Port utPort was unmapped from system:utPort.
+05:30:45.229646 Port utPort was stopped.
+05:30:45.229655 Removing unterminated mapping between port acPort and system:acPort.
+05:30:45.229665 Port acPort was unmapped from system:acPort.
+05:30:45.229680 Port acPort was stopped.
+05:30:45.229689 Removing unterminated mapping between port geoNetworkingPort and system:geoNetworkingPort.
+05:30:45.229730 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:45.229747 Port geoNetworkingPort was stopped.
+05:30:45.229757 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_05_BV.
+05:30:45.229775 Waiting for PTCs to finish.
+05:30:45.230142 Setting final verdict of the test case.
+05:30:45.230314 Local verdict of MTC: fail
+05:30:45.230361 No PTCs were created.
+05:30:45.230384 Test case TC_SEC_ITSS_SND_GENMSG_05_BV finished. Verdict: fail
+05:30:45.230824 Executing test case TC_SEC_ITSS_SND_GENMSG_06_BV in module ItsSecurity_TestCases.
+05:30:45.231065 Test case TC_SEC_ITSS_SND_GENMSG_06_BV started.
+05:30:45.231090 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_06_BV.
+05:30:45.231237 Port syncSendPort was started.
+05:30:45.231263 Port syncPort was started.
+05:30:45.231274 Port utPort was started.
+05:30:45.231283 Port acPort was started.
+05:30:45.231292 Port geoNetworkingPort was started.
+05:30:45.231301 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:45.231322 Mapping port mtc:acPort to system:acPort.
+05:30:45.231429 Port acPort was mapped to system:acPort.
+05:30:45.231812 Map operation of mtc:acPort to system:acPort finished.
+05:30:45.231866 Mapping port mtc:utPort to system:utPort.
+05:30:45.232859 Port utPort was mapped to system:utPort.
+05:30:45.233395 Map operation of mtc:utPort to system:utPort finished.
+05:30:45.233443 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:45.234143 security_services_its::setup: Already done
+05:30:45.234468 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:45.234976 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:45.235069 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:45.235413 Port syncPort has established the connection with local port syncSendPort.
+05:30:45.235517 Port syncSendPort has established the connection with local port syncPort.
+05:30:45.235977 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:45.236074 Altstep a_cf01Down was activated as default, id 1
+05:30:45.236136 security_services_its::setup: Already done
+05:30:45.236464 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:45.236770 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:45.239399 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:45.239512 Start timer tc_wait: 120 s
+05:30:45.239559 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:45.239575 Message with id 1 was extracted from the queue of utPort.
+05:30:45.239585 Stop timer tc_wait: 120 s
+05:30:45.239597 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:45.239611 Start timer t: 1 s
+05:30:46.239625 Timeout t: 1 s
+05:30:46.239760 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:46.239788 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:46.239804 Start timer tc_ac: 30 s
+05:30:46.239839 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:46.239850 Message with id 1 was extracted from the queue of acPort.
+05:30:46.239859 Stop timer tc_ac: 30 s
+05:30:46.239957 Altstep a_default was activated as default, id 2
+05:30:46.239967 Altstep a_utDefault was activated as default, id 3
+05:30:46.239972 Altstep a_neighbourDefault was activated as default, id 4
+05:30:46.240136 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476874103, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:46.240548 Start timer t: 1 s
+05:30:47.240601 Timeout t: 1 s
+05:30:47.240652 Start timer t: 0.5 s
+05:30:47.740694 Timeout t: 0.5 s
+05:30:47.740830 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:47.740875 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:47.740886 Start timer tc_ac: 30 s
+05:30:49.036288 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441454034857 / 716441449036288, delta = 4998569.000000, comp = 0
+05:30:49.037138 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476882798, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3D056E1EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441454034857, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '2552027D2F085E7A6834180221FC2427BD1A84C93CB140E55AFE9BE674124F00'O }, sSig := 'BE409362D4360E805F6A6FA551A309B435A2AB603CC62AB8993DDE45F0B943B2'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:49.037334 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476882798, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3D056E1EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441454034857, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '2552027D2F085E7A6834180221FC2427BD1A84C93CB140E55AFE9BE674124F00'O }, sSig := 'BE409362D4360E805F6A6FA551A309B435A2AB603CC62AB8993DDE45F0B943B2'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:49.037375 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:49.037397 Stop timer tc_ac: 30 s
+05:30:49.037412 *** TC_SEC_ITSS_SND_GENMSG_06_BV: PASS: GN received with a well formated payload ***
+05:30:49.037421 setverdict(pass): none -> pass
+05:30:49.037651 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:49.037678 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:49.037692 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:49.037699 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:49.037719 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:49.037728 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:49.037738 Start timer tc_ac: 30 s
+05:30:49.037754 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:49.037762 Message with id 2 was extracted from the queue of acPort.
+05:30:49.037768 Stop timer tc_ac: 30 s
+05:30:49.037776 Unmapping port mtc:acPort from system:acPort.
+05:30:49.037960 Port acPort was unmapped from system:acPort.
+05:30:49.038262 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:49.038294 Unmapping port mtc:utPort from system:utPort.
+05:30:49.038474 Port utPort was unmapped from system:utPort.
+05:30:49.038676 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:49.038711 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:49.038869 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:49.039017 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:49.039060 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:49.039249 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:49.039264 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:49.039366 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:49.039382 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:49.039393 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:49.039402 Default with id 2 (altstep a_default) was deactivated.
+05:30:49.039406 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:49.039413 Port syncSendPort was stopped.
+05:30:49.039422 Port syncPort was stopped.
+05:30:49.039428 Port utPort was stopped.
+05:30:49.039433 Port acPort was stopped.
+05:30:49.039442 Port geoNetworkingPort was stopped.
+05:30:49.039448 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_06_BV.
+05:30:49.039457 Waiting for PTCs to finish.
+05:30:49.039708 Setting final verdict of the test case.
+05:30:49.039771 Local verdict of MTC: pass
+05:30:49.039789 No PTCs were created.
+05:30:49.039801 Test case TC_SEC_ITSS_SND_GENMSG_06_BV finished. Verdict: pass
+05:30:49.040046 Executing test case TC_SEC_ITSS_SND_GENMSG_07_BV in module ItsSecurity_TestCases.
+05:30:49.040148 Test case TC_SEC_ITSS_SND_GENMSG_07_BV started.
+05:30:49.040162 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_07_BV.
+05:30:49.040232 Port syncSendPort was started.
+05:30:49.040241 Port syncPort was started.
+05:30:49.040246 Port utPort was started.
+05:30:49.040250 Port acPort was started.
+05:30:49.040254 Port geoNetworkingPort was started.
+05:30:49.040259 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:49.040271 Mapping port mtc:acPort to system:acPort.
+05:30:49.040524 Port acPort was mapped to system:acPort.
+05:30:49.040784 Map operation of mtc:acPort to system:acPort finished.
+05:30:49.040822 Mapping port mtc:utPort to system:utPort.
+05:30:49.041722 Port utPort was mapped to system:utPort.
+05:30:49.041971 Map operation of mtc:utPort to system:utPort finished.
+05:30:49.042013 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:49.042494 security_services_its::setup: Already done
+05:30:49.042573 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:49.042724 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:49.042750 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:49.042990 Port syncPort has established the connection with local port syncSendPort.
+05:30:49.043013 Port syncSendPort has established the connection with local port syncPort.
+05:30:49.043107 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:49.043137 Altstep a_cf01Down was activated as default, id 1
+05:30:49.043156 security_services_its::setup: Already done
+05:30:49.043291 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:49.043438 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:49.045160 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:49.045216 Start timer tc_wait: 120 s
+05:30:49.045249 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:49.045262 Message with id 1 was extracted from the queue of utPort.
+05:30:49.045271 Stop timer tc_wait: 120 s
+05:30:49.045280 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:49.045310 Start timer t: 1 s
+05:30:50.045321 Timeout t: 1 s
+05:30:50.045501 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:50.045530 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:50.045546 Start timer tc_ac: 30 s
+05:30:50.045581 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:50.045598 Message with id 1 was extracted from the queue of acPort.
+05:30:50.045607 Stop timer tc_ac: 30 s
+05:30:50.045740 Altstep a_default was activated as default, id 2
+05:30:50.045754 Altstep a_utDefault was activated as default, id 3
+05:30:50.045760 Altstep a_neighbourDefault was activated as default, id 4
+05:30:50.045929 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476877909, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:50.046427 Start timer t: 1 s
+05:30:51.046474 Timeout t: 1 s
+05:30:51.046551 Start timer t: 0.5 s
+05:30:51.546654 Timeout t: 0.5 s
+05:30:51.546849 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:51.546869 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:51.546875 Start timer tc_ac: 30 s
+05:30:52.845367 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441457843006 / 716441452845366, delta = 4997640.000000, comp = 0
+05:30:52.846706 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476886606, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3D144E1EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441457843006, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '806D34586AC33259BA688FFCA543D5B226F234C75926D935113E1821FF81EA89'O }, sSig := 'D759D720C1A131C720BDF46808E89B057E2CE6978FB5A863BF3707ACE7682D7D'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:52.847154 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476886606, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3D144E1EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441457843006, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '806D34586AC33259BA688FFCA543D5B226F234C75926D935113E1821FF81EA89'O }, sSig := 'D759D720C1A131C720BDF46808E89B057E2CE6978FB5A863BF3707ACE7682D7D'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:52.847230 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:52.847265 Stop timer tc_ac: 30 s
+05:30:52.847289 *** TC_SEC_ITSS_SND_GENMSG_07_BV: PASS: received with a well formated payload ***
+05:30:52.847304 setverdict(pass): none -> pass
+05:30:52.847457 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:52.847491 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:52.847512 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:52.847525 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:52.847555 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:52.847572 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:52.847588 Start timer tc_ac: 30 s
+05:30:52.847615 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:52.847630 Message with id 2 was extracted from the queue of acPort.
+05:30:52.847640 Stop timer tc_ac: 30 s
+05:30:52.847653 Unmapping port mtc:acPort from system:acPort.
+05:30:52.847910 Port acPort was unmapped from system:acPort.
+05:30:52.848154 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:52.848194 Unmapping port mtc:utPort from system:utPort.
+05:30:52.848360 Port utPort was unmapped from system:utPort.
+05:30:52.848539 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:52.848590 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:52.848843 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:52.849018 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:52.849072 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:52.849303 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:52.849323 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:52.849568 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:52.849622 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:52.849634 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:52.849644 Default with id 2 (altstep a_default) was deactivated.
+05:30:52.849650 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:52.849657 Port syncSendPort was stopped.
+05:30:52.849667 Port syncPort was stopped.
+05:30:52.849674 Port utPort was stopped.
+05:30:52.849680 Port acPort was stopped.
+05:30:52.849686 Port geoNetworkingPort was stopped.
+05:30:52.849692 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_07_BV.
+05:30:52.849701 Waiting for PTCs to finish.
+05:30:52.849908 Setting final verdict of the test case.
+05:30:52.849958 Local verdict of MTC: pass
+05:30:52.849978 No PTCs were created.
+05:30:52.849990 Test case TC_SEC_ITSS_SND_GENMSG_07_BV finished. Verdict: pass
+05:30:52.850256 Executing test case TC_SEC_ITSS_SND_GENMSG_08_BV in module ItsSecurity_TestCases.
+05:30:52.850414 Test case TC_SEC_ITSS_SND_GENMSG_08_BV started.
+05:30:52.850432 Initializing variables, timers and ports of component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking inside testcase TC_SEC_ITSS_SND_GENMSG_08_BV.
+05:30:52.850511 Port syncSendPort was started.
+05:30:52.850521 Port syncPort was started.
+05:30:52.850527 Port utPort was started.
+05:30:52.850533 Port acPort was started.
+05:30:52.850539 Port geoNetworkingPort was started.
+05:30:52.850545 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was initialized.
+05:30:52.850567 Mapping port mtc:acPort to system:acPort.
+05:30:52.850733 Port acPort was mapped to system:acPort.
+05:30:52.850924 Map operation of mtc:acPort to system:acPort finished.
+05:30:52.850976 Mapping port mtc:utPort to system:utPort.
+05:30:52.851497 Port utPort was mapped to system:utPort.
+05:30:52.851654 Map operation of mtc:utPort to system:utPort finished.
+05:30:52.851673 Mapping port mtc:geoNetworkingPort to system:geoNetworkingPort.
+05:30:52.852248 security_services_its::setup: Already done
+05:30:52.852379 Port geoNetworkingPort was mapped to system:geoNetworkingPort.
+05:30:52.852688 Map operation of mtc:geoNetworkingPort to system:geoNetworkingPort finished.
+05:30:52.852737 Connecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:52.852886 Port syncPort has established the connection with local port syncSendPort.
+05:30:52.852902 Port syncSendPort has established the connection with local port syncPort.
+05:30:52.853083 Connect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:52.853135 Altstep a_cf01Down was activated as default, id 1
+05:30:52.853163 security_services_its::setup: Already done
+05:30:52.853409 Selected issuer: 'E4B9D11A3802CDD1'O
+05:30:52.853594 Sent on utPort to system @LibItsGeoNetworking_TypesAndValues.UtGnInitialize : { hashedId8 := '115EA89063B17FFD'O }
+05:30:52.855346 Message enqueued on utPort from system @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:52.855399 Start timer tc_wait: 120 s
+05:30:52.855426 Receive operation on port utPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.UtGnResults : { utGnInitializeResult := true } id 1
+05:30:52.855439 Message with id 1 was extracted from the queue of utPort.
+05:30:52.855447 Stop timer tc_wait: 120 s
+05:30:52.855458 *** f_utInitializeIut: INFO: IUT initialized ***
+05:30:52.855467 Start timer t: 1 s
+05:30:53.855480 Timeout t: 1 s
+05:30:53.855629 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { getLongPosVector := { gnAddress := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O } } }
+05:30:53.855661 Message enqueued on acPort from system @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:53.855680 Start timer tc_ac: 30 s
+05:30:53.855721 Receive operation on port acPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.AcGnResponse : { getLongPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } id 1
+05:30:53.855734 Message with id 1 was extracted from the queue of acPort.
+05:30:53.855744 Stop timer tc_ac: 30 s
+05:30:53.855852 Altstep a_default was activated as default, id 2
+05:30:53.855863 Altstep a_utDefault was activated as default, id 3
+05:30:53.855869 Altstep a_neighbourDefault was activated as default, id 4
+05:30:53.856058 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startBeaconing := { beaconPacket := { basicHeader := { version := 1, nextHeader := e_commonHeader (1), reserved := 0, lifeTime := { multiplier := 10, ltBase := e_100s (3) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfEnabled (1), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '00000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_manual (1), stationType := e_passengerCar (5), reserved := 0, mid := '00000000000B'O }, timestamp_ := 3476881719, latitude := 520020000, longitude := 130000000, pai := '1'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := omit } } } }
+05:30:53.856555 Start timer t: 1 s
+05:30:54.856612 Timeout t: 1 s
+05:30:54.856721 Start timer t: 0.5 s
+05:30:55.356743 Timeout t: 0.5 s
+05:30:55.357189 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { startPassBeaconing := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 0, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } } }
+05:30:55.358370 **** f_selfSync: Successfully passed PREAMBLE synchronization point. ****
+05:30:55.358444 Start timer tc_ac: 30 s
+05:30:56.654641 security_services_its::process_ieee_1609_dot2_signed_data: generation time check 716441461652609 / 716441456654640, delta = 4997969.000000, comp = 0
+05:30:56.655494 Message enqueued on geoNetworkingPort from system @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476890416, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3D23301EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441461652609, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := 'E2BBC36510821429C43497C348284EA7BEE11B8E74F4128DF004F328CB4FB489'O }, sSig := '1964EB29561DC3CCD1950AD88769F49F103C27F0F1D05E80632ED808DBFE6076'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:56.655849 Receive operation on port geoNetworkingPort succeeded, message from system(): @LibItsGeoNetworking_TypesAndValues.GeoNetworkingInd : { msgIn := { basicHeader := { version := 1, nextHeader := e_securedPacket (2), reserved := 0, lifeTime := { multiplier := 6, ltBase := e_10s (2) }, routerHopLimit := 1 }, gnPacket := { packet := { commonHeader := { nextHeader := e_any (0), reserved := 0, headerTST := { beaconHdr := { headerType := e_beacon (1), headerSubType := 0 } }, trafficClass := { scf := e_scfDisabled (0), channelOffload := e_choffDisabled (0), tcId := 0 }, flags := '10000000'B, plLength := 0, maxHopLimit := 1, reserved2 := 0 }, extendedHeader := { beaconHeader := { srcPosVector := { gnAddr := { typeOfAddress := e_initial (0), stationType := e_unknown (0), reserved := 0, mid := '020000000001'O }, timestamp_ := 3476890416, latitude := 520000000, longitude := 130000000, pai := '0'B, speed := 0, heading := 0 } } }, payload := omit }, securedMsg := { protocolVersion := 3, content := { signedData := { hashId := sha256 (0), tbsData := { payload := { data := { protocolVersion := 3, content := { unsecuredData := '00100080000001000000020000000001CF3D23301EFE920007BFA48000000000'O } }, extDataHash := omit, omitted := omit }, headerInfo := { psid := 141, generationTime := 716441461652609, expiryTime := omit, generationLocation := omit, p2pcdLearningRequest := omit, missingCrlIdentifier := omit, encryptionKey := omit, inlineP2pcdRequest := omit, requestedCertificate := omit, pduFunctionalType := omit, contributedExtensions := omit } }, signer := { certificate := { { version := 3, type_ := explicit (0), issuer := { sha256AndDigest := 'E5FA1B0F67D696EF'O }, toBeSigned := { id := { none_ := NULL }, cracaId := '000000'O, crlSeries := 0, validityPeriod := { start_ := 716440640, duration := { hours := 24 } }, region := omit, assuranceLevel := omit, appPermissions := { { psid := 36, ssp := { bitmapSsp := '01FFFC'O } }, { psid := 37, ssp := { bitmapSsp := '01FFFFFF'O } }, { psid := 141, ssp := omit }, { psid := 638, ssp := { bitmapSsp := '01'O } } }, certIssuePermissions := omit, certRequestPermissions := omit, canRequestRollover := omit, encryptionKey := omit, verifyKeyIndicator := { verificationKey := { ecdsaNistP256 := { compressed_y_0 := 'CE0D44FEB38EEC2A621802DF4AEDC4559C6362B922FC673076329142FB98B9BB'O } } }, flags := omit, appExtensions := omit, certIssueExtensions := omit, certRequestExtension := omit }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := '9A64157E524E023A54AB06957B37716AA503C45671C74E983FAB3191E9283F26'O }, sSig := 'C4B8A3ECBD3D5484A3AC9E76873F36ADCE244DE0B4DB8FD305B99558F6C94CD5'O } } } } }, signature_ := { ecdsaNistP256Signature := { rSig := { x_only := 'E2BBC36510821429C43497C348284EA7BEE11B8E74F4128DF004F328CB4FB489'O }, sSig := '1964EB29561DC3CCD1950AD88769F49F103C27F0F1D05E80632ED808DBFE6076'O } } } } } } }, macDestinationAddress := 'FFFFFFFFFFFF'O, ssp := omit, its_aid := 141 } id 1
+05:30:56.655885 Message with id 1 was extracted from the queue of geoNetworkingPort.
+05:30:56.655950 Stop timer tc_ac: 30 s
+05:30:56.655983 *** TC_SEC_ITSS_SND_GENMSG_08_BV: INFO: GN message with certificate received ***
+05:30:56.655999 setverdict(pass): none -> pass
+05:30:56.656230 **** f_selfSync: Successfully passed TEST BODY synchronization point. ****
+05:30:56.656275 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopPassBeaconing := { } }
+05:30:56.656302 Sent on acPort to system @LibItsGeoNetworking_TypesAndValues.AcGnPrimitive : { stopBeaconing := { } }
+05:30:56.656315 Default with id 4 (altstep a_neighbourDefault) was deactivated.
+05:30:56.656378 Sent on acPort to system @LibItsCommon_TypesAndValues.AcSecPrimitive : { acDisableSecurity := { disable := true } }
+05:30:56.656396 Message enqueued on acPort from system @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:56.656413 Start timer tc_ac: 30 s
+05:30:56.656441 Receive operation on port acPort succeeded, message from system(): @LibItsCommon_TypesAndValues.AdapterControlResults : { acSecResponse := true } id 2
+05:30:56.656456 Message with id 2 was extracted from the queue of acPort.
+05:30:56.656466 Stop timer tc_ac: 30 s
+05:30:56.656482 Unmapping port mtc:acPort from system:acPort.
+05:30:56.656791 Port acPort was unmapped from system:acPort.
+05:30:56.657155 Unmap operation of mtc:acPort from system:acPort finished.
+05:30:56.657200 Unmapping port mtc:utPort from system:utPort.
+05:30:56.657494 Port utPort was unmapped from system:utPort.
+05:30:56.657858 Unmap operation of mtc:utPort from system:utPort finished.
+05:30:56.657930 Unmapping port mtc:geoNetworkingPort from system:geoNetworkingPort.
+05:30:56.658344 Port geoNetworkingPort was unmapped from system:geoNetworkingPort.
+05:30:56.658639 Unmap operation of mtc:geoNetworkingPort from system:geoNetworkingPort finished.
+05:30:56.658762 Disconnecting ports mtc:syncSendPort and mtc:syncPort.
+05:30:56.659101 Port syncSendPort has terminated the connection with local port syncPort.
+05:30:56.659136 Port syncPort has terminated the connection with local port syncSendPort.
+05:30:56.659406 Disconnect operation on mtc:syncSendPort and mtc:syncPort finished.
+05:30:56.659571 Terminating component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking.
+05:30:56.659591 Default with id 1 (altstep a_cf01Down) was deactivated.
+05:30:56.659609 Default with id 2 (altstep a_default) was deactivated.
+05:30:56.659617 Default with id 3 (altstep a_utDefault) was deactivated.
+05:30:56.659628 Port syncSendPort was stopped.
+05:30:56.659643 Port syncPort was stopped.
+05:30:56.659654 Port utPort was stopped.
+05:30:56.659663 Port acPort was stopped.
+05:30:56.659671 Port geoNetworkingPort was stopped.
+05:30:56.659679 Component type LibItsGeoNetworking_TestSystem.ItsGeoNetworking was shut down inside testcase TC_SEC_ITSS_SND_GENMSG_08_BV.
+05:30:56.659693 Waiting for PTCs to finish.
+05:30:56.660236 Setting final verdict of the test case.
+05:30:56.660323 Local verdict of MTC: pass
+05:30:56.660368 No PTCs were created.
+05:30:56.660395 Test case TC_SEC_ITSS_SND_GENMSG_08_BV finished. Verdict: pass
+05:30:56.661836 Verdict statistics: 0 none (0.00 %), 7 pass (87.50 %), 0 inconc (0.00 %), 1 fail (12.50 %), 0 error (0.00 %).
+05:30:56.661972 Test execution summary: 8 test cases were executed. Overall verdict: fail
+05:30:56.661988 Exit was requested from MC. Terminating MTC.

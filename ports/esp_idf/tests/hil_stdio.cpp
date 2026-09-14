@@ -1,5 +1,5 @@
 // Host SUT process: one hex command line in, one hex reply line out.
-//   vidf_sut [--security-pool DIR [--root NAME] [--aa NAME] [--at NAME] [--anonymous]]
+//   vidf_sut [--security-pool DIR [--root NAME] [--aa NAME]... [--at NAME] [--anonymous]]
 // With a pool the reset command builds the secured, beaconing profile from
 // DIR/<NAME>.oer and DIR/<at NAME>.vkey (the layout the ETSI ATS certificate
 // loader uses as well); without one the unsecured BTP/GN profile is used.
@@ -16,7 +16,11 @@ int main(int argc, char** argv) {
         const bool has_value = i + 1 < argc;
         if (arg == "--security-pool" && has_value) profile.pool = argv[++i];
         else if (arg == "--root" && has_value) profile.root = argv[++i];
-        else if (arg == "--aa" && has_value) profile.authority = argv[++i];
+        else if (arg == "--aa" && has_value) { // repeatable; the first use replaces the defaults
+            static bool replaced = false;
+            if (!replaced) { profile.authorities.clear(); replaced = true; }
+            profile.authorities.push_back(argv[++i]);
+        }
         else if (arg == "--at" && has_value) profile.ticket = argv[++i];
         else if (arg == "--anonymous") profile.anonymous_address = true;
         else { std::fprintf(stderr, "unknown argument: %s\n", arg.c_str()); return 2; }

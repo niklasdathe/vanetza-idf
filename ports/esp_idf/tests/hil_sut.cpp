@@ -51,7 +51,8 @@ public:
     Result load(const SecurityProfile& profile) {
         const auto file = [&](const std::string& name, const char* ext) { return read(profile.pool + "/" + name + ext); };
         if (trust.add_root(file(profile.root, ".oer")) != Result::accepted) return Result::invalid_argument;
-        if (trust.add_authority(file(profile.authority, ".oer")) != Result::accepted) return Result::invalid_argument;
+        for (const auto& authority : profile.authorities)
+            if (trust.add_authority(file(authority, ".oer")) != Result::accepted) return Result::invalid_argument;
         const auto key_octets = file(profile.ticket, ".vkey");
         vanetza::security::PrivateKey key;
         key.type = key_octets.size() == 48 ? vanetza::security::KeyType::BrainpoolP384r1 : vanetza::security::KeyType::NistP256;

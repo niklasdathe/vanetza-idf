@@ -15,14 +15,15 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 663 checks | Security entity, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 840 checks; security off 150; access-only 88; Linux Release 663 |
-| ESP32-C5 component execution, security on (COM11) | PASS, 537 checks | PSA Crypto backend of mbedTLS 4.1.0; `CONFIG_VANETZA_IDF_PKI=y`; [security-device-05](evidence/security-device-05/result.json) (earlier 503-check runs: -03 COM11, -04 COM20); heap note below |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 794 checks | Security entity incl. receive-side verification, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 968 checks; security off 150; access-only 88; Linux Release 794 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 668 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`; [security-device-06](evidence/security-device-06/result.json) (earlier: -05 537 checks, -03/-04 503 checks); heap and cost notes below |
 | ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
 | Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below |
 | Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below |
-| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-06](evidence/btp-host-06/result.json) (earlier -05) |
-| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-03](evidence/geonetworking-host-03/result.json) (earlier -02): no regression |
-| Security ATS receiving side, PKI ATS | Not executed | SN-DECAP verification does not exist (GAP-SEC-001); the TS 102 941 core has no transport (GAP-PKI-001) |
+| Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-07](evidence/btp-host-07/result.json) (earlier -05, -06) |
+| Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-04](evidence/geonetworking-host-04/result.json) (earlier -02, -03): no regression |
+| Official ETSI Security, receiving side, host | **PASS 24/26**; 2 errors (testcase defect, IUT-independent) | `TC_SEC_ITSS_RCV_MSG/CAM/DENM_*` with the SUT verifying (`VIDF_SECURITY_VERIFY`); see below |
+| PKI ATS | Not executed | The TS 102 941 core has no transport (GAP-PKI-001) |
 | Complete facilities ATS | Not executed | Full services remain incomplete |
 
 The [BTP result](evidence/btp-host-04.json) records executable and configuration
@@ -211,7 +212,7 @@ form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
 The host tests run the same backend against OpenSSL as an oracle (signature
 cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
 known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
-build (840 checks); the device runs the PSA path natively (537 checks, the
+build (968 checks); the device runs the PSA path natively (668 checks, the
 difference being the OpenSSL-only oracle tests).
 
 **Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
@@ -259,7 +260,7 @@ framework's `base_time` is UTC-based, hence the 5 s offset in its logs.
 `ItsSecSystem` ports (GeoNetworking, GN/CAM/DENM upper testers, adapter
 control) against the official `AtsSecurity` testcase objects
 ([build_etsi_security_adapter.py](../../ports/esp_idf/tools/build_etsi_security_adapter.py),
-[adapter-build.json](evidence/security-host-03/adapter-build.json)). The
+[adapter-build.json](evidence/security-host-06/adapter-build.json)). The
 host SUT is `vidf_sut --security-pool ./certificates`, the pool an isolated test
 trust domain written by `vidf_test_pool` in the framework's own loader layout
 (hashes in each `result.json`). Three properties of the run matter for reading
@@ -288,19 +289,68 @@ the verdicts:
    Release 2 CAM (SHB) and DENM (GBC into a 500 m circle, TS 103 831 clause
    5.4.2) PDUs of the test application; no CA/DEN service is claimed.
 
-Verdicts ([security-host-03](evidence/security-host-03/result.json),
-[security-host-04](evidence/security-host-04/result.json); the first runs -01/-02
-of 2026-09-13 gave the same verdicts):
+Verdicts ([security-host-06](evidence/security-host-06/result.json),
+[security-host-07](evidence/security-host-07/result.json); the earlier runs -01/-02
+and -03/-04 gave the same verdicts):
 
 | Case | Verdict | Note |
 |---|---|---|
 | `TC_SEC_ITSS_SND_GENMSG_01..04, 06..08_BV` | pass | Secured beacons, psid 141, digest/certificate alternation, generationTime, signedData payload |
-| `TC_SEC_ITSS_SND_GENMSG_05_BV` | **fail** | The testcase compares `validityPeriod.start` (Time32, seconds) with a range built from `v_curTime` in microseconds (pinned `ItsSecurity_TestCases.ttcn` line 7313; unchanged at the upstream master's line 6672), so no IUT passes it. The test purpose's own condition (start <= generation time < start + duration) holds for the logged values. Retained, not tuned; [analysis](evidence/security-host-03/analysis.md) |
+| `TC_SEC_ITSS_SND_GENMSG_05_BV` | **fail** | The testcase compares `validityPeriod.start` (Time32, seconds) with a range built from `v_curTime` in microseconds (pinned `ItsSecurity_TestCases.ttcn` line 7313; unchanged at the upstream master's line 6672), so no IUT passes it. The test purpose's own condition (start <= generation time < start + duration) holds for the logged values. Retained, not tuned; [analysis](evidence/security-host-06/analysis.md) |
 | `TC_SEC_ITSS_SND_CAM_01..04_BV` | pass | psid 36, headerInfo without expiry/location, signer digest or certificate with appPermissions |
 | `TC_SEC_ITSS_SND_DENM_01..03_BV` | pass | psid 37, generationLocation present, GBC packet |
 
-The receiving-side cases (`TC_SEC_ITSS_RCV_*`) were not executed: the SUT
-cannot verify, and running them would only document INCONC.
+**Receive-side verification (decided 2026-09-14, ACT-025).** `SecurityEntity::
+decapsulate_packet` now implements IEEE Std 1609.2 clause 5.2 as TS 103 097
+clause 5.2 requires, built with `VIDF_SECURITY_VERIFY` (default on): the
+TS 103 097 clause 7.1 structure of the received message (`check_profile`), the
+signer from the inline certificate or the bounded certificate cache, the
+upstream `DefaultCertificateValidator` (validity time, ITS-AID permission,
+anchoring, chain consistency, region through `DefaultLocationChecker`), the
+certificate signatures up the chain to a provisioned root
+(`verify_certificate_signature`, IEEE 1609.2 clause 5.3.1: the upstream
+validator only checked anchoring by issuer digest, so a forged ticket naming a
+known AA would have passed), the message signature over
+`calculate_message_hash`, then the generationTime window and replay detection
+of `VerificationPolicy`. The P2P certificate distribution of clause 7.1.1 is
+wired both ways: unknown AT/AA digests are requested through the header
+policy, and an AA carried in `requestedCertificate` is learned once its
+signature chains to a root. `test_verification` (host and device) covers a
+valid message with certificate and with digest, the GN-core path with the
+metadata in BTP-DATA.indication, a tampered signature, an unknown station, an
+unanchored chain, a forged ticket, a ticket without the ITS-AID, an expired
+ticket, the time window in both directions, five profile violations and the
+AA-learning sequence. The verification flow is a port of upstream's
+`StraightVerifyService::verify(v3)` (that translation unit drags the v2 code
+in), with the chain check added; `VerificationPolicy` bounds the certificate
+cache (upstream's is unbounded), the learned AAs and the replay window for the
+device.
+
+**Verification cost on the ESP32-C5** (`security-device-06`, PSA Crypto of
+mbedTLS 4.1.0): a digest-signed message costs 34.6 ms end to end, of which the
+raw ECDSA P-256 verification is 29.7 ms on the ECDSA peripheral
+(`CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY`); the same build with the peripheral
+disabled needs 57.6 ms for the raw verification and 62 ms end to end (control
+run, not retained as evidence). The peripheral is only taken when the PSA
+operation names the hash (`PSA_ALG_ECDSA(PSA_ALG_SHA_256)`); the backend used
+`PSA_ALG_ECDSA_ANY` before, which ESP-IDF's driver declines, so this run also
+removes that software fallback. Roughly 25 to 30 verified messages per second
+are therefore the C5's budget; the chain signature of a newly seen ticket is
+verified once and remembered. The host (OpenSSL) verifies in about 0.2 ms.
+
+**Receiving-side campaign** ([security-host-05](evidence/security-host-05/result.json),
+[analysis](evidence/security-host-05/analysis.md)): `etsi_security_receive.cfg`
+selects the 26 compiled `TC_SEC_ITSS_RCV_*` cases inside the SUT's PICS (no
+implicit certificates, no Brainpool). The test system signs in TTCN-3 with
+`CERT_TS_A_AT`, or `CERT_TS_B_AT` (5 km circular region around the SUT) as
+`PX_AT_CERTIFICATE`; the adapter injects the secured GN PDU and reports what
+the SUT passes up as `UtGnEventInd`. 24 pass (accepting the valid messages,
+discarding every protocol-version, profile, algorithm, signer and signature
+violation); `TC_SEC_ITSS_RCV_DENM_01_BV` and `DENM_02_BV_XX` end in `error`
+because the testcases read NodeB's position from the position table before
+`f_cf01Up()` fills it (pinned lines 9293/9401, same in the upstream master):
+a second, IUT-independent ATS defect, retained as recorded. The 99 CERT/GENMSG
+receiving cases of TS 103 096-2 are commented out in the pinned suite.
 
 **Device heap.** The first device run with security failed in `test_fail_closed`
 with "OER decoding failed" ([security-device-02](evidence/security-device-02/result.json)).

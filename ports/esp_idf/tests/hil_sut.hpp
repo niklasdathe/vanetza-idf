@@ -28,7 +28,9 @@ namespace vidf_test {
 struct SecurityProfile {
     std::string pool;             // directory with <name>.oer (COER certificate) and <name>.vkey (raw private key)
     std::string root = "CERT_IUT_A_RCA";
-    std::string authority = "CERT_IUT_A_AA";
+    // every AA the station trusts as an issuer (its own and, for the receiving-side campaign, the
+    // test system's); ATs of other AAs must arrive through P2P certificate distribution
+    std::vector<std::string> authorities {"CERT_IUT_A_AA", "CERT_TS_A_AA"};
     std::string ticket = "CERT_IUT_A_AT";
     bool anonymous_address = false; // itsGnLocalAddrConfMethod ANONYMOUS: MID from the ticket digest
 };

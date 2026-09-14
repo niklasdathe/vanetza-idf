@@ -75,8 +75,8 @@ The source manifest includes only the ASN.1 types transitively needed by enabled
 services. `CONFIG_VANETZA_IDF_HIL` adds transport-independent tester framing;
 it defaults off. `CONFIG_VANETZA_IDF_SECURITY` (default on with the network
 profile) builds the signing security entity, the PSA crypto backend and the
-identifier change; `CONFIG_VANETZA_IDF_SECURITY_VERIFY` names the missing
-verification and fails the build when selected; `CONFIG_VANETZA_IDF_PKI`
+identifier change; `CONFIG_VANETZA_IDF_SECURITY_VERIFY` (default on) adds the
+verification of received secured packets; `CONFIG_VANETZA_IDF_PKI`
 (default off) adds the TS 102 941 request/response core. Optional features are
 removed at compile time, rather than being permanently allocated and merely
 ignored at runtime.
@@ -141,9 +141,25 @@ certificate, generationLocation), generic/GN-MGMT (clause 7.1.3), VAM
 (TS 103 300-3 clause 6.5: individual 1 s, cluster 500 ms through
 `context::vam_cluster`). Without a valid ticket for the requested ITS-AID and
 permissions, or without an anchored chain, the request is refused and counted
-(`SecurityEntity::statistics()`); nothing is transmitted unsigned. SN-DECAP
-returns the report of the missing verification and never `Success`
-(docs/idf/conformance.md GAP-SEC-001).
+(`SecurityEntity::statistics()`); nothing is transmitted unsigned.
+
+SN-DECAP verifies received `EtsiTs103097Data-Signed` packets (IEEE Std 1609.2
+clause 5.2 as TS 103 097 clause 5.2 requires): the TS 103 097 clause 7.1
+structure for the ITS-AID, the signer (inline certificate or a digest learned
+earlier), the ticket's validity, permissions and region, every certificate
+signature up to a provisioned root, the message signature, then the
+generationTime window and replay detection of `VerificationPolicy`
+(`set_verification_policy`). A CAM from an unknown station or with an unknown
+AA triggers the P2P certificate distribution of clause 7.1.1 through the header
+policy, and an AA received in `requestedCertificate` is learned once it chains
+to a root. The GN router drops what does not verify (`itsGnSnDecapResultHandling`
+STRICT) and passes report, ITS-AID and SSP of what does up to BTP. Without
+`CONFIG_VANETZA_IDF_SECURITY_VERIFY` the report is `Configuration_Problem` and
+nothing secured is passed up (docs/idf/conformance.md GAP-SEC-001). Revocation
+(CRL/CTL) and encryption are not implemented; identified regions (country
+codes) are accepted unless the application supplies a geodesy country
+database. Budget on the ESP32-C5: about 34 ms per verified message, 29 ms of
+which is the ECDSA peripheral (validation.md).
 
 `IdentityManager` implements the identifier change of TS 102 723-8 clause 6.3:
 subscribers (the GN core when `itsGnLocalAddrConfMethod` is ANONYMOUS, the
@@ -280,7 +296,7 @@ test application on ESP32 -> service/BTP/position/security hooks -> stack
 | BTP upper tester | `Stack::request(BtpRequest)`; result/events from the actual operation and `on_receive` | Test BTP-A/B headers, payload delivery and port handling |
 | GN upper tester | Router request/configuration through the test application | Test supported GN transports, forwarding and lifetimes; unsupported transports remain explicitly unimplemented |
 | Position/time control | `Stack::update_position` and `Stack::advance` | Deterministic host/component tests; physical campaigns use measured real time and ATS-defined timing tolerances |
-| Security | Injected `SecurityEntity`, real credentials and trust configuration; `vidf_sut --security-pool` for the host | Test signing and authorization (`etsi_security_gn.cfg`, `etsi_security_facilities.cfg`); an absent signer cannot produce success and receiving-side cases stay unexecuted until verification exists |
+| Security | Injected `SecurityEntity`, real credentials and trust configuration; `vidf_sut --security-pool` for the host | Test signing and authorization (`etsi_security_gn.cfg`, `etsi_security_facilities.cfg`) and reception (`etsi_security_receive.cfg`: the test system signs in TTCN-3, the adapter reports what the SUT passes up); an absent signer cannot produce success |
 | Software lower tester | `Access::request` (outgoing GNPDU), `Stack::indicate` (incoming GNPDU and metadata) | HIL for BTP/GN on the MCU while bypassing RF; codec conversion must preserve the ATS lower-port semantics |
 | Physical lower tester | Independent ITS-G5 capture/injection radio | Test MAC/PHY, channel behavior, radiated packets and integrated ITS-G5 behavior |
 

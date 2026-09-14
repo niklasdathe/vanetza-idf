@@ -166,6 +166,24 @@ Credential TrustDomain::issue_ticket(const Credential& authority, const Permissi
     return ticket;
 }
 
+Credential TrustDomain::issue_ticket(const Credential& authority, const Permissions& permissions,
+                                     Clock::time_point start, unsigned hours, const CircularRegion& region) const {
+    Credential ticket;
+    auto ticket_key = fresh_key();
+    ticket.key = ticket_key.priv;
+    common_fields(ticket.certificate, ticket_key.pub, start, hours, Vanetza_Security_Duration_PR_hours);
+    ticket.certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_none;
+    for (const auto& permission : permissions) ticket.certificate.add_app_permission(permission.first, permission.second);
+    auto* geographic = vanetza::asn1::allocate<Vanetza_Security_GeographicRegion_t>();
+    geographic->present = Vanetza_Security_GeographicRegion_PR_circularRegion;
+    geographic->choice.circularRegion.center.latitude = region.latitude;
+    geographic->choice.circularRegion.center.longitude = region.longitude;
+    geographic->choice.circularRegion.radius = region.radius_m;
+    ticket.certificate->toBeSigned.region = geographic;
+    sign(ticket.certificate, &authority.certificate, authority.key);
+    return ticket;
+}
+
 Credential TrustDomain::issue_authority(const std::string& name, Clock::time_point start) const {
     Credential authority;
     auto key = fresh_key();
