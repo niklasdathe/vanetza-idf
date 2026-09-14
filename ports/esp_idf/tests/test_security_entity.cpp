@@ -789,6 +789,84 @@ void test_verification() {
     b.runtime.trigger(t0 + 30h);
     check(b.decap(with_certificate).report == VerificationReport::Invalid_Certificate, "expired ticket: INVALID_CERTIFICATE");
 }
+
+// IEEE Std 1609.2 clause 5.1.2 chain consistency: three chains with valid signatures whose
+// permissions do not fit their issuers. Its own test so the device heap starts fresh.
+void test_chain_consistency() {
+    vidf_test::section("test_chain_consistency");
+    Station a;
+    auto at = a.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    a.pool.add(at.certificate, at.key);
+    a.start();
+    AlDataRequest wide_ssp, short_root, enrol_root;
+    ByteBuffer root_short_coer, aa_short_coer, root_enrol_coer, aa_enrol_coer; // only the octets survive (device heap)
+    {   // IEEE Std 1609.2 clause 5.1.2 chain consistency, three chains with valid signatures:
+        // a ticket whose CAM SSP sets bits the AA's bitmapSspRange fixes to zero (6.4.30),
+        auto wide = a.domain.issue_ticket({{aid::CA, {0x01, 0xff, 0xff}}, {aid::VRU, {0x01}}}, t0 - 1h, 24);
+        Station w;
+        w.trust.add_root(a.domain.root.certificate.encode()); w.trust.add_authority(a.domain.aa.certificate.encode());
+        check(w.pool.add(wide.certificate, wide.key) == Result::accepted, "wide-SSP ticket accepted into the pool");
+        w.start();
+        check(w.send(aid::VRU, {0x01}) == Result::accepted && !w.radio.packets.empty(), "wide-SSP station signs (its own AA does not check SSP ranges)");
+        wide_ssp = w.radio.packets.back();
+        check(has_certificate(secured_of(wide_ssp)) && secured_of(wide_ssp).its_aid() == aid::VRU, "wide-SSP frame carries the certificate and psid 638");
+    }
+    {   // a root whose certIssuePermissions permit a chain of length 1 only (6.4.28: the ticket
+        // sits two certificates below the root), its AA re-signed under that root,
+        v3::Certificate root_short = a.domain.root.certificate, aa_short = a.domain.aa.certificate;
+        auto* group = root_short->toBeSigned.certIssuePermissions->list.array[0];
+        *group->minChainLength = 1;
+        a.domain.sign(root_short, nullptr, a.domain.root.key);
+        a.domain.sign(aa_short, &root_short, a.domain.root.key);
+        root_short_coer = root_short.encode(); aa_short_coer = aa_short.encode();
+        auto ticket = a.domain.issue_ticket({std::move(aa_short), a.domain.aa.key}, all_permissions, t0 - 1h, 24);
+        Station r;
+        r.trust.add_root(root_short_coer); r.trust.add_authority(aa_short_coer);
+        check(r.pool.add(std::move(ticket.certificate), ticket.key) == Result::accepted, "ticket under the short-chain root accepted into the pool");
+        r.start();
+        check(r.send(aid::VRU, {0x01}) == Result::accepted && !r.radio.packets.empty(), "short-chain station signs");
+        short_root = r.radio.packets.back();
+    }
+    {   // and a root whose group carries eeType enrol only (6.4.28: the chain may not end in an
+        // authorization certificate).
+        v3::Certificate root_enrol = a.domain.root.certificate, aa_enrol = a.domain.aa.certificate;
+        auto* group = root_enrol->toBeSigned.certIssuePermissions->list.array[0];
+        group->eeType->buf[0] = 0x40;
+        a.domain.sign(root_enrol, nullptr, a.domain.root.key);
+        a.domain.sign(aa_enrol, &root_enrol, a.domain.root.key);
+        root_enrol_coer = root_enrol.encode(); aa_enrol_coer = aa_enrol.encode();
+        auto ticket = a.domain.issue_ticket({std::move(aa_enrol), a.domain.aa.key}, all_permissions, t0 - 1h, 24);
+        Station r;
+        r.trust.add_root(root_enrol_coer); r.trust.add_authority(aa_enrol_coer);
+        check(r.pool.add(std::move(ticket.certificate), ticket.key) == Result::accepted, "ticket under the enrol-only root accepted into the pool");
+        r.start();
+        check(r.send(aid::VRU, {0x01}) == Result::accepted && !r.radio.packets.empty(), "enrol-only-root station signs");
+        enrol_root = r.radio.packets.back();
+    }
+    Receiver b(a);
+    // The receiver trusts all three roots and AAs; every signature verifies, the permissions
+    // do not fit the issuers.
+    check(b.trust.add_root(root_short_coer) == Result::accepted && b.trust.add_authority(aa_short_coer) == Result::accepted &&
+          b.trust.add_root(root_enrol_coer) == Result::accepted && b.trust.add_authority(aa_enrol_coer) == Result::accepted,
+          "receiver provisioned with the inconsistent roots and AAs");
+    // The outcome is named in the failure text so a device log shows what was reported instead.
+    const auto expect_inconsistent = [&](const AlDataRequest& frame, const char* what) {
+        const auto confirm = b.decap(frame);
+        const bool inconsistent = confirm.report == VerificationReport::Inconsistent_Chain && !confirm.certificate_validity &&
+                                  confirm.certificate_validity.reason() == CertificateInvalidReason::Inconsistent_With_Signer;
+        static std::string text;
+        const auto* report = boost::get<VerificationReport>(&confirm.report);
+        text = std::string(what) + ": INCONSISTENT_CHAIN, inconsistent with signer (report " +
+               (report ? std::to_string(static_cast<int>(*report)) : std::string("blank")) + ", validity reason " +
+               (confirm.certificate_validity ? std::string("valid") : std::to_string(static_cast<int>(confirm.certificate_validity.reason()))) + ")";
+        check(inconsistent, text.c_str());
+    };
+    expect_inconsistent(wide_ssp, "ticket SSP outside the AA's bitmapSspRange");
+    expect_inconsistent(short_root, "root permitting chain length 1 only, ticket two levels down");
+    expect_inconsistent(enrol_root, "root group with eeType enrol only, authorization ticket");
+    check(b.entity->statistics().rejected_certificate == 3 && b.entity->statistics().failed == 0,
+          "counted as rejected certificates, no exception on the way");
+}
 #endif
 
 void test_security_entity() {
@@ -800,5 +878,6 @@ void test_security_entity() {
     test_sf_facilities_hook();
 #if VIDF_SECURITY_VERIFY
     test_verification();
+    test_chain_consistency();
 #endif
 }

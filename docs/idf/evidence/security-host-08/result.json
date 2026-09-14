@@ -1,0 +1,136 @@
+{
+  "started_utc": "2026-09-14T08:01:14.992613+00:00",
+  "binary_sha256": "6d7f18b24b0dd2e8553e18bfc6fd800b9c777ae7eabb3dc491a6945e9d1bff21",
+  "config_sha256": "6ef95fb9f0aedcc78f8c65aba541f77ab99db363d72e6916fc3ddf00442aa203",
+  "sut_sha256": "7fb99794329299c8e5cd28041926643c3f09b7016a16b099918c5fd3f7cd5db8",
+  "sut_args": "--security-pool ./certificates",
+  "pool_sha256": {
+    "CERT_IUT_A_AA.oer": "b399ef1c7bc936f8c9263e5b61141142238705f8b768aaacb855a498df506f45",
+    "CERT_IUT_A_AA.vkey": "c592f86064c25ac4ed68f8ebee6d04ac148ec46e12a761d9a63477f32d017b07",
+    "CERT_IUT_A_AT.oer": "dc3d1135f231d18038eb38cee9a6b169ba1d5669539791ac4918f4345be1bea2",
+    "CERT_IUT_A_AT.vkey": "fd929dc360aab4f31bab160ff28b9ee9dc0f6689fa86cda94d1457d0850864c0",
+    "CERT_IUT_A_RCA.oer": "028f436b840beaf759339a0fa041808eb711bcb95f185f6c7b2ae5a1bc848788",
+    "CERT_IUT_A_RCA.vkey": "1550aade996a235c95baafafac8b0bd11ff6a1d24742a076c761dfd9171e9e9c",
+    "CERT_TS_A_AA.oer": "e12062d0274fdfb2193dd8cfe1d6ec6dc91efc7def7881a9e2ae71cf23534941",
+    "CERT_TS_A_AA.vkey": "555ee4eee2ef5248d7eb39ee73265d66f962b0e7400554d2739812c69f56b988",
+    "CERT_TS_A_AT.oer": "69fd54a7f2bffc074c7d7231ad5219a5a26beeda53ad86fb0a0ac87f05a910a1",
+    "CERT_TS_A_AT.vkey": "d74b8deddbd314c9ec56f2dfeeb54aadeaf6236c48115c9cef4c7a784d4d3f14",
+    "CERT_TS_B_AT.oer": "b489ff9fbe8a1e89abd32ce1a18137b2df0b322eeeb73c2acdcae969cbb4998a",
+    "CERT_TS_B_AT.vkey": "e9cebe7d4f6e40a3839655caf6fed56da07c0024811920af39b103fab1708218",
+    "index.lst": "c3f3bcdfce94778bd902607bc469af2911b31806f2eac628de58e5c24d171672"
+  },
+  "expected_cases_sha256": "8e3b79e6ef5cd270b13072e4a3708c2c0e9a689327f85a13fc5b059f965273ba",
+  "verdicts": [
+    {
+      "testcase": "TC_SEC_ITSS_RCV_MSG_01_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_MSG_01_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_MSG_02_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_01_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_02_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_03_BV",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_04_BV_XX",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_01_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_02_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_03_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_04_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_05_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_06_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_07_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_08_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_CAM_09_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_01_BV",
+      "verdict": "error"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_02_BV_XX",
+      "verdict": "error"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_01_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_02_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_03_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_04_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_05_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_06_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_07_BO",
+      "verdict": "pass"
+    },
+    {
+      "testcase": "TC_SEC_ITSS_RCV_DENM_09_BO",
+      "verdict": "pass"
+    }
+  ],
+  "status": "completed",
+  "exit_code": 0,
+  "missing_cases": [],
+  "unexpected_cases": [],
+  "duplicate_cases": [],
+  "campaign_complete": true,
+  "finished_utc": "2026-09-14T08:06:20.959183+00:00"
+}

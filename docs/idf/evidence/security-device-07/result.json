@@ -1,0 +1,14 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "port": "COM11",
+  "status": "pass",
+  "reset": "none",
+  "checks": 707,
+  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2) with CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY; 707 checks = 833 host checks minus the OpenSSL-only oracle tests",
+  "capture": "listen-only after the esptool post-flash reset",
+  "verifies": "receive-side verification (test_verification) and the IEEE Std 1609.2 clause 5.1.2 chain consistency checks (test_chain_consistency: SSP outside the AA's bitmapSspRange, root chain length 1, root eeType enrol only) on the device; verification cost line: certificate-signed 35.2 ms, digest-signed 34.8 ms end to end, raw ECDSA P-256 verify 29.5 ms on the ECDSA peripheral",
+  "note": "the same three checks appended to test_verification failed on the device only: with the fourth receiver trust configuration the heap was too fragmented (largest free block 16 kB) and an allocation failure inside verify() surfaced as INCOMPATIBLE_PROTOCOL through the catch-all; moved into their own test with a fresh heap",
+  "sha256": "4347962d78d247733d4bfcb1ed06378a7c0e1e7c9b663e60b6191da3c71abc8c"
+}

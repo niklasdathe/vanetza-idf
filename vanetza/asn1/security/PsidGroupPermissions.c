@@ -7,6 +7,12 @@
 
 #include "PsidGroupPermissions.h"
 
+/* vanetza-idf: eeType defaults to {app} ('80'H) as in IEEE Std 1609.2-2022/-2025
+ * clause 6.4.28 (schema major-version-2 minor-version-7, the base of ETSI TS 103 097
+ * V2.2.1); the module this file was generated from still said DEFAULT '00'H, which
+ * made every decoded CA certificate with an absent eeType deny authorization
+ * certificates. Hand-edited default value only (asn_DFL_5_cmp/asn_DFL_5_set); the
+ * corresponding line of asn1/IEEE1609dot2.asn is changed alike. */
 static int asn_DFL_3_cmp_1(const void *sptr) {
 	const long *st = sptr;
 	
@@ -52,7 +58,7 @@ static int asn_DFL_4_set_0(void **sptr) {
 	return 0;
 }
 static int asn_DFL_5_cmp(const void *sptr) {
-	static const uint8_t defv[] = { 0x00 };
+	static const uint8_t defv[] = { 0x80 }; /* vanetza-idf: DEFAULT {app} */
 	const Vanetza_Security_EndEntityType_t *st = sptr;
 	
 	if(!st) {
@@ -65,7 +71,7 @@ static int asn_DFL_5_cmp(const void *sptr) {
 	return 1;
 }
 static int asn_DFL_5_set(void **sptr) {
-	static const uint8_t defv[] = { 0x00 };
+	static const uint8_t defv[] = { 0x80 }; /* vanetza-idf: DEFAULT {app} */
 	Vanetza_Security_EndEntityType_t *st = *sptr;
 	uint8_t *nstr = MALLOC(sizeof(defv));
 	
@@ -164,8 +170,8 @@ asn_TYPE_member_t asn_MBR_Vanetza_Security_PsidGroupPermissions_1[] = {
 #endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
 			0
 		},
-		&asn_DFL_5_cmp,	/* Compare DEFAULT "" */
-		&asn_DFL_5_set,	/* Set DEFAULT "" */
+		&asn_DFL_5_cmp,	/* Compare DEFAULT {app} (vanetza-idf) */
+		&asn_DFL_5_set,	/* Set DEFAULT {app} (vanetza-idf) */
 		"eeType"
 		},
 };

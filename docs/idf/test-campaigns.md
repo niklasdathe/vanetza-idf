@@ -102,8 +102,8 @@ Device execution has not been attempted for this suite.
 GeoNetworking/CAM/DENM port objects are replaced, the same disposable
 `geonetworking_codec.cc` overlay as for GeoNetworking is applied to this build
 only). The adapter covers the sending side: GN-MGMT beacons through the GN core,
-CAM and DENM carriers from the test application behind the upper tester ports.
-Receiving-side cases are not wired (GAP-SEC-001).
+CAM and DENM carriers from the test application behind the upper tester ports,
+and the receiving side through the third configuration below.
 
 Generate an isolated test trust domain in the framework's certificate pool
 layout, then run the two configurations (the GN-MGMT cases must run without the
@@ -160,13 +160,71 @@ to a 5 km circle around the SUT position) where the testcase uses
 after SN-DECAP as `UtGnEventInd`. The SUT trusts both AAs of the pool
 (`--aa` is repeatable; the defaults are `CERT_IUT_A_AA` and `CERT_TS_A_AA`).
 
-Expected outcome with this library (retained in `docs/idf/evidence/security-host-06`,
-`-07` and `-05`): sending side 14 of 15 (`TC_SEC_ITSS_SND_GENMSG_05_BV` fails on a
-unit defect of the testcase), receiving side 24 of 26 (`TC_SEC_ITSS_RCV_DENM_01_BV`
-and `DENM_02_BV_XX` error on a declaration-order defect of the testcases);
-docs/idf/validation.md has both analyses. Device execution of this suite has not
-been attempted; the device runs the same security entity in the component tests
-(`security-device-06`).
+Expected outcome with this library (retained in `docs/idf/evidence/security-host-09`,
+`-10` and `-08`; earlier -06/-07/-05 identical): sending side 14 of 15
+(`TC_SEC_ITSS_SND_GENMSG_05_BV` fails on a unit defect of the testcase), receiving
+side 24 of 26 (`TC_SEC_ITSS_RCV_DENM_01_BV` and `DENM_02_BV_XX` error on a
+declaration-order defect of the testcases); docs/idf/validation.md has both
+analyses. Device execution of this suite has not been attempted; the device runs
+the same security entity in the component tests (`security-device-06`).
+
+### Issuing credentials outside the test pool: `vidf_issue`
+
+`vidf_test_pool` writes the ETSI-named pool with fresh keys. `vidf_issue` (built
+with the tests, host OpenSSL) issues the same certificate profiles for keys and
+names of your choosing, so a chain under a real root can be produced and the
+station's signed frames checked by tools that know nothing of this library:
+
+```sh
+vidf_issue root      --key root.pem --name "Example Root CA" --id ROOT --out chain     # self-signed (clause 7.2.3)
+vidf_issue authority --issuer chain/ROOT.oer --issuer-key root.pem --name "Example AA" --id AA --out chain
+vidf_issue ticket    --issuer chain/AA.oer --issuer-key chain/AA.vkey --id AT \
+                     --permission 36:01FFFC --permission 37:01FFFFFF --permission 141 --permission 638:01 --out chain
+vidf_issue show chain/AT.oer                 # digest, issuer, validity, permissions, region
+vidf_issue verify chain/AT.oer chain/AA.oer  # IEEE Std 1609.2 clause 5.3.1 signature check
+```
+
+`--key`/`--issuer-key` accept a PEM private key (an encrypted PKCS#8 file is
+opened with OpenSSL's pass-phrase prompt; the pass phrase is never an argument)
+or a raw 32-octet `.vkey` as the pool writes it; `--start`/`--years`/`--hours`
+set the validity, `--region LAT,LON,RADIUS_M` (1/10 microdegrees, metres) a
+circular region. The root
+profile is the EU CCMS CPOC Protocol Release 3.0 one (certIssuePermissions with
+minChainLength 2 and eeType app+enrol for CA/DEN/VRU/GN-MGMT and the end-entity
+part of psid 623, a second group for the authorities' psid 623 SSPs; CRL/CTL
+appPermissions), the AA and ticket profiles those of TS 103 097 V2.2.1 clauses
+7.2.4 and 7.2.1 with the SSPs of TS 102 941 V2.2.1 Table B.6. The output
+directory gets `<id>.oer`, `<id>.vkey` (except for `root`, whose key stays where
+it was) and an `index.lst`, i.e. a pool `vidf_sut --security-pool` loads with
+`--root ROOT --aa AA --at AT`.
+
+Rules for a production root: run the tool where the root key lives, never copy
+the encrypted PEM or its pass phrase anywhere, and keep the generated `.vkey`
+files with the same care as the PEM. Nothing in the tests uses a project key;
+the component tests and the pool generate throwaway keys per run.
+
+### Independent verification of signed frames
+
+`ports/esp_idf/tools/capture_pcap.py` drives `vidf_sut` with such a pool,
+triggers the CAM and DENM carriers and writes the transmissions as an IEEE
+802.11 pcap (linktype 105, wildcard BSSID, LLC/SNAP 0x8947). Any verifier that
+reads pcaps can then judge them; the retained run uses c-its
+(https://github.com/TheEnbyperor/c-its, `c-its-pcap`, roots as
+`./ctl/root-*.oer`, AAs as `./ctl/aa-*.oer`):
+
+```sh
+python3 ports/esp_idf/tools/capture_pcap.py --sut ./build-host/vidf_sut --pool chain \
+  --root ROOT --aa AA --at AT --out sut.pcap
+mkdir ctl && cp chain/ROOT.oer ctl/root-ROOT.oer && cp chain/AA.oer ctl/aa-AA.oer
+RUST_LOG=info c-its-pcap sut.pcap          # one JSON line per frame: signature, chain, security_authorized
+```
+
+Retained in `docs/idf/evidence/independent-verifier-01` (analysis there): with
+a ticket carrying CAM, DENM and VRU permissions c-its reports the message
+signature, the chain to the root and the CAM/DENM authorisation as valid; with
+the standard ticket that also lists psid 141 without an SSP, c-its verifies
+every signature but does not validate the permissions because it treats an
+omitted SSP as unsupported (its limitation, not a standard's requirement).
 
 ## Independent radio reception
 

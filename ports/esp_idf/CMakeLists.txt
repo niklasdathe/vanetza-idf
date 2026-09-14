@@ -226,5 +226,9 @@ elseif(VIDF_TESTS)
         # Isolated test trust domain in the ETSI framework's certificate pool layout (not a PKI).
         add_executable(vidf_test_pool tests/trust_domain_pool.cpp tests/test_trust_domain.cpp)
         target_link_libraries(vidf_test_pool PRIVATE ${VIDF_TARGET})
+        # Lab issuing under an existing (project) root: reads PEM keys through OpenSSL, host only.
+        add_executable(vidf_issue tests/issue_tool.cpp tests/test_trust_domain.cpp)
+        target_link_libraries(vidf_issue PRIVATE ${VIDF_TARGET} OpenSSL::Crypto)
+        target_compile_definitions(vidf_issue PRIVATE OPENSSL_API_COMPAT=0x10101000L)
     endif()
 endif()

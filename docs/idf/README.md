@@ -147,9 +147,10 @@ SN-DECAP verifies received `EtsiTs103097Data-Signed` packets (IEEE Std 1609.2
 clause 5.2 as TS 103 097 clause 5.2 requires): the TS 103 097 clause 7.1
 structure for the ITS-AID, the signer (inline certificate or a digest learned
 earlier), the ticket's validity, permissions and region, every certificate
-signature up to a provisioned root, the message signature, then the
-generationTime window and replay detection of `VerificationPolicy`
-(`set_verification_policy`). A CAM from an unknown station or with an unknown
+signature up to a provisioned root, the permission consistency of the chain
+(IEEE Std 1609.2 clause 5.1.2: chain length windows, eeType, SSP ranges of
+every ancestor), the message signature, then the generationTime window and
+replay detection of `VerificationPolicy` (`set_verification_policy`). A CAM from an unknown station or with an unknown
 AA triggers the P2P certificate distribution of clause 7.1.1 through the header
 policy, and an AA received in `requestedCertificate` is learned once it chains
 to a root. The GN router drops what does not verify (`itsGnSnDecapResultHandling`
@@ -175,7 +176,11 @@ The private keys of the tickets stay with the application: the pool holds
 them, the backend imports them as volatile PSA keys, and no key ever leaves the
 device through this library. The test trust domain of the component tests
 (`tests/test_trust_domain.*`, `vidf_test_pool`) is generated per run and is not
-a PKI.
+a PKI. To issue a chain under a root of your own for lab use (root, AA,
+tickets in the pool layout, EU CCMS CPOC root profile) there is the host tool
+`vidf_issue`, and `tools/capture_pcap.py` records what the host SUT signs as
+an 802.11 pcap for an independent verifier; both are described in
+[test-campaigns.md](test-campaigns.md).
 
 ## Cross-layer SAPs
 

@@ -12,6 +12,7 @@
 #include <vanetza/security/v3/certificate_cache.hpp>
 #include <vanetza/security/v3/issuer_lookup.hpp>
 #include <unordered_set>
+#include <vector>
 #endif
 #include <algorithm>
 #include <stdexcept>
@@ -242,9 +243,199 @@ private:
     const v3::IssuerLookup& provisioned_;
 };
 
-// TS 102 940 clause 6 chain: the upstream validator checks anchoring, time, permission,
+// IEEE Std 1609.2-2025 permission consistency along the chain, which the upstream
+// validator reduces to "the issuer lists the ITS-AID". TS 103 097 V2.2.1 clause 5.2
+// verifies an SPDU as IEEE Std 1609.2 clause 5.2 requires, and that includes the
+// certificate chain consistency of clause 5.1.2:
+//  * PsidGroupPermissions (6.4.28): minChainLength/chainLengthRange bound the length of
+//    the chain from that certificate down to and including the end entity (-1: no upper
+//    bound; 0 is invalid in certIssuePermissions); eeType must permit an authorization
+//    certificate (app), absent eeType defaulting to {app}.
+//  * SubjectPermissions (6.4.29): "all" covers every PSID not indicated explicitly by
+//    another group of the same certificate; "explicit" lists PsidSspRange values.
+//  * SspRange consistency (6.4.29/6.4.30): an omitted ssp needs a range "all" (or an
+//    empty opaque entry); an opaque ssp must duplicate one opaque entry; a bitmapSsp
+//    must equal sspValue in every bit position where sspBitmask is 1 and may not be
+//    shorter than the last 1 bit of the mask nor longer than the mask.
+//  * A subordinate CA's own PsidSspRange must nest inside its issuer's (6.4.30): the
+//    issuer's range is "all", or for every 1 bit of the issuer's mask the subordinate's
+//    mask bit is 1 and its value bit equals the issuer's; opaque entries must duplicate
+//    the issuer's; "all" needs "all".
+// Unknown CHOICE alternatives are critical information (5.2.6): fail closed.
+namespace consistency {
+using Group = Vanetza_Security_PsidGroupPermissions_t;
+using Groups = Vanetza_Security_SequenceOfPsidGroupPermissions_t;
+using Range = Vanetza_Security_PsidSspRange_t;
+using Ssp = Vanetza_Security_ServiceSpecificPermissions_t;
+
+bool octets_equal(const OCTET_STRING_t& a, const OCTET_STRING_t& b) {
+    return a.size == b.size && (a.size == 0 || std::equal(a.buf, a.buf + a.size, b.buf));
+}
+
+bool ee_type_app(const Group& group) {
+    if (!group.eeType || group.eeType->size == 0) return true; // DEFAULT {app}
+    return (group.eeType->buf[0] & 0x80) != 0;                 // bit 0: app
+}
+
+bool chain_length_permits(const Group& group, unsigned depth) {
+    const long min = group.minChainLength ? *group.minChainLength : 1;
+    const long range = group.chainLengthRange;
+    if (min < 1 || depth < static_cast<unsigned long>(min)) return false;
+    return range < 0 || depth <= static_cast<unsigned long>(min + range);
+}
+
+const Range* find_range(const Group& group, long psid) {
+    if (group.subjectPermissions.present != Vanetza_Security_SubjectPermissions_PR_explicit) return nullptr;
+    const auto& list = group.subjectPermissions.choice.Explicit.list;
+    for (int i = 0; i < list.count; ++i) {
+        if (list.array[i] && list.array[i]->psid == psid) return list.array[i];
+    }
+    return nullptr;
+}
+
+bool listed_explicitly(const Groups& groups, long psid) {
+    for (int i = 0; i < groups.list.count; ++i) {
+        if (groups.list.array[i] && find_range(*groups.list.array[i], psid)) return true;
+    }
+    return false;
+}
+
+// end-entity ssp (nullptr: omitted) within a PsidSspRange's sspRange (nullptr: all)
+bool ssp_within(const Ssp* ssp, const Vanetza_Security_SspRange_t* range) {
+    if (!range || range->present == Vanetza_Security_SspRange_PR_all) return true;
+    if (range->present == Vanetza_Security_SspRange_PR_opaque) {
+        const auto& entries = range->choice.opaque.list;
+        for (int i = 0; i < entries.count; ++i) {
+            const OCTET_STRING_t* entry = entries.array[i];
+            if (!entry) continue;
+            if (!ssp) { if (entry->size == 0) return true; }
+            else if (ssp->present == Vanetza_Security_ServiceSpecificPermissions_PR_opaque &&
+                     octets_equal(*entry, ssp->choice.opaque)) return true;
+        }
+        return false;
+    }
+    if (range->present == Vanetza_Security_SspRange_PR_bitmapSspRange) {
+        if (!ssp || ssp->present != Vanetza_Security_ServiceSpecificPermissions_PR_bitmapSsp) return false;
+        const OCTET_STRING_t& value = range->choice.bitmapSspRange.sspValue;
+        const OCTET_STRING_t& mask = range->choice.bitmapSspRange.sspBitmask;
+        const OCTET_STRING_t& bits = ssp->choice.bitmapSsp;
+        if (value.size != mask.size || bits.size > mask.size) return false;
+        for (std::size_t i = 0; i < mask.size; ++i) {
+            if (i >= bits.size) { if (mask.buf[i]) return false; continue; }
+            if ((bits.buf[i] & mask.buf[i]) != (value.buf[i] & mask.buf[i])) return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+// an ancestor's certIssuePermissions cover one appPermissions entry of the end entity at
+// the given chain length
+bool covers(const Groups& groups, const Vanetza_Security_PsidSsp_t& entry, unsigned depth) {
+    const bool elsewhere = listed_explicitly(groups, entry.psid);
+    for (int i = 0; i < groups.list.count; ++i) {
+        const Group* group = groups.list.array[i];
+        if (!group || !ee_type_app(*group) || !chain_length_permits(*group, depth)) continue;
+        if (group->subjectPermissions.present == Vanetza_Security_SubjectPermissions_PR_all) {
+            if (!elsewhere) return true;
+        } else if (const Range* range = find_range(*group, entry.psid)) {
+            if (ssp_within(entry.ssp, range->sspRange)) return true;
+        }
+    }
+    return false;
+}
+
+// a subordinate CA's PsidSspRange nests inside the issuer's range for the same PSID
+bool range_within(const Vanetza_Security_SspRange_t* sub, const Vanetza_Security_SspRange_t* issuer) {
+    if (!issuer || issuer->present == Vanetza_Security_SspRange_PR_all) return true;
+    if (!sub || sub->present == Vanetza_Security_SspRange_PR_all) return false;
+    if (issuer->present == Vanetza_Security_SspRange_PR_opaque) {
+        if (sub->present != Vanetza_Security_SspRange_PR_opaque) return false;
+        const auto& subs = sub->choice.opaque.list;
+        const auto& issuers = issuer->choice.opaque.list;
+        for (int i = 0; i < subs.count; ++i) {
+            bool found = false;
+            for (int j = 0; j < issuers.count && !found; ++j) {
+                found = subs.array[i] && issuers.array[j] && octets_equal(*subs.array[i], *issuers.array[j]);
+            }
+            if (!found) return false;
+        }
+        return true;
+    }
+    if (issuer->present == Vanetza_Security_SspRange_PR_bitmapSspRange) {
+        if (sub->present != Vanetza_Security_SspRange_PR_bitmapSspRange) return false;
+        const auto& r = issuer->choice.bitmapSspRange;
+        const auto& p = sub->choice.bitmapSspRange;
+        if (r.sspValue.size != r.sspBitmask.size || p.sspValue.size != p.sspBitmask.size) return false;
+        for (std::size_t i = 0; i < r.sspBitmask.size; ++i) {
+            const std::uint8_t fixed = r.sspBitmask.buf[i];
+            if (!fixed) continue;
+            if (i >= p.sspBitmask.size) return false;
+            if ((p.sspBitmask.buf[i] & fixed) != fixed) return false;
+            if ((p.sspValue.buf[i] & fixed) != (r.sspValue.buf[i] & fixed)) return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool nests(const Groups& sub, const Groups& issuer) {
+    for (int i = 0; i < sub.list.count; ++i) {
+        const Group* group = sub.list.array[i];
+        if (!group) continue;
+        if (group->subjectPermissions.present == Vanetza_Security_SubjectPermissions_PR_all) {
+            bool found = false;
+            for (int j = 0; j < issuer.list.count && !found; ++j) {
+                found = issuer.list.array[j] &&
+                        issuer.list.array[j]->subjectPermissions.present == Vanetza_Security_SubjectPermissions_PR_all;
+            }
+            if (!found) return false;
+            continue;
+        }
+        if (group->subjectPermissions.present != Vanetza_Security_SubjectPermissions_PR_explicit) return false;
+        const auto& ranges = group->subjectPermissions.choice.Explicit.list;
+        for (int k = 0; k < ranges.count; ++k) {
+            const Range* range = ranges.array[k];
+            if (!range) continue;
+            const bool elsewhere = listed_explicitly(issuer, range->psid);
+            bool found = false;
+            for (int j = 0; j < issuer.list.count && !found; ++j) {
+                const Group* candidate = issuer.list.array[j];
+                if (!candidate) continue;
+                if (candidate->subjectPermissions.present == Vanetza_Security_SubjectPermissions_PR_all) found = !elsewhere;
+                else if (const Range* r = find_range(*candidate, range->psid)) found = range_within(range->sspRange, r->sspRange);
+            }
+            if (!found) return false;
+        }
+    }
+    return true;
+}
+
+// chain[0] is the end entity, chain.back() the anchor
+bool chain_consistent(const std::vector<const Vanetza_Security_EtsiTs103097Certificate_t*>& chain) {
+    if (chain.empty()) return false;
+    const auto* app = chain.front()->toBeSigned.appPermissions;
+    if (!app) return false;
+    for (std::size_t depth = 1; depth < chain.size(); ++depth) {
+        const Groups* issuing = chain[depth]->toBeSigned.certIssuePermissions;
+        if (!issuing) return false;
+        for (int i = 0; i < app->list.count; ++i) {
+            if (!app->list.array[i] || !covers(*issuing, *app->list.array[i], depth)) return false;
+        }
+    }
+    for (std::size_t k = 1; k + 1 < chain.size(); ++k) { // subordinate CAs below the anchor
+        const Groups* sub = chain[k]->toBeSigned.certIssuePermissions;
+        const Groups* issuer = chain[k + 1]->toBeSigned.certIssuePermissions;
+        if (!sub || !issuer || !nests(*sub, *issuer)) return false;
+    }
+    return true;
+}
+} // namespace consistency
+
+// TS 102 940 clause 6 chain: the upstream validator checks anchoring, time, ITS-AID,
 // assurance and region consistency; this adds the certificate signatures up the chain
-// (IEEE Std 1609.2 clause 5.3.1), remembering tickets already verified.
+// (IEEE Std 1609.2 clause 5.3.1) and the permission consistency of clause 5.1.2 (above),
+// remembering tickets already verified.
 class ChainValidator {
 public:
     using Verdict = v3::CertificateValidator::Verdict;
@@ -259,20 +450,25 @@ public:
         if (!digest) return Verdict::Untrusted;
         if (verified_.count(*digest)) return Verdict::Valid;
         // walk up to a self-signed anchor, verifying every signature on the way
-        const Vanetza_Security_EtsiTs103097Certificate_t* subject = &signing_cert;
-        for (unsigned depth = 0; depth < 4; ++depth) {
+        std::vector<const Vanetza_Security_EtsiTs103097Certificate_t*> chain {&signing_cert};
+        bool anchored = false;
+        for (unsigned depth = 0; depth < 4 && !anchored; ++depth) {
+            const Vanetza_Security_EtsiTs103097Certificate_t* subject = chain.back();
             const v3::CertificateView subject_view { subject };
             if (subject_view.issuer_is_self()) {
                 if (!verify_certificate_signature(backend_, *subject, nullptr)) return Verdict::Untrusted;
+                anchored = true;
                 break;
             }
             const auto issuer_digest = subject_view.issuer_digest();
             const Certificate* issuer = issuer_digest ? issuers_.find_issuer(*issuer_digest) : nullptr;
             if (!issuer || !issuer->content()) return Verdict::Untrusted;
             if (!verify_certificate_signature(backend_, *subject, issuer)) return Verdict::Untrusted;
-            if (issuer->issuer_is_self()) break; // the anchor was provisioned by the application
-            subject = issuer->content();
+            chain.push_back(issuer->content());
+            anchored = issuer->issuer_is_self(); // the anchor was provisioned by the application
         }
+        if (!anchored) return Verdict::Untrusted;
+        if (chain.size() > 1 && !consistency::chain_consistent(chain)) return Verdict::InconsistentChain;
         if (verified_.size() >= capacity) verified_.clear();
         verified_.insert(*digest);
         return Verdict::Valid;
@@ -390,12 +586,26 @@ public:
             return confirm;
         }
         const v3::CertificateView view { certificate };
-        if (chain.valid_for_signing(*certificate, its_aid) != ChainValidator::Verdict::Valid) {
+        const auto verdict = chain.valid_for_signing(*certificate, its_aid);
+        if (verdict != ChainValidator::Verdict::Valid) {
             // an AT issued by an unknown AA: ask for the AA (clause 7.1.1 inlineP2pcdRequest)
             if (const auto aa = view.issuer_digest()) {
                 if (!issuers.find_issuer(*aa) && !cache.is_known(*aa)) policy.request_unrecognized_certificate(*aa);
             }
+            // TS 102 723-8 V1.1.1 Table 27 report codes: INVALID_CERTIFICATE for the certificate
+            // itself, INCONSISTENT_CHAIN when the chain's permissions do not fit (IEEE 1609.2 5.1.2)
             confirm.report = VerificationReport::Invalid_Certificate;
+            switch (verdict) {
+                case ChainValidator::Verdict::Expired: confirm.certificate_validity = CertificateInvalidReason::Off_Time_Period; break;
+                case ChainValidator::Verdict::Untrusted: confirm.certificate_validity = CertificateInvalidReason::Unknown_Signer; break;
+                case ChainValidator::Verdict::InconsistentChain:
+                    confirm.report = VerificationReport::Inconsistent_Chain;
+                    confirm.certificate_validity = CertificateInvalidReason::Inconsistent_With_Signer;
+                    break;
+                case ChainValidator::Verdict::OutsideRegion: confirm.certificate_validity = CertificateInvalidReason::Off_Region; break;
+                case ChainValidator::Verdict::InsufficientPermission: confirm.certificate_validity = CertificateInvalidReason::Insufficient_ITS_AID; break;
+                default: break;
+            }
             return confirm;
         }
         const auto public_key = v3::get_public_key(*certificate);

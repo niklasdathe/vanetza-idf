@@ -26,7 +26,7 @@ typedef struct Vanetza_Security_PsidGroupPermissions {
 	Vanetza_Security_SubjectPermissions_t	 subjectPermissions;
 	long	*minChainLength;	/* DEFAULT 1 */
 	long	 chainLengthRange;	/* DEFAULT 0 */
-	Vanetza_Security_EndEntityType_t	*eeType;	/* DEFAULT '00'HH */
+	Vanetza_Security_EndEntityType_t	*eeType;	/* DEFAULT {app} (vanetza-idf, IEEE Std 1609.2-2022 6.4.28) */
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;

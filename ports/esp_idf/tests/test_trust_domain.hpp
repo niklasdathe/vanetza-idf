@@ -3,8 +3,12 @@
 // authorization tickets generated on the fly with the host OpenSSL backend.
 // Certificates follow TS 103 097 V2.2.1 clause 6 and clauses 7.2.1/7.2.3/7.2.4
 // and carry IEEE Std 1609.2 clause 5.3.1 signatures (Hash(Hash(toBeSigned) ||
-// Hash(issuer certificate)), empty string for self-signed). Keys and
-// certificates never leave the test process; nothing here is a production PKI.
+// Hash(issuer certificate)), empty string for self-signed). The CA permissions
+// are shaped like the EU CCMS CPOC Protocol Release 3.0 root profile (chain
+// length 2 with eeType app+enrol at the root, IEEE Std 1609.2 clause 6.4.28)
+// with the Security Management SSPs of TS 102 941 V2.2.1 Tables B.3/B.6. Keys
+// and certificates never leave the test process; nothing here is a production
+// PKI (vidf_issue reuses the building blocks for a lab chain under a real root).
 #include <vanetza/common/clock.hpp>
 #include <vanetza/common/its_aid.hpp>
 #include <vanetza/security/backend.hpp>
@@ -41,6 +45,14 @@ public:
                             unsigned hours, const CircularRegion& region) const;
     /// a further subordinate CA (clause 7.2.4) under the root, e.g. the test-system side authority
     Credential issue_authority(const std::string& name, vanetza::Clock::time_point start) const;
+    /// a subordinate CA (clause 7.2.4) under any issuer, e.g. an AA under an external root (vidf_issue)
+    Credential issue_authority(const Credential& issuer, const std::string& name, vanetza::Clock::time_point start,
+                               unsigned years) const;
+    /// a self-signed root (clause 7.2.3) from an existing key, e.g. a project root certificate (vidf_issue)
+    vanetza::security::v3::Certificate issue_root(const vanetza::security::PrivateKey& key,
+                                                  const vanetza::security::PublicKey& verification,
+                                                  const std::string& name, vanetza::Clock::time_point start,
+                                                  unsigned years) const;
     /// AT for a verification key the station generated itself (TS 102 941 authorization); no private key
     vanetza::security::v3::Certificate issue_ticket_for(const vanetza::security::PublicKey& verification,
                                                         const Permissions&, vanetza::Clock::time_point start,

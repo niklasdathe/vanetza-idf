@@ -47,25 +47,76 @@ void common_fields(Certificate& cert, const PublicKey& verification, Clock::time
     boost::apply_visitor(visitor, compress_public_key(legacy));
 }
 
-void issue_permissions(Certificate& ca) {
-    // certIssuePermissions (clauses 7.2.3/7.2.4): explicit PSID/SSP ranges the CA may issue.
+// PsidSspRange without sspRange: the CA may issue any SSP for that PSID (IEEE Std 1609.2
+// 6.4.29 SspRange: omitting it means "all", the only range consistent with a ticket
+// whose ssp is omitted, as GN-MGMT tickets are).
+void add_psid_all_permission(v3::asn1::PsidGroupPermissions* group, ItsAid aid) {
+    auto* range = vanetza::asn1::allocate<v3::asn1::PsidSspRange>();
+    range->psid = aid;
+    ASN_SEQUENCE_ADD(&group->subjectPermissions.choice.Explicit, range);
+}
+
+// certIssuePermissions (clauses 7.2.3/7.2.4) shaped like the EU CCMS CPOC Protocol
+// Release 3.0 root profile: explicit PSID/SSP ranges the CA may issue, the SSP ranges
+// with the IEEE Std 1609.2 6.4.30 bitmask rule (a 1 bit fixes the subordinate's bit).
+//  * The application group (CA, DEN, VRU, GN-MGMT and the end-entity part of the
+//    Secured Certificate Request service, TS 102 941 V2.2.1 Table B.6: EC signs
+//    enrolment and authorization requests, 01C0/FF3F). In a root this group carries
+//    minChainLength 2 (IEEE Std 1609.2 6.4.28: the chain below the root runs through
+//    the AA/EA down to the ticket/credential, so its length is 2) and eeType app+enrol;
+//    a subordinate CA keeps the defaults (1, app) because it issues end entities only.
+//  * In a root, a second group for the CA side of the Secured Certificate Request
+//    service (013E/FFC1: the SSP bits an EA/AA may hold to sign responses, Table B.6),
+//    chain length 1 as in the CPOC profile.
+void issue_permissions(Certificate& ca, bool root) {
     auto* group = v3::asn1::allocate<v3::asn1::PsidGroupPermissions>();
     group->subjectPermissions.present = Vanetza_Security_SubjectPermissions_PR_explicit;
     v3::add_psid_group_permission(group, aid::CA, {0x01, 0xff, 0xfc}, {0xff, 0x00, 0x03});
     v3::add_psid_group_permission(group, aid::DEN, {0x01, 0xff, 0xff, 0xff}, {0xff, 0x00, 0x00, 0x00});
     v3::add_psid_group_permission(group, aid::VRU, {0x01}, {0xff});
-    v3::add_psid_group_permission(group, aid::GN_MGMT, {0x00}, {0xff});
+    add_psid_all_permission(group, aid::GN_MGMT);
     v3::add_psid_group_permission(group, aid::SCR, {0x01, 0xc0}, {0xff, 0x3f});
+    if (root) {
+        group->minChainLength = vanetza::asn1::allocate<long>();
+        *group->minChainLength = 2;
+        group->eeType = vanetza::asn1::allocate<Vanetza_Security_EndEntityType_t>();
+        // EndEntityType BIT STRING (SIZE (8)) with app(0) and enrol(1) set; the pinned asn1c
+        // schema defaults an absent eeType to 00H, IEEE Std 1609.2-2022 to {app}: encode it.
+        group->eeType->buf = static_cast<std::uint8_t*>(vanetza::asn1::allocate(1));
+        group->eeType->buf[0] = 0xc0;
+        group->eeType->size = 1;
+        group->eeType->bits_unused = 0;
+    }
     ca.add_cert_issue_permission(group);
+    if (root) {
+        auto* authorities = v3::asn1::allocate<v3::asn1::PsidGroupPermissions>();
+        authorities->subjectPermissions.present = Vanetza_Security_SubjectPermissions_PR_explicit;
+        v3::add_psid_group_permission(authorities, aid::SCR, {0x01, 0x3e}, {0xff, 0xc1});
+        ca.add_cert_issue_permission(authorities);
+    }
+}
+
+// Clause 7.2.3: the root's appPermissions are the CRL and CTL services (TS 102 941 V2.2.1
+// Table B.3: a root CTL lists EA, AA and DC entries, SSP 0138; clause B.3: CRL SSP 01).
+void root_fields(Certificate& root, const std::string& name) {
+    root->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
+    OCTET_STRING_fromBuf(&root->toBeSigned.id.choice.name, name.data(), name.size());
+    root.add_app_permission(aid::CRL, {0x01});
+    root.add_app_permission(aid::CTL, {0x01, 0x38});
+    issue_permissions(root, true);
 }
 
 // Clause 7.2.4: a subordinate CA carries an encryption key for the ECIES of TS 102 941 and
-// appPermissions to sign certificate responses (SCR).
-void authority_fields(Certificate& ca, const std::string& name, const PublicKey& encryption) {
+// appPermissions to sign certificate responses (SCR): an AA signs authorization validation
+// requests and authorization responses (TS 102 941 V2.2.1 Table B.6, bits 2 and 3: 0130), an
+// EA signs authorization validation responses, enrolment responses and CA certificate
+// requests (bits 4 to 6: 010E).
+enum class AuthorityKind { aa, ea };
+void authority_fields(Certificate& ca, const std::string& name, const PublicKey& encryption, AuthorityKind kind) {
     ca->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
     OCTET_STRING_fromBuf(&ca->toBeSigned.id.choice.name, name.data(), name.size());
-    issue_permissions(ca);
-    ca.add_app_permission(aid::SCR, {0x01, 0xc0});
+    issue_permissions(ca, false);
+    ca.add_app_permission(aid::SCR, kind == AuthorityKind::aa ? ByteBuffer {0x01, 0x30} : ByteBuffer {0x01, 0x0e});
     auto* key = v3::asn1::allocate<v3::asn1::PublicEncryptionKey>();
     key->supportedSymmAlg = Vanetza_Security_SymmAlgorithm_aes128Ccm;
     key->publicKey.present = Vanetza_Security_BasePublicEncryptionKey_PR_eciesNistP256;
@@ -131,10 +182,7 @@ TrustDomain::TrustDomain(Backend& backend, Clock::time_point now) : backend_(bac
     auto root_key = fresh_key();
     root.key = root_key.priv;
     common_fields(root.certificate, root_key.pub, start, 4, Vanetza_Security_Duration_PR_years);
-    static const std::string root_name("vanetza-idf test root");
-    root.certificate->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name;
-    OCTET_STRING_fromBuf(&root.certificate->toBeSigned.id.choice.name, root_name.data(), root_name.size());
-    issue_permissions(root.certificate);
+    root_fields(root.certificate, "vanetza-idf test root");
     sign(root.certificate, nullptr, root.key);
     // Authorization authority (clause 7.2.4): issued by the root, with an encryption key.
     auto aa_key = fresh_key();
@@ -142,7 +190,7 @@ TrustDomain::TrustDomain(Backend& backend, Clock::time_point now) : backend_(bac
     aa.key = aa_key.priv;
     aa_encryption_key = aa_enc.priv;
     common_fields(aa.certificate, aa_key.pub, start, 3, Vanetza_Security_Duration_PR_years);
-    authority_fields(aa.certificate, "vanetza-idf test AA", aa_enc.pub);
+    authority_fields(aa.certificate, "vanetza-idf test AA", aa_enc.pub, AuthorityKind::aa);
     sign(aa.certificate, &root.certificate, root.key);
     // Enrolment authority (clause 7.2.4): issued by the root, with an encryption key.
     auto ea_key = fresh_key();
@@ -150,7 +198,7 @@ TrustDomain::TrustDomain(Backend& backend, Clock::time_point now) : backend_(bac
     ea.key = ea_key.priv;
     ea_encryption_key = ea_enc.priv;
     common_fields(ea.certificate, ea_key.pub, start, 3, Vanetza_Security_Duration_PR_years);
-    authority_fields(ea.certificate, "vanetza-idf test EA", ea_enc.pub);
+    authority_fields(ea.certificate, "vanetza-idf test EA", ea_enc.pub, AuthorityKind::ea);
     sign(ea.certificate, &root.certificate, root.key);
 }
 
@@ -190,9 +238,30 @@ Credential TrustDomain::issue_authority(const std::string& name, Clock::time_poi
     auto enc = fresh_key();
     authority.key = key.priv;
     common_fields(authority.certificate, key.pub, start, 3, Vanetza_Security_Duration_PR_years);
-    authority_fields(authority.certificate, name, enc.pub);
+    authority_fields(authority.certificate, name, enc.pub, AuthorityKind::aa);
     sign(authority.certificate, &root.certificate, root.key);
     return authority;
+}
+
+Credential TrustDomain::issue_authority(const Credential& issuer, const std::string& name, Clock::time_point start,
+                                        unsigned years) const {
+    Credential authority;
+    auto key = fresh_key();
+    auto enc = fresh_key();
+    authority.key = key.priv;
+    common_fields(authority.certificate, key.pub, start, years, Vanetza_Security_Duration_PR_years);
+    authority_fields(authority.certificate, name, enc.pub, AuthorityKind::aa);
+    sign(authority.certificate, &issuer.certificate, issuer.key);
+    return authority;
+}
+
+Certificate TrustDomain::issue_root(const PrivateKey& key, const PublicKey& verification, const std::string& name,
+                                    Clock::time_point start, unsigned years) const {
+    Certificate certificate;
+    common_fields(certificate, verification, start, years, Vanetza_Security_Duration_PR_years);
+    root_fields(certificate, name);
+    sign(certificate, nullptr, key);
+    return certificate;
 }
 
 Certificate TrustDomain::issue_ticket_for(const PublicKey& verification, const Permissions& permissions,

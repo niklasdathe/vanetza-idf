@@ -286,7 +286,7 @@ PsidGroupPermissions ::= SEQUENCE {
     subjectPermissions SubjectPermissions,
     minChainLength     INTEGER DEFAULT 1,
     chainLengthRange   INTEGER DEFAULT 0,
-    eeType             EndEntityType DEFAULT '00'H
+    eeType             EndEntityType DEFAULT {app} -- vanetza-idf: IEEE Std 1609.2-2022 6.4.28 (was '00'H)
 }
 
 SequenceOfPsidGroupPermissions ::= SEQUENCE OF PsidGroupPermissions

@@ -15,14 +15,15 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 794 checks | Security entity incl. receive-side verification, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 968 checks; security off 150; access-only 88; Linux Release 794 |
-| ESP32-C5 component execution, security on (COM11) | PASS, 668 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`; [security-device-06](evidence/security-device-06/result.json) (earlier: -05 537 checks, -03/-04 503 checks); heap and cost notes below |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 833 checks | Security entity incl. receive-side verification and chain consistency, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1010 checks; security off 150; access-only 88; Linux Release 833 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 707 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`; [security-device-07](evidence/security-device-07/result.json) incl. the chain consistency test (earlier: -06 668 checks, -05 537, -03/-04 503); heap and cost notes below |
 | ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
-| Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below |
-| Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below |
+| Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below; rerun with the CPOC-shaped pool and the consistency checks: [security-host-09](evidence/security-host-09/result.json), same verdicts |
+| Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below; rerun [security-host-10](evidence/security-host-10/result.json), same verdicts |
+| Independent verifier (c-its) on SUT-signed CAM/DENM, host | **PASS**: signatures, chain, permissions, CAM/DENM authorisation | Lab chain from `vidf_issue`, frames from `capture_pcap.py`; [independent-verifier-01](evidence/independent-verifier-01/analysis.md) |
 | Official ETSI BTP control, host, secured-capable SUT | PASS, 5/5 | Regression of the new `vidf_sut` build: [btp-host-07](evidence/btp-host-07/result.json) (earlier -05, -06) |
 | Official ETSI GeoNetworking control, host, secured-capable SUT | pass/inconc/fail, identical to geonetworking-host-01 | [geonetworking-host-04](evidence/geonetworking-host-04/result.json) (earlier -02, -03): no regression |
-| Official ETSI Security, receiving side, host | **PASS 24/26**; 2 errors (testcase defect, IUT-independent) | `TC_SEC_ITSS_RCV_MSG/CAM/DENM_*` with the SUT verifying (`VIDF_SECURITY_VERIFY`); see below |
+| Official ETSI Security, receiving side, host | **PASS 24/26**; 2 errors (testcase defect, IUT-independent) | `TC_SEC_ITSS_RCV_MSG/CAM/DENM_*` with the SUT verifying (`VIDF_SECURITY_VERIFY`); see below; rerun with the consistency checks [security-host-08](evidence/security-host-08/result.json), same verdicts |
 | PKI ATS | Not executed | The TS 102 941 core has no transport (GAP-PKI-001) |
 | Complete facilities ATS | Not executed | Full services remain incomplete |
 
@@ -212,7 +213,7 @@ form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
 The host tests run the same backend against OpenSSL as an oracle (signature
 cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
 known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
-build (968 checks); the device runs the PSA path natively (668 checks, the
+build (1010 checks); the device runs the PSA path natively (707 checks, the
 difference being the OpenSSL-only oracle tests).
 
 **Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
@@ -244,8 +245,16 @@ drop buffered packets carrying the old identifier on PREPARE. One corrective
 one (decided 2026-09-14): `v3::SecuredMessage::get_inline_p2pcd_request()`
 widened each 3-octet `HashedId3` through an 8-octet conversion and truncated
 the wrong end; it now uses `create_hashed_id3()` and `test_signing_profiles`
-checks the accessor against the raw ASN.1 field. Nothing else in `vanetza/`
-changed; all four are listed in the thesis's `adapted-code.yaml`.
+checks the accessor against the raw ASN.1 field. A second corrective one
+(2026-09-14, found through the independent verifier below): the pinned
+asn1c files were generated from an IEEE 1609.2 module with `eeType
+EndEntityType DEFAULT '00'H`, so the decoder installed '00'H (neither app nor
+enrol) into every decoded `PsidGroupPermissions` without an explicit eeType,
+while IEEE Std 1609.2-2022/-2025 clause 6.4.28, the base of TS 103 097
+V2.2.1, defaults to `{app}`; `vanetza/asn1/security/PsidGroupPermissions.c`
+now installs '80'H (`asn_DFL_5_cmp/_set`, hand-edited and commented) and
+`asn1/IEEE1609dot2.asn` says `DEFAULT {app}`. Nothing else in `vanetza/`
+changed; all five are listed in the thesis's `adapted-code.yaml`.
 
 **ITS time base.** `vanetza_idf/its_time.hpp` converts wall-clock (Unix) time
 to TAI microseconds since the ITS epoch with the five leap seconds inserted since
@@ -351,6 +360,54 @@ because the testcases read NodeB's position from the position table before
 `f_cf01Up()` fills it (pinned lines 9293/9401, same in the upstream master):
 a second, IUT-independent ATS defect, retained as recorded. The 99 CERT/GENMSG
 receiving cases of TS 103 096-2 are commented out in the pinned suite.
+
+**Chain consistency (2026-09-14, from the independent verifier).** The upstream
+`DefaultCertificateValidator` reduces permission consistency to "the issuer
+lists the ITS-AID"; `ChainValidator` now applies IEEE Std 1609.2-2025 clause
+5.1.2 as TS 103 097 clause 5.2 requires: for every `appPermissions` entry of
+the signing certificate each ancestor must hold a `PsidGroupPermissions`
+group whose chain-length window covers the distance to that ancestor
+(6.4.28: minChainLength/chainLengthRange count the certificates below the
+ancestor down to the end entity, -1 unbounded, 0 invalid), whose eeType
+permits an authorization certificate (absent = `{app}`), and whose
+subjectPermissions cover the PSID (`all` unless another group lists the PSID
+explicitly) with the SSP inside the range (6.4.30: every 1 bit of
+`sspBitmask` fixes the subordinate's bit, the SSP may not be longer than the
+mask nor shorter than its last 1 bit; opaque: an identical entry; an omitted
+SSP needs `all` or an empty opaque entry); a subordinate CA's own ranges must
+nest inside its issuer's. A violation is reported as `INCONSISTENT_CHAIN`
+(TS 102 723-8 Table 27) with `Inconsistent_With_Signer`. `test_chain_consistency` exercises a ticket
+whose CAM SSP sets bits the AA's mask fixes to zero, a root permitting a chain
+of length 1 only, and a root group with eeType enrol only, all with valid
+signatures (833 host checks, 707 on the device). On the device the same three
+checks appended to `test_verification` failed at first: after that test's
+stations and a fourth trust configuration the heap was fragmented (largest
+free block 16 kB), an allocation failure inside `verify()` surfaced through
+the catch-all as `INCOMPATIBLE_PROTOCOL`, and the frame bytes were identical to
+the host's; the checks now run as their own test with a fresh heap
+([security-device-07](evidence/security-device-07/result.json)). The test
+trust domain and `vidf_test_pool` moved
+to the EU CCMS CPOC Protocol Release 3.0 root profile at the same time
+(minChainLength 2, eeType app+enrol, psid 623 01C0/FF3F for end entities plus
+a second group 013E/FFC1 for authorities; GN-MGMT range `all`; AA
+appPermissions psid 623 ssp 0130, EA 010E, root CRL 01 and CTL 0138 per
+TS 102 941 V2.2.1 Tables B.3/B.6). The three security campaigns were rerun on
+the new pool with identical verdicts ([security-host-08](evidence/security-host-08/result.json)
+receiving 24/26, [-09](evidence/security-host-09/result.json) GN-MGMT 7/8,
+[-10](evidence/security-host-10/result.json) CAM/DENM 7/7).
+
+**Independent verifier** ([independent-verifier-01](evidence/independent-verifier-01/analysis.md)).
+c-its (an unrelated Rust implementation with its own ASN.1 modules and
+crypto) verifies the frames the host SUT signs with a lab chain from
+`vidf_issue`, recorded as an 802.11 pcap by `tools/capture_pcap.py`: message
+signature, the three certificate signatures, chain lengths, end-entity
+permissions and the CAM/DENM content against the ticket's SSP all pass
+(`security_authorized: true` for three CAMs and one DENM). Its first run,
+against the previous lab profile, is what exposed the chain-length and eeType
+issues above. Its one disagreement with the standard ticket is its own
+limitation: it treats an `appPermissions` entry without SSP (psid 141 as the
+ETSI test-suite tickets carry it) as unsupported, whereas IEEE Std 1609.2
+makes an omitted SSP consistent with an issuer range `all`.
 
 **Device heap.** The first device run with security failed in `test_fail_closed`
 with "OER decoding failed" ([security-device-02](evidence/security-device-02/result.json)).
