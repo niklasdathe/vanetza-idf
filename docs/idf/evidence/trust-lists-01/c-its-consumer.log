@@ -1,0 +1,4 @@
+ INFO  c_its_download_int_certs > Requesting CTL from http://127.0.0.1:8080/ for CA ./ctl\root-CAEBC77021CE448E.oer
+ INFO  c_its_download_int_certs > Got AA cert UML L0 twin AA
+ INFO  c_its_download_int_certs > Requesting CRL from http://127.0.0.1:8080/ for CA ./ctl\root-CAEBC77021CE448E.oer
+ INFO  c_its_download_int_certs > Got CRL for UML L0 twin (lab key)

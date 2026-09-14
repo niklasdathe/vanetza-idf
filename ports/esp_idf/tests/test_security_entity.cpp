@@ -256,6 +256,20 @@ void test_signing_profiles() {
     encap.tbe_packet_length = 4; encap.target_id_list.push_back(unknown);
     check(SN_SAP::SN_ENCAP_request_submit(*s.entity, encap, confirm) == Result::unsupported,
           "encryption targets unsupported, not ignored");
+    {   // signing cost for the platform record: one SN-ENCAP (hash, ECDSA P-256 sign, encode) and the raw ECDSA sign alone
+        const auto tick = [] { return std::chrono::steady_clock::now(); };
+        s.advance(100ms);
+        auto begin = tick();
+        check(s.send(aid::VRU, {0x01}) == Result::accepted, "timing: digest-signed VAM");
+        const auto encap = std::chrono::duration_cast<std::chrono::microseconds>(tick() - begin).count();
+        const ByteBuffer probe = s.backend.calculate_hash(HashAlgorithm::SHA256, {1, 2, 3});
+        begin = tick();
+        const auto raw = s.backend.sign_digest(at.key, probe);
+        const auto ecdsa = std::chrono::duration_cast<std::chrono::microseconds>(tick() - begin).count();
+        check(!raw.r.empty() && !raw.s.empty(), "timing: raw ECDSA sign");
+        std::printf("-- signing cost: SN-ENCAP %lld us (digest signer), ECDSA P-256 sign alone %lld us\n",
+                    static_cast<long long>(encap), static_cast<long long>(ecdsa));
+    }
 }
 
 void test_fail_closed() {
@@ -866,7 +880,6 @@ void test_chain_consistency() {
     expect_inconsistent(enrol_root, "root group with eeType enrol only, authorization ticket");
     check(b.entity->statistics().rejected_certificate == 3 && b.entity->statistics().failed == 0,
           "counted as rejected certificates, no exception on the way");
-
 }
 
 // IEEE Std 1609.2 clause 6.4.17 region consistency, its own test for the device heap.
@@ -963,6 +976,38 @@ void test_region_consistency() {
     b.entity->set_verification_policy(policy);
     check(is_successful(b.decap(circle_frame).report), "the same circle under the permissive policy: verifies");
 }
+// TS 102 941 clause 6.3.6 with IEEE Std 1609.2 clause 5.2: a revoked AA takes every ticket under
+// it with it. Its own test: on the device the first signature of a station created before a
+// receiver and several scoped stations fails with an exhausted heap (see validation.md).
+void test_revocation() {
+    vidf_test::section("test_revocation");
+    Station a;
+    auto at = a.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    a.pool.add(at.certificate, at.key);
+    a.start();
+    Receiver b(a);
+    // the RCA's CRL names the sender's AA; every ticket under it is refused until the revocation is withdrawn
+    b.trust.revoke(*a.domain.root.certificate.calculate_digest(), *a.domain.aa.certificate.calculate_digest());
+    const auto sends = [&](const char* what) {
+        a.advance(300ms);
+        const auto result = a.send(aid::VRU, {0x01});
+        static std::string text;
+        const auto& st = a.entity->statistics();
+        text = std::string(what) + " (send result " + std::to_string(static_cast<int>(result)) + ", packets " + std::to_string(a.radio.packets.size()) +
+               "; signed " + std::to_string(st.signed_messages) + " no_ticket " + std::to_string(st.refused_no_ticket) + " change_pending " +
+               std::to_string(st.refused_change_pending) + " permission " + std::to_string(st.refused_permission) + " failed " + std::to_string(st.failed) + ")";
+        check(result == Result::accepted && !a.radio.packets.empty(), text.c_str());
+        b.advance(300ms);
+    };
+    sends("sender still signs: only the receiver revoked its AA");
+    check(b.decap(a.radio.packets.back()).report == VerificationReport::Revoked_Certificate, "ticket under a revoked AA: REVOKED_CERTIFICATE");
+    b.trust.clear_revocations(*a.domain.root.certificate.calculate_digest());
+    a.advance(800ms); b.advance(800ms); // past the 1 s rule: the certificate is attached again (the refused one was never cached)
+    sends("sender signs after the withdrawal");
+    check(has_certificate(secured_of(a.radio.packets.back())) && is_successful(b.decap(a.radio.packets.back()).report),
+          "the same chain verifies again once the revocation is withdrawn");
+}
+
 #endif
 
 void test_security_entity() {
@@ -976,5 +1021,6 @@ void test_security_entity() {
     test_verification();
     test_chain_consistency();
     test_region_consistency();
+    test_revocation();
 #endif
 }

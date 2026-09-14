@@ -158,12 +158,16 @@ policy, and an AA received in `requestedCertificate` is learned once it chains
 to a root. The GN router drops what does not verify (`itsGnSnDecapResultHandling`
 STRICT) and passes report, ITS-AID and SSP of what does up to BTP. Without
 `CONFIG_VANETZA_IDF_SECURITY_VERIFY` the report is `Configuration_Problem` and
-nothing secured is passed up (docs/idf/conformance.md GAP-SEC-001). Revocation
-(CRL/CTL) and encryption are not implemented; identified regions (country
-codes) are accepted for the position check, and a circular/rectangular/
+nothing secured is passed up (docs/idf/conformance.md GAP-SEC-001). Identified
+regions (country codes) are accepted for the position check, and a circular/rectangular/
 polygonal region under an identified one is accepted in the chain, while
 `VerificationPolicy::permissive_identified_region` is true (no border database
-on the device); set it to false to reject both. Budget on the ESP32-C5: about 34 ms per verified message, 29 ms of
+on the device); set it to false to reject both. Encryption is not implemented.
+Revocation is: with `VIDF_PKI`, `pki::parse_rca_ctl`/`parse_crl` read a root's
+CTL and CRL as fetched from its distribution centre (TS 102 941 clause 6.3;
+the HTTP GET is the application's) and `pki::apply` turns them into trusted
+issuers and revocations (`TrustConfiguration::revoke`) the chain validator
+honours (`REVOKED_CERTIFICATE`). Budget on the ESP32-C5: about 34 ms per verified message, 29 ms of
 which is the ECDSA peripheral (validation.md).
 
 `IdentityManager` implements the identifier change of TS 102 723-8 clause 6.3:

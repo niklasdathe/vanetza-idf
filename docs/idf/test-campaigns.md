@@ -211,6 +211,28 @@ the encrypted PEM or its pass phrase anywhere, and keep the generated `.vkey`
 files with the same care as the PEM. Nothing in the tests uses a project key;
 the component tests and the pool generate throwaway keys per run.
 
+### A distribution centre on localhost (CTL and CRL)
+
+Receivers that take their AA certificates from the root's CTL rather than from
+P2P distribution need the root's distribution centre (TS 102 941 V2.2.1 clause
+6.3, Annex D). Until the real DC is up, the same interface runs on localhost:
+
+```sh
+vidf_issue ctl --issuer chain/ROOT.oer --issuer-key root.pem --aa chain/AA.oer=http://aa.example/ \
+               --dc http://127.0.0.1:8080/ --sequence 1 --out lists/ctl-<HASHEDID8>.oer
+vidf_issue crl --issuer chain/ROOT.oer --issuer-key root.pem [--revoke <HASHEDID8>]... --out lists/crl-<HASHEDID8>.oer
+python3 ports/esp_idf/tools/local_dc.py --dir lists --port 8080       # GET /getctl/<HASHEDID8>, /getcrl/<HASHEDID8>
+python3 ports/esp_idf/tools/fetch_trust_lists.py --dc http://127.0.0.1:8080/ --root chain/ROOT.oer --out fetched
+vidf_issue inspect fetched/ctl-<HASHEDID8>.oer --root chain/ROOT.oer  # clause 6.3.6 checks, then the entries
+```
+
+The station applies what `fetch_trust_lists.py` fetched through
+`pki::parse_rca_ctl`/`parse_crl` and `pki::apply` (the fetch itself is the
+application's transport). c-its' `c-its-download-int-certs` is the
+independent consumer: with `ctl/root-<HASHEDID8>.oer` and a
+`root-<HASHEDID8>.json` naming the DC it fetches, validates and extracts the
+AA certificates (retained run: `docs/idf/evidence/trust-lists-01`).
+
 ### Independent verification of signed frames
 
 `ports/esp_idf/tools/capture_pcap.py` drives `vidf_sut` with such a pool,

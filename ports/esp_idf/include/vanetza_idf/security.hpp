@@ -12,6 +12,7 @@
 #include <vanetza/security/v3/certificate_validator.hpp>
 #include <vanetza/security/v3/issuer_memory_lookup.hpp>
 #include <vanetza/security/v3/location_checker.hpp>
+#include <vanetza/security/v3/revocation_lookup.hpp>
 #include <vanetza/security/v3/sign_header_policy.hpp>
 #include <vanetza/security/v3/trust_store.hpp>
 #include <chrono>
@@ -111,7 +112,8 @@ public:
     /// self-signed root CA certificate (clause 7.2.3) -> trust store and issuer lookup
     Result add_root(const ByteBuffer& coer_certificate);
     Result add_root(const Certificate&);
-    /// AA or other subordinate CA certificate (clause 7.2.4) -> issuer lookup
+    /// AA or other subordinate CA certificate (clause 7.2.4) -> issuer lookup; a certificate
+    /// already known is Result::rejected (nothing changes), a non-CA one invalid_argument
     Result add_authority(const ByteBuffer& coer_certificate);
     Result add_authority(const Certificate&);
 
@@ -120,10 +122,21 @@ public:
     /// every CA certificate added (for P2P certificate distribution lookups by HashedId3)
     const std::vector<Certificate>& authorities() const { return authorities_; }
 
+    /** TS 102 941 V2.2.1 clause 6.3.3/6.3.6: a certificate the named issuer has revoked
+     * (the RCA's CRL lists the CA certificates it no longer trusts). The validator walks
+     * every chain link against this list (IEEE Std 1609.2 clause 5.2: a revoked
+     * certificate anywhere in the chain invalidates it), so a revoked AA takes all its
+     * tickets with it; the station's own tickets included (it stops signing). */
+    void revoke(const HashedId8& issuer, const HashedId8& certificate);
+    /// forget every revocation recorded for this issuer (a fresh CRL replaces the old one)
+    void clear_revocations(const HashedId8& issuer);
+    const vanetza::security::v3::RevocationLookup& revocations() const { return revocations_; }
+
 private:
     vanetza::security::v3::TrustStore roots_;
     vanetza::security::v3::IssuerMemoryLookup issuers_;
     std::vector<Certificate> authorities_;
+    vanetza::security::v3::RevocationMemoryLookup revocations_;
 };
 
 /** IEEE Std 1609.2 clause 5.3.1 certificate signature: Hash(Hash(toBeSigned) || Hash(issuer

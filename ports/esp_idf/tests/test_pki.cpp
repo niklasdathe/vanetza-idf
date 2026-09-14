@@ -316,11 +316,78 @@ void test_enrolment_and_authorization(Backend& backend, pki::EciesBackend& ecies
 }
 } // namespace
 
+// TS 102 941 V2.2.1 clause 6.3: the RCA's CTL and CRL as built for a distribution centre
+// and as an ITS-S reads them (clause 6.3.6: signed by its RCA, otherwise nothing is taken).
+void test_trust_lists(Backend& backend) {
+    vidf_test::section("test_trust_lists");
+    const Clock::time_point now = Clock::time_point(std::chrono::seconds(716292005));
+    vidf_test::TrustDomain domain {backend, now};
+    vidf_test::TrustDomain other {backend, now};
+    const auto root_id = *domain.root.certificate.calculate_digest();
+    const auto aa_id = *domain.aa.certificate.calculate_digest();
+    pki::TrustListEntries entries;
+    entries.ea.push_back({domain.ea.certificate.encode(), "http://ea.example.test/"});
+    entries.aa.push_back({domain.aa.certificate.encode(), "http://aa.example.test/"});
+    entries.dc.push_back({"http://dc.example.test/", {root_id}});
+    const pki::Time32 next_update = 716292005 + 7 * 86400;
+    auto ctl = pki::build_rca_ctl(backend, now, domain.root.certificate, domain.root.key, entries, next_update, 3);
+    check(ctl.has_value() && !ctl->empty(), "RCA CTL built (FullCtl, sequence 3)");
+    // 1. It reads back, signed by the RCA, with every entry.
+    auto list = pki::parse_rca_ctl(backend, *ctl, domain.root.certificate);
+    check(list.has_value(), "CTL verifies against the RCA that signed it");
+    if (list) {
+        check(list->sequence == 3 && list->next_update == next_update && list->full, "CTL sequence, nextUpdate and isFullCtl");
+        check(list->ea.size() == 1 && list->aa.size() == 1 && *list->aa[0].calculate_digest() == aa_id, "EA and AA entries decoded");
+        check(list->dc.size() == 1 && list->dc[0].url == "http://dc.example.test/" && list->dc[0].certificates == std::vector<HashedId8> {root_id},
+              "DC entry with the RCA digest");
+    }
+    // 2. Not by another root, not tampered, not with a foreign AA.
+    check(!pki::parse_rca_ctl(backend, *ctl, other.root.certificate), "a CTL of another RCA is refused");
+    { ByteBuffer bad = *ctl; bad[bad.size() / 2] ^= 0x01; check(!pki::parse_rca_ctl(backend, bad, domain.root.certificate), "a tampered CTL is refused"); }
+    {
+        pki::TrustListEntries foreign;
+        foreign.aa.push_back({other.aa.certificate.encode(), ""});
+        auto bad = pki::build_rca_ctl(backend, now, domain.root.certificate, domain.root.key, foreign, next_update, 4);
+        check(bad && !pki::parse_rca_ctl(backend, *bad, domain.root.certificate), "an AA not issued by the RCA is refused even inside its signed CTL");
+    }
+    {   // an RCA without the CTL permission cannot sign one (TS 103 097 clause 7.2.3)
+        auto ticket = domain.issue_ticket({{aid::VRU, {0x01}}}, now - std::chrono::hours(1), 24);
+        check(!pki::build_rca_ctl(backend, now, ticket.certificate, ticket.key, entries, next_update, 1), "a certificate without psid 624 signs no CTL");
+    }
+    // 3. Applied: the authorities become issuers.
+    {
+        vanetza_idf::security::TrustConfiguration trust;
+        check(trust.add_root(domain.root.certificate.encode()) == Result::accepted, "root provisioned");
+        check(pki::apply(*list, trust) == 2 && trust.authorities().size() == 3, "CTL adds EA and AA as issuers");
+        check(pki::apply(*list, trust) == 0, "applying the same CTL again adds nothing");
+    }
+    // 4. CRL: revoking the AA.
+    auto crl = pki::build_crl(backend, now, domain.root.certificate, domain.root.key, {aa_id}, 716292005, next_update);
+    check(crl.has_value(), "CRL built");
+    auto revoked = pki::parse_crl(backend, *crl, domain.root.certificate);
+    check(revoked && revoked->revoked == std::vector<HashedId8> {aa_id} && revoked->this_update == 716292005 && revoked->next_update == next_update,
+          "CRL verifies and lists the AA");
+    check(!pki::parse_crl(backend, *crl, other.root.certificate), "a CRL of another RCA is refused");
+    check(!pki::parse_rca_ctl(backend, *crl, domain.root.certificate) && !pki::parse_crl(backend, *ctl, domain.root.certificate),
+          "a CRL is no CTL and a CTL no CRL (psid)");
+    {
+        vanetza_idf::security::TrustConfiguration trust;
+        trust.add_root(domain.root.certificate.encode());
+        check(pki::apply(*revoked, domain.root.certificate, trust) == 1 && trust.revocations().is_revoked(root_id, aa_id) &&
+              !trust.revocations().is_revoked(root_id, root_id), "CRL entries become revocations by the RCA");
+        auto empty = pki::build_crl(backend, now, domain.root.certificate, domain.root.key, {}, 716292005, next_update);
+        auto none = pki::parse_crl(backend, *empty, domain.root.certificate);
+        check(none && pki::apply(*none, domain.root.certificate, trust) == 0 && !trust.revocations().is_revoked(root_id, aa_id),
+              "a newer empty CRL replaces the earlier list");
+    }
+}
+
 void test_pki() {
     vidf_test::TestBackend backend;
     TestEcies ecies;
     test_ecies(backend, ecies);
     test_enrolment_and_authorization(backend, ecies);
+    test_trust_lists(backend);
 #if VIDF_BACKEND_OPENSSL && VIDF_BACKEND_MBEDTLS
     // Cross-check: the PSA primitives interoperate with the OpenSSL ones.
     pki::EciesMbedTls psa;

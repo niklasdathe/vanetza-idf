@@ -1,0 +1,14 @@
+{
+  "kind": "component-tests",
+  "target": "esp32c5",
+  "idf_version": "6.0.2",
+  "port": "COM11",
+  "status": "pass",
+  "reset": "none",
+  "checks": 810,
+  "backend": "BackendMbedTls (PSA Crypto, mbedTLS 4.1.0 of ESP-IDF 6.0.2) with CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY, _ECC, _SHA, _MPI, _AES; 810 checks = 935 host checks minus the OpenSSL-only oracle tests",
+  "capture": "listen-only after the esptool post-flash reset",
+  "verifies": "as security-device-08 plus test_revocation (a revoked AA: REVOKED_CERTIFICATE, accepted again after withdrawal) and test_trust_lists (RCA CTL/CRL build, parse, apply); signing cost line: SN-ENCAP 32.4 ms, raw ECDSA P-256 sign 23.2 ms (software sign with the ECC point-multiplication accelerator); verification cost line: certificate-signed 36.2 ms, digest-signed 35.4 ms, raw verify 29.3 ms (ECDSA peripheral)",
+  "note": "the revocation scenario appended to test_chain_consistency failed on the device only: the sender's first signature after a receiver and three scoped stations had been created threw inside the PSA backend (statistics.failed = 1, an allocation failure with the heap fragmented); as its own test with a fresh heap it passes",
+  "sha256": "3986d2f2a862845d45235e96ee8f791f3a3edd59030ec9fa594930613e294424"
+}

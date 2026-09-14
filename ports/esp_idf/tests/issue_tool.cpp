@@ -10,6 +10,12 @@
 //   vidf_issue show      CERT.oer                       digest, validity, permissions, region
 //   vidf_issue verify    CERT.oer [ISSUER.oer [ROOT.oer]]  clause 5.3.1 signatures, IEEE 1609.2 clause 5.1.2
 //                                                       permission/region/time consistency of the chain
+//   vidf_issue ctl       --issuer ROOT.oer --issuer-key KEY --out FILE [--sequence N] [--next-update T]
+//                        [--aa CERT.oer[=URL]]... [--ea CERT.oer[=URL]]... [--dc URL[=HASHEDID8,...]]...
+//                                                       TS 102 941 clause 6.3.2/6.3.4 RcaCertificateTrustListMessage (FullCtl)
+//   vidf_issue crl       --issuer ROOT.oer --issuer-key KEY --out FILE [--next-update T] [--revoke HASHEDID8]...
+//                                                       TS 102 941 clause 6.3.3 CertificateRevocationListMessage
+//   vidf_issue inspect   FILE --root ROOT.oer            read a CTL or CRL back as an ITS-S would (clause 6.3.6)
 //
 // KEY is a PEM private key (OpenSSL reads it; an encrypted PEM prompts for the pass
 // phrase on the terminal, nothing is echoed or written) or a raw 32-octet .vkey file.
@@ -26,6 +32,7 @@
 #include "test_backend.hpp"
 #include <vanetza_idf/its_time.hpp>
 #include <vanetza_idf/security.hpp>
+#include <vanetza_idf/pki.hpp>
 #include <vanetza/common/clock.hpp>
 #include <vanetza/security/v3/certificate.hpp>
 #include <openssl/bn.h>
@@ -38,6 +45,7 @@
 #include <fstream>
 #include <iterator>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -61,6 +69,10 @@ std::string hex(const ByteBuffer& b) {
     std::string s;
     for (auto v : b) { s += digits[v >> 4]; s += digits[v & 15]; }
     return s;
+}
+std::string digest_hex(const Certificate& c) { // one optional, one pair of iterators
+    const auto digest = c.calculate_digest();
+    return digest ? hex(ByteBuffer(digest->begin(), digest->end())) : std::string("?");
 }
 ByteBuffer from_hex(const std::string& s) {
     ByteBuffer out;
@@ -290,6 +302,94 @@ int main(int argc, char** argv) try {
     const Options options = parse(argc, argv, 2);
     if (command == "show") {
         show(load_certificate(one(options, "positional")));
+        return 0;
+    }
+    if (command == "inspect") {
+        const Certificate rca = load_certificate(one(options, "--root"));
+        const ByteBuffer message = read_file(one(options, "positional"));
+        if (const auto ctl = vanetza_idf::pki::parse_rca_ctl(backend, message, rca)) {
+            std::printf("RCA CTL of %s: %s, sequence %u, nextUpdate Time32 %u\n", digest_hex(rca).c_str(),
+                        ctl->full ? "full" : "delta", unsigned(ctl->sequence), unsigned(ctl->next_update));
+            for (const auto& ea : ctl->ea) std::printf("  ea  %s\n", digest_hex(ea).c_str());
+            for (const auto& aa : ctl->aa) std::printf("  aa  %s\n", digest_hex(aa).c_str());
+            for (const auto& dc : ctl->dc) {
+                std::printf("  dc  %s:", dc.url.c_str());
+                for (const auto& id : dc.certificates) std::printf(" %s", hex(ByteBuffer(id.begin(), id.end())).c_str());
+                std::printf("\n");
+            }
+            for (const auto& id : ctl->deleted) std::printf("  delete %s\n", hex(ByteBuffer(id.begin(), id.end())).c_str());
+            return 0;
+        }
+        if (const auto crl = vanetza_idf::pki::parse_crl(backend, message, rca)) {
+            std::printf("CRL of %s: thisUpdate Time32 %u, nextUpdate Time32 %u, %zu revoked\n",
+                        digest_hex(rca).c_str(),
+                        unsigned(crl->this_update), unsigned(crl->next_update), crl->revoked.size());
+            for (const auto& id : crl->revoked) std::printf("  revoked %s\n", hex(ByteBuffer(id.begin(), id.end())).c_str());
+            return 0;
+        }
+        std::printf("neither a CTL nor a CRL signed by that root\n");
+        return 1;
+    }
+    if (command == "ctl" || command == "crl") {
+        const Certificate rca = load_certificate(one(options, "--issuer"));
+        const auto key = load_key(one(options, "--issuer-key"), backend).priv;
+        const std::string out = one(options, "--out");
+        const Clock::time_point at = now();
+        const auto next_update = options.count("--next-update")
+            ? static_cast<vanetza_idf::pki::Time32>(std::chrono::duration_cast<std::chrono::seconds>(parse_time(one(options, "--next-update")).time_since_epoch()).count())
+            : static_cast<vanetza_idf::pki::Time32>(std::chrono::duration_cast<std::chrono::seconds>(at.time_since_epoch()).count() + 7 * 86400);
+        std::optional<ByteBuffer> message;
+        if (command == "ctl") {
+            vanetza_idf::pki::TrustListEntries entries;
+            const auto authority = [&](const std::string& spec) {
+                const auto eq = spec.find('=');
+                vanetza_idf::pki::TrustListEntries::Authority a;
+                a.certificate = read_file(spec.substr(0, eq));
+                if (eq != std::string::npos) a.access_point = spec.substr(eq + 1);
+                return a;
+            };
+            if (auto it = options.find("--ea"); it != options.end()) for (const auto& spec : it->second) entries.ea.push_back(authority(spec));
+            if (auto it = options.find("--aa"); it != options.end()) for (const auto& spec : it->second) entries.aa.push_back(authority(spec));
+            if (auto it = options.find("--dc"); it != options.end()) {
+                for (const auto& spec : it->second) {
+                    vanetza_idf::pki::TrustListEntries::DistributionCentre dc;
+                    const auto eq = spec.find('=');
+                    dc.url = spec.substr(0, eq);
+                    std::string ids = eq == std::string::npos ? std::string() : spec.substr(eq + 1);
+                    if (ids.empty()) dc.certificates.push_back(*rca.calculate_digest()); // clause 6.3.2: at least the RCA itself
+                    for (std::size_t from = 0; from < ids.size();) {
+                        const auto comma = ids.find(',', from);
+                        const ByteBuffer raw = from_hex(ids.substr(from, comma == std::string::npos ? std::string::npos : comma - from));
+                        if (raw.size() != 8) throw std::runtime_error("--dc URL=HASHEDID8,... needs 8-octet hex digests");
+                        HashedId8 id; std::copy(raw.begin(), raw.end(), id.begin());
+                        dc.certificates.push_back(id);
+                        from = comma == std::string::npos ? ids.size() : comma + 1;
+                    }
+                    entries.dc.push_back(std::move(dc));
+                }
+            }
+            if (entries.dc.empty()) throw std::runtime_error("a root CTL needs at least one --dc URL (TS 102 941 clause 6.3.4)");
+            message = vanetza_idf::pki::build_rca_ctl(backend, at, rca, key, entries, next_update, std::stoul(one(options, "--sequence", "1")));
+            if (message) {
+                const auto back = vanetza_idf::pki::parse_rca_ctl(backend, *message, rca);
+                if (!back) throw std::runtime_error("the CTL does not read back (an entry not issued by this root?)");
+            }
+        } else {
+            std::vector<HashedId8> revoked;
+            if (auto it = options.find("--revoke"); it != options.end()) {
+                for (const auto& spec : it->second) {
+                    const ByteBuffer raw = from_hex(spec);
+                    if (raw.size() != 8) throw std::runtime_error("--revoke needs an 8-octet hex HashedId8");
+                    HashedId8 id; std::copy(raw.begin(), raw.end(), id.begin());
+                    revoked.push_back(id);
+                }
+            }
+            const auto this_update = static_cast<vanetza_idf::pki::Time32>(std::chrono::duration_cast<std::chrono::seconds>(at.time_since_epoch()).count());
+            message = vanetza_idf::pki::build_crl(backend, at, rca, key, revoked, this_update, next_update);
+        }
+        if (!message) throw std::runtime_error("the root cannot sign this list (missing CTL/CRL appPermissions, psid 624/622?)");
+        write_file(out, *message);
+        std::printf("%s written: %zu octets -> %s\n", command == "ctl" ? "RCA CTL" : "CRL", message->size(), out.c_str());
         return 0;
     }
     if (command == "verify") {

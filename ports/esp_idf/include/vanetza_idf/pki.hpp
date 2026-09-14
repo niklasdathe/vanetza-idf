@@ -1,5 +1,6 @@
 #pragma once
 #include <vanetza_idf/access.hpp>
+#include <vanetza_idf/security.hpp>
 #include <vanetza/common/byte_buffer.hpp>
 #include <vanetza/common/clock.hpp>
 #include <vanetza/common/its_aid.hpp>
@@ -12,6 +13,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -28,9 +30,13 @@
  * appended to the ciphertext).
  *
  * The library builds and parses the messages only. Transport to the EA/AA
- * (TS 102 941 clause 6.1 reference points S3/S4, HTTP in practice), storage
- * of credentials and the CTL/CRL retrieval of clause 6.3 are supplied by the
- * application; butterfly keys (clause 6.2.3.5) are not implemented.
+ * (TS 102 941 clause 6.1 reference points S3/S4, HTTP in practice) and the
+ * retrieval of CTL and CRL from a distribution centre (clause 6.3.5, Annex D:
+ * GET <dc>/getctl/<HashedId8>, GET <dc>/getcrl/<HashedId8>) are supplied by the
+ * application; the lists themselves are built, verified and read here (clause
+ * 6.3.2 to 6.3.6, formats of clause A.2.7 as compiled from the TS 102 941
+ * V1.3.1 module, unchanged for these types in V2.2.1); butterfly keys (clause
+ * 6.2.3.5) are not implemented.
  */
 namespace vanetza_idf::pki {
 
@@ -178,5 +184,62 @@ std::optional<ByteBuffer> decrypt_with_psk(EciesBackend&, const std::array<std::
 /// Verify an EtsiTs103097Data-Signed: self-signed with public_key, or by signer_cert when given; returns the payload
 std::optional<ByteBuffer> verify_signed(vanetza::security::Backend&, const ByteBuffer& encoded, const PublicKey* self_key,
                                         const Certificate* signer_cert, vanetza::ItsAid expected_psid);
+
+// ---- TS 102 941 V2.2.1 clause 6.3: trust list and revocation list of a root CA ----------
+//
+// RcaCertificateTrustListMessage (clause 6.3.2, 6.3.4, A.2.7): EtsiTs103097Data-Signed over an
+// EtsiTs102941Data{certificateTrustListRca ToBeSignedRcaCtl}, signed with the RCA's key, the
+// signer carrying the RCA certificate, psid = CTL service (TS 102 965 Table A.1, 624), the RCA
+// certificate holding the CTL appPermissions (TS 102 941 Table B.3: 0138 for a root CTL).
+// CertificateRevocationListMessage (clause 6.3.3): the same over
+// EtsiTs102941Data{certificateRevocationList ToBeSignedCrl}, psid = CRL service (622).
+// Clause 6.3.6: an ITS-S accepts either only when it verifies as signed by its RCA; it then
+// takes the EA/AA entries as trusted issuers and the CRL entries as revoked.
+
+using Time32 = std::uint32_t; // IEEE Std 1609.2 Time32, seconds since 2004-01-01 00:00:00 TAI
+
+struct TrustListEntries {
+    struct Authority { ByteBuffer certificate; std::string access_point; };   // EaEntry / AaEntry
+    struct DistributionCentre { std::string url; std::vector<HashedId8> certificates; }; // DcEntry
+    std::vector<Authority> ea, aa;
+    std::vector<DistributionCentre> dc;
+};
+
+/// FullCtl (isFullCtl true, ctlCommands add only) of an RCA, version 1; ctl_sequence 0..255
+std::optional<ByteBuffer> build_rca_ctl(vanetza::security::Backend&, vanetza::Clock::time_point now, const Certificate& rca,
+                                        const PrivateKey& rca_key, const TrustListEntries&, Time32 next_update,
+                                        std::uint8_t ctl_sequence);
+/// CRL of an RCA, version 1
+std::optional<ByteBuffer> build_crl(vanetza::security::Backend&, vanetza::Clock::time_point now, const Certificate& rca,
+                                    const PrivateKey& rca_key, const std::vector<HashedId8>& revoked, Time32 this_update,
+                                    Time32 next_update);
+
+struct RcaTrustList {
+    std::uint8_t sequence = 0;
+    Time32 next_update = 0;
+    bool full = true;
+    std::vector<Certificate> ea, aa;                       // added entries (issuer of each: the RCA, checked)
+    std::vector<TrustListEntries::DistributionCentre> dc;
+    std::vector<HashedId8> deleted;                        // DeltaCtl delete commands (certificates)
+    std::vector<std::string> deleted_dc;
+};
+/// Clause 6.3.6: the message verifies as signed by rca (signer certificate equal to rca,
+/// psid 624, rca permitted for the CTL service), decodes as an RCA CTL of version 1 and every
+/// EA/AA entry is issued by rca with a verifying signature (IEEE Std 1609.2 clause 5.3.1).
+std::optional<RcaTrustList> parse_rca_ctl(vanetza::security::Backend&, const ByteBuffer& message, const Certificate& rca);
+
+struct RevocationList {
+    Time32 this_update = 0, next_update = 0;
+    std::vector<HashedId8> revoked;
+};
+/// the same for a CRL (psid 622, rca permitted for the CRL service)
+std::optional<RevocationList> parse_crl(vanetza::security::Backend&, const ByteBuffer& message, const Certificate& rca);
+
+/// Clause 6.3.6: the EA/AA entries become trusted issuers (TrustConfiguration::add_authority);
+/// returns the number added (entries already known are not counted)
+std::size_t apply(const RcaTrustList&, vanetza_idf::security::TrustConfiguration&);
+/// Clause 6.3.6: the CRL entries become revocations by the RCA (TrustConfiguration::revoke),
+/// replacing the RCA's earlier list; returns the number of entries
+std::size_t apply(const RevocationList&, const Certificate& rca, vanetza_idf::security::TrustConfiguration&);
 
 } // namespace vanetza_idf::pki

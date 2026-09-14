@@ -15,9 +15,10 @@ port, not inferred from the upstream project or other firmware.
 | Official ETSI GeoNetworking control, host | **PASS, 1/3 executed cases**; 1 fail, 1 inconc (both legitimate scope gaps, not bugs) | `TC_GEONW_FDV_SHB_BV_01`; see below |
 | Access/DCC campaign | Not executed | Required observations and behavior remain incomplete |
 | Independent C5 radio pair, real RF (COM20→COM11) | **PASS**, 3/3 identical reruns | Real over-the-air transmit/receive between two boards; see below for the FCS-check fix |
-| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 890 checks | Security entity incl. receive-side verification, chain and region consistency, credential bundle and stores, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1067 checks; security off 150; access-only 88; Linux Release 890 |
-| ESP32-C5 component execution, security on (COM11) | PASS, 765 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`, `CONFIG_VANETZA_IDF_NVS_CREDENTIALS=y`; [security-device-08](evidence/security-device-08/result.json) incl. the chain/region consistency and the NVS credential store tests (earlier: -07 747, -06 668, -05 537, -03/-04 503); heap and cost notes below |
+| Host component regression, security on (Windows Debug, OpenSSL) | PASS, 935 checks | Security entity incl. receive-side verification, chain and region consistency, revocation, credential bundle and stores, identifier change, SN/SF/MN/MF/MI bindings, TS 102 941 core incl. RCA CTL/CRL, ITS time base; PSA cross-check build (mbedTLS 4.1 from the IDF tree) PASS, 1112 checks; security off 150; access-only 88; Linux Release 935 |
+| ESP32-C5 component execution, security on (COM11) | PASS, 810 checks | PSA Crypto backend of mbedTLS 4.1.0 with the ECDSA peripheral for verification; `CONFIG_VANETZA_IDF_SECURITY_VERIFY=y`, `CONFIG_VANETZA_IDF_PKI=y`, `CONFIG_VANETZA_IDF_NVS_CREDENTIALS=y`; [security-device-09](evidence/security-device-09/result.json) incl. the chain/region consistency, revocation, NVS credential store and RCA CTL/CRL tests (earlier: -08 765, -07 747, -06 668, -05 537, -03/-04 503); heap and cost notes below |
 | ESP32-C5 signing with run-time provisioned credentials, verified by c-its | **PASS**: signatures and chain (3/3 CAMs per capture), CAM authorisation with the SSP-carrying ticket | Bundle over the USB diagnostic channel (command 9), twin chain of a real EU root; [independent-verifier-03](evidence/independent-verifier-03/analysis.md) |
+| RCA CTL/CRL from a distribution centre on localhost | **PASS**: library reader and c-its consumer both validate and extract the AA; revocation honoured by the chain validator | TS 102 941 clause 6.3 / Annex D; `vidf_issue ctl/crl`, `local_dc.py`, `fetch_trust_lists.py`; [trust-lists-01](evidence/trust-lists-01/analysis.md) |
 | ESP32-C5 component execution, security on (COM20, second board) | PASS, 503 checks | Same image, board recovered over JTAG; [security-device-04](evidence/security-device-04/result.json) |
 | Official ETSI Security, GN-MGMT profile, host | **PASS 7/8**; 1 fail (testcase defect, IUT-independent) | `TC_SEC_ITSS_SND_GENMSG_01..08_BV`, framework-side signature verification enforced; see below; rerun with the CPOC-shaped pool and the consistency checks: [security-host-09](evidence/security-host-09/result.json), same verdicts |
 | Official ETSI Security, CAM/DENM profiles, host | **PASS 7/7** | `TC_SEC_ITSS_SND_CAM_01..04_BV`, `TC_SEC_ITSS_SND_DENM_01..03_BV`; see below; rerun [security-host-10](evidence/security-host-10/result.json), same verdicts |
@@ -214,7 +215,7 @@ form, so compressed IEEE 1609.2 points are recovered by `vanetza_idf::ecc`
 The host tests run the same backend against OpenSSL as an oracle (signature
 cross-verification, decompression against `EC_POINT_set_compressed_coordinates`,
 known-answer vectors in `test_backend_kat.cpp`) in the `VIDF_MBEDTLS_ROOT`
-build (1067 checks); the device runs the PSA path natively (765 checks, the
+build (1112 checks); the device runs the PSA path natively (810 checks, the
 difference being the OpenSSL-only oracle tests).
 
 **Trust and refusal.** `CertificatePool::add` checks the TS 103 097 clause
@@ -437,6 +438,51 @@ reset. `test_credentials` (890 host checks, 765 on the device with the NVS
 round trip) covers the codec, the malformed cases, `apply()` and the stores;
 [independent-verifier-03](evidence/independent-verifier-03/analysis.md) is the
 ESP32-C5 signing with a chain it received this way, verified by c-its.
+
+**Trust lists (2026-09-14, TS 102 941 clause 6.3).** `pki::build_rca_ctl` and
+`build_crl` produce the RCA's FullCtl (EA/AA/DC entries) and CRL as
+EtsiTs103097Data-Signed over EtsiTs102941Data with the RCA certificate as the
+signer, psid 624/622 and the RCA's CTL/CRL appPermissions required;
+`parse_rca_ctl`/`parse_crl` accept a list only when it verifies as signed by
+the RCA the station trusts and every EA/AA entry is issued by that RCA with a
+verifying signature; `apply` turns the entries into trusted issuers and the
+CRL into revocations by issuer (`TrustConfiguration::revoke`), and the base
+validator's `chain_is_revoked` walk (now fed with the lookup) rejects any
+chain link so revoked with `REVOKED_CERTIFICATE`. `test_trust_lists` covers
+build/parse/apply, a tampered list, a foreign root, an AA not issued by the
+root, a CRL replacing an earlier one; `test_chain_consistency` the receiver
+refusing every ticket under a revoked AA and accepting again after the
+withdrawal (935 host checks, 810 on the device; `test_revocation` is its own test:
+on the device the sender's first signature after a receiver and three scoped
+stations existed threw inside the PSA backend with a fragmented heap, the same
+lesson as `test_chain_consistency`). [trust-lists-01](evidence/trust-lists-01/analysis.md)
+serves both lists from `tools/local_dc.py` (Annex D GETs, content types) and
+lets c-its' `download-int-certs` fetch, validate and extract the AA of the
+twin root; the fetch on the library side is `tools/fetch_trust_lists.py` (the
+transport stays the application's). The ASN.1 of the lists is compiled from
+the TS 102 941 V1.3.1 module in the pinned asn1c set; these types are
+unchanged in V2.2.1.
+
+**Cryptographic hardware of the ESP32-C5 (2026-09-14).** Used by the PSA
+backend as configured (`sdkconfig`): the ECDSA peripheral for verification
+(`CONFIG_MBEDTLS_HARDWARE_ECDSA_VERIFY`), the ECC point-multiplication
+accelerator for the software ECDSA sign (`CONFIG_MBEDTLS_HARDWARE_ECC`,
+P-256), the SHA accelerator (`CONFIG_MBEDTLS_HARDWARE_SHA`), the MPI and AES
+accelerators (`CONFIG_MBEDTLS_HARDWARE_MPI`, `_AES`, the latter for the ECIES
+AES-CCM of the PKI core). Measured on the board
+([security-device-09](evidence/security-device-09/result.json)): a raw ECDSA
+P-256 sign 23.2 ms, one SN-ENCAP (hash, sign, encode) 32.4 ms; a raw verify
+29.3 ms, one SN-DECAP 35.4 ms (host, OpenSSL: sign 0.11 ms, SN-ENCAP 0.23 ms).
+Not used: the ECDSA peripheral's signing mode
+(`CONFIG_MBEDTLS_HARDWARE_ECDSA_SIGN`) takes its private key from an eFuse key
+block only (purpose ECDSA_KEY: burnt once, never readable), which fits one
+long-term device key such as the TS 102 941 canonical key but not authorization
+tickets provisioned at run time; the Key Manager (`SOC_KEY_MANAGER_ECDSA_KEY_DEPLOY`)
+can deploy a device-bound encrypted key into that peripheral and would give
+tickets hardware-held keys at a deployment per ticket switch, through
+ESP-IDF's `esp_key_mgr`/`esp_ecdsa` rather than the PSA path the backend uses;
+neither is attempted (thesis ACT-030). Keys at rest: NVS/flash encryption, the
+application's configuration.
 
 **Independent verifier** ([independent-verifier-01](evidence/independent-verifier-01/analysis.md),
 [-02](evidence/independent-verifier-02/analysis.md) on a twin of a real EU CCMS L0 root,

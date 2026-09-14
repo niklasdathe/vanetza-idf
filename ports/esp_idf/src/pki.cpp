@@ -2,8 +2,12 @@
 // EtsiTs103097Data wrapper. See pki.hpp for the clause map.
 #include <vanetza_idf/pki.hpp>
 #include <vanetza_idf/ecc.hpp>
+#include <vanetza_idf/security.hpp>
 #include <vanetza/asn1/asn1c_wrapper.hpp>
 #include <vanetza/asn1/security/EtsiTs102941Data.h>
+#include <vanetza/asn1/security/CtlCommand.h>
+#include <vanetza/asn1/security/CtlEntry.h>
+#include <vanetza/asn1/security/EtsiTs103097Certificate.h>
 #include <vanetza/asn1/security/InnerAtRequest.h>
 #include <vanetza/asn1/security/InnerEcRequest.h>
 #include <vanetza/asn1/security/PublicEncryptionKey.h>
@@ -538,6 +542,235 @@ Result parse_authorization_response(Backend& backend, EciesBackend& ecies, const
     if (!mgmt.decode(*mgmt_bytes) || mgmt->version != Vanetza_Security_Version_v1 ||
         mgmt->content.present != Vanetza_Security_EtsiTs102941DataContent_PR_authorizationResponse) return Result::rejected;
     return read_inner_response(mgmt->content.choice.authorizationResponse, context, out.response_code, out.certificate);
+}
+
+// ---- TS 102 941 clause 6.3: RCA trust list and revocation list -----------------------
+
+namespace {
+void set_url(Vanetza_Security_Url_t& url, const std::string& text) {
+    OCTET_STRING_fromBuf(&url, text.data(), text.size());
+}
+std::string get_url(const Vanetza_Security_Url_t& url) {
+    return std::string(reinterpret_cast<const char*>(url.buf), url.size);
+}
+void set_hashed_id8(Vanetza_Security_HashedId8_t& target, const HashedId8& id) {
+    OCTET_STRING_fromBuf(&target, reinterpret_cast<const char*>(id.data()), id.size());
+}
+std::optional<HashedId8> get_hashed_id8(const Vanetza_Security_HashedId8_t& source) {
+    if (source.size != 8) return std::nullopt;
+    HashedId8 id;
+    std::copy_n(source.buf, 8, id.begin());
+    return id;
+}
+// the certificate structure of an entry, decoded from COER into the inline member
+bool put_certificate(Vanetza_Security_EtsiTs103097Certificate_t& target, const ByteBuffer& coer) {
+    void* into = &target;
+    return vanetza::asn1::decode_oer(asn_DEF_Vanetza_Security_EtsiTs103097Certificate, &into, coer);
+}
+
+// EtsiTs102941Data{content} signed by the RCA with the signer certificate inline (clause 6.3.4)
+std::optional<ByteBuffer> sign_list(Backend& backend, Clock::time_point now, const Certificate& rca, const PrivateKey& rca_key,
+                                    ItsAid psid, const ByteBuffer& mgmt) {
+    if (!rca.valid_for_application(psid)) return std::nullopt; // TS 103 097 clause 7.2.3: CRL/CTL appPermissions
+    SecuredData data = SecuredData::with_signed_data();
+    data.set_hash_id(HashAlgorithm::SHA256);
+    data.set_its_aid(psid);
+    data.set_generation_time(v2::convert_time64(now));
+    data.set_signer_identifier(rca);
+    data.set_payload(mgmt);
+    return finish_signed(backend, data, HashAlgorithm::SHA256, rca_key, &rca);
+}
+
+// the EtsiTs102941Data of a list message that verifies as signed by rca with the given psid
+std::optional<ByteBuffer> open_list(Backend& backend, const ByteBuffer& message, const Certificate& rca, ItsAid psid) {
+    SecuredData data;
+    if (!data.decode(message) || !data.is_signed() || data.protocol_version() != 3) return std::nullopt;
+    if (data.its_aid() != psid || !data.generation_time() || data.hash_id() != HashAlgorithm::SHA256) return std::nullopt;
+    if (!rca.valid_for_application(psid)) return std::nullopt;
+    // clause 6.3.4: the signer contains the issuer's certificate; it must be the RCA we trust
+    const auto* signed_data = data->content->choice.signedData;
+    if (signed_data->signer.present != Vanetza_Security_SignerIdentifier_PR_certificate ||
+        signed_data->signer.choice.certificate.list.count != 1) return std::nullopt;
+    const ByteBuffer inline_cert = vanetza::asn1::encode_oer(asn_DEF_Vanetza_Security_EtsiTs103097Certificate,
+                                                            signed_data->signer.choice.certificate.list.array[0]);
+    if (inline_cert != rca.encode()) return std::nullopt;
+    const auto signature = data.signature();
+    const auto key = v3::get_public_key(*rca.content());
+    if (!signature || !key) return std::nullopt;
+    const auto digest = message_digest(backend, HashAlgorithm::SHA256, data.signing_payload(), &rca);
+    try {
+        if (!backend.verify_digest(*key, digest, *signature)) return std::nullopt;
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+    auto payload = data.payload();
+    const auto& packet = boost::get<CohesivePacket>(payload);
+    const auto view = create_byte_view(packet, OsiLayer::Network, max_osi_layer());
+    return ByteBuffer(view.begin(), view.end());
+}
+} // namespace
+
+std::optional<ByteBuffer> build_rca_ctl(Backend& backend, Clock::time_point now, const Certificate& rca, const PrivateKey& rca_key,
+                                        const TrustListEntries& entries, Time32 next_update, std::uint8_t ctl_sequence) {
+    vanetza::asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs102941Data> mgmt(asn_DEF_Vanetza_Security_EtsiTs102941Data);
+    mgmt->version = Vanetza_Security_Version_v1;
+    mgmt->content.present = Vanetza_Security_EtsiTs102941DataContent_PR_certificateTrustListRca;
+    auto& ctl = mgmt->content.choice.certificateTrustListRca;
+    ctl.version = 1; // clause 6.3.4: CtlFormat version 1
+    ctl.nextUpdate = next_update;
+    ctl.isFullCtl = 1;
+    ctl.ctlSequence = ctl_sequence;
+    const auto add = [&](Vanetza_Security_CtlEntry_PR kind) -> Vanetza_Security_CtlEntry_t& {
+        auto* command = vanetza::asn1::allocate<Vanetza_Security_CtlCommand_t>();
+        command->present = Vanetza_Security_CtlCommand_PR_add;
+        command->choice.add.present = kind;
+        ASN_SEQUENCE_ADD(&ctl.ctlCommands, command);
+        return command->choice.add;
+    };
+    for (const auto& ea : entries.ea) {
+        auto& entry = add(Vanetza_Security_CtlEntry_PR_ea).choice.ea;
+        if (!put_certificate(entry.eaCertificate, ea.certificate)) return std::nullopt;
+        set_url(entry.aaAccessPoint, ea.access_point);
+    }
+    for (const auto& aa : entries.aa) {
+        auto& entry = add(Vanetza_Security_CtlEntry_PR_aa).choice.aa;
+        if (!put_certificate(entry.aaCertificate, aa.certificate)) return std::nullopt;
+        set_url(entry.accessPoint, aa.access_point);
+    }
+    for (const auto& dc : entries.dc) {
+        auto& entry = add(Vanetza_Security_CtlEntry_PR_dc).choice.dc;
+        set_url(entry.url, dc.url);
+        for (const auto& id : dc.certificates) {
+            auto* item = vanetza::asn1::allocate<Vanetza_Security_HashedId8_t>();
+            set_hashed_id8(*item, id);
+            ASN_SEQUENCE_ADD(&entry.cert, item);
+        }
+    }
+    if (!mgmt.validate()) return std::nullopt;
+    return sign_list(backend, now, rca, rca_key, aid::CTL, mgmt.encode());
+}
+
+std::optional<ByteBuffer> build_crl(Backend& backend, Clock::time_point now, const Certificate& rca, const PrivateKey& rca_key,
+                                    const std::vector<HashedId8>& revoked, Time32 this_update, Time32 next_update) {
+    vanetza::asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs102941Data> mgmt(asn_DEF_Vanetza_Security_EtsiTs102941Data);
+    mgmt->version = Vanetza_Security_Version_v1;
+    mgmt->content.present = Vanetza_Security_EtsiTs102941DataContent_PR_certificateRevocationList;
+    auto& crl = mgmt->content.choice.certificateRevocationList;
+    crl.version = 1;
+    crl.thisUpdate = this_update;
+    crl.nextUpdate = next_update;
+    for (const auto& id : revoked) {
+        auto* entry = vanetza::asn1::allocate<Vanetza_Security_CrlEntry_t>();
+        set_hashed_id8(*entry, id);
+        ASN_SEQUENCE_ADD(&crl.entries, entry);
+    }
+    if (!mgmt.validate()) return std::nullopt;
+    return sign_list(backend, now, rca, rca_key, aid::CRL, mgmt.encode());
+}
+
+std::optional<RcaTrustList> parse_rca_ctl(Backend& backend, const ByteBuffer& message, const Certificate& rca) {
+    const auto mgmt_bytes = open_list(backend, message, rca, aid::CTL);
+    if (!mgmt_bytes) return std::nullopt;
+    vanetza::asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs102941Data> mgmt(asn_DEF_Vanetza_Security_EtsiTs102941Data);
+    if (!mgmt.decode(*mgmt_bytes) || mgmt->version != Vanetza_Security_Version_v1 ||
+        mgmt->content.present != Vanetza_Security_EtsiTs102941DataContent_PR_certificateTrustListRca) return std::nullopt;
+    const auto& ctl = mgmt->content.choice.certificateTrustListRca;
+    if (ctl.version != 1 || ctl.ctlSequence < 0 || ctl.ctlSequence > 255) return std::nullopt;
+    RcaTrustList list;
+    list.sequence = static_cast<std::uint8_t>(ctl.ctlSequence);
+    list.next_update = static_cast<Time32>(ctl.nextUpdate);
+    list.full = ctl.isFullCtl != 0;
+    const auto rca_digest = rca.calculate_digest();
+    if (!rca_digest) return std::nullopt;
+    const auto issued_by_rca = [&](const Vanetza_Security_EtsiTs103097Certificate_t& raw, Certificate& out) {
+        out = Certificate(raw);
+        const auto issuer = out.issuer_digest();
+        return issuer && *issuer == *rca_digest && out.is_ca_certificate() &&
+               vanetza_idf::security::verify_certificate_signature(backend, out, &rca);
+    };
+    for (int i = 0; i < ctl.ctlCommands.list.count; ++i) {
+        const auto* command = ctl.ctlCommands.list.array[i];
+        if (!command) return std::nullopt;
+        if (command->present == Vanetza_Security_CtlCommand_PR_add) {
+            const auto& entry = command->choice.add;
+            Certificate certificate;
+            switch (entry.present) {
+                case Vanetza_Security_CtlEntry_PR_ea:
+                    if (!issued_by_rca(entry.choice.ea.eaCertificate, certificate)) return std::nullopt;
+                    list.ea.push_back(std::move(certificate));
+                    break;
+                case Vanetza_Security_CtlEntry_PR_aa:
+                    if (!issued_by_rca(entry.choice.aa.aaCertificate, certificate)) return std::nullopt;
+                    list.aa.push_back(std::move(certificate));
+                    break;
+                case Vanetza_Security_CtlEntry_PR_dc: {
+                    TrustListEntries::DistributionCentre dc;
+                    dc.url = get_url(entry.choice.dc.url);
+                    for (int k = 0; k < entry.choice.dc.cert.list.count; ++k) {
+                        const auto id = entry.choice.dc.cert.list.array[k] ? get_hashed_id8(*entry.choice.dc.cert.list.array[k]) : std::nullopt;
+                        if (!id) return std::nullopt;
+                        dc.certificates.push_back(*id);
+                    }
+                    list.dc.push_back(std::move(dc));
+                    break;
+                }
+                default:
+                    return std::nullopt; // clause 6.3.2: an RCA CTL carries no RCA or TLM entries
+            }
+        } else if (command->present == Vanetza_Security_CtlCommand_PR_delete) {
+            if (list.full) return std::nullopt; // clause 6.3.4: a FullCtl has add commands only
+            const auto& del = command->choice.Delete;
+            if (del.present == Vanetza_Security_CtlDelete_PR_cert) {
+                const auto id = get_hashed_id8(del.choice.cert);
+                if (!id) return std::nullopt;
+                list.deleted.push_back(*id);
+            } else if (del.present == Vanetza_Security_CtlDelete_PR_dc) {
+                list.deleted_dc.push_back(get_url(del.choice.dc));
+            } else {
+                return std::nullopt;
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
+    return list;
+}
+
+std::optional<RevocationList> parse_crl(Backend& backend, const ByteBuffer& message, const Certificate& rca) {
+    const auto mgmt_bytes = open_list(backend, message, rca, aid::CRL);
+    if (!mgmt_bytes) return std::nullopt;
+    vanetza::asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs102941Data> mgmt(asn_DEF_Vanetza_Security_EtsiTs102941Data);
+    if (!mgmt.decode(*mgmt_bytes) || mgmt->version != Vanetza_Security_Version_v1 ||
+        mgmt->content.present != Vanetza_Security_EtsiTs102941DataContent_PR_certificateRevocationList) return std::nullopt;
+    const auto& crl = mgmt->content.choice.certificateRevocationList;
+    if (crl.version != 1) return std::nullopt;
+    RevocationList list;
+    list.this_update = static_cast<Time32>(crl.thisUpdate);
+    list.next_update = static_cast<Time32>(crl.nextUpdate);
+    for (int i = 0; i < crl.entries.list.count; ++i) {
+        const auto id = crl.entries.list.array[i] ? get_hashed_id8(*crl.entries.list.array[i]) : std::nullopt;
+        if (!id) return std::nullopt;
+        list.revoked.push_back(*id);
+    }
+    return list;
+}
+
+std::size_t apply(const RcaTrustList& list, vanetza_idf::security::TrustConfiguration& trust) {
+    std::size_t added = 0;
+    for (const auto* entries : {&list.ea, &list.aa}) {
+        for (const auto& certificate : *entries) {
+            if (trust.add_authority(certificate) == Result::accepted) ++added;
+        }
+    }
+    return added;
+}
+
+std::size_t apply(const RevocationList& list, const Certificate& rca, vanetza_idf::security::TrustConfiguration& trust) {
+    const auto issuer = rca.calculate_digest();
+    if (!issuer) return 0;
+    trust.clear_revocations(*issuer);
+    for (const auto& id : list.revoked) trust.revoke(*issuer, id);
+    return list.revoked.size();
 }
 
 } // namespace vanetza_idf::pki

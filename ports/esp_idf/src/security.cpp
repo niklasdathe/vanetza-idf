@@ -136,9 +136,20 @@ Result TrustConfiguration::add_authority(const ByteBuffer& coer) {
 Result TrustConfiguration::add_authority(const Certificate& certificate) {
     // TS 103 097 clause 7.2.4: issued by digest, carries certIssuePermissions.
     if (certificate.issuer_is_self() || !certificate.is_ca_certificate()) return Result::invalid_argument;
+    const auto digest = certificate.calculate_digest();
+    if (!digest) return Result::invalid_argument;
+    if (issuers_.find_issuer(*digest)) return Result::rejected; // already known (a CTL applied twice)
     if (!issuers_.insert(certificate)) return Result::invalid_argument;
     authorities_.push_back(certificate);
     return Result::accepted;
+}
+
+void TrustConfiguration::revoke(const HashedId8& issuer, const HashedId8& certificate) {
+    revocations_.revoke(issuer, certificate);
+}
+
+void TrustConfiguration::clear_revocations(const HashedId8& issuer) {
+    revocations_.clear(issuer);
 }
 
 // ---- Certificate signatures and message profiles ----------------------------
@@ -645,6 +656,7 @@ public:
         validator.use_position_provider(&position);
         validator.use_location_checker(&location_checker);
         validator.use_trust_store(&tc.roots());
+        validator.use_revocation_lookup(&tc.revocations()); // TS 102 941 clause 6.3.6 CRL use
         location_checker.set_permissive_identified_region(verification.permissive_identified_region);
 #if VIDF_SECURITY_VERIFY
         validator.use_issuer_lookup(&issuers);
@@ -729,6 +741,7 @@ public:
             // itself, INCONSISTENT_CHAIN when the chain's permissions do not fit (IEEE 1609.2 5.1.2)
             confirm.report = VerificationReport::Invalid_Certificate;
             switch (verdict) {
+                case ChainValidator::Verdict::Revoked: confirm.report = VerificationReport::Revoked_Certificate; break;
                 case ChainValidator::Verdict::Expired: confirm.certificate_validity = CertificateInvalidReason::Off_Time_Period; break;
                 case ChainValidator::Verdict::Untrusted: confirm.certificate_validity = CertificateInvalidReason::Unknown_Signer; break;
                 case ChainValidator::Verdict::InconsistentChain:
