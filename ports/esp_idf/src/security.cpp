@@ -1,3 +1,4 @@
+#include <esp_log.h>
 #include <vanetza_idf/security.hpp>
 #include <vanetza/asn1/asn1c_wrapper.hpp>
 #include <vanetza/security/encap_service.hpp>
@@ -840,10 +841,15 @@ EncapConfirm SecurityEntity::encapsulate_packet(EncapRequest&& request) {
     }
     try {
         auto confirm = dispatch(std::move(request), &impl_->sign_service);
-        if (confirm.secured_message()) ++stats.signed_messages;
-        else ++stats.refused_permission; // validator verdict != Valid for this ITS-AID
+        if (confirm.secured_message()) {
+            ++stats.signed_messages;
+        } else {
+            ESP_LOGE("sec_entity", "refused_permission");
+            ++stats.refused_permission; // validator verdict != Valid for this ITS-AID
+        }
         return confirm;
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
+        ESP_LOGE("sec_entity", "signing exception: %s", e.what());
         ++stats.failed;
         return EncapConfirm::from(SignConfirm::failure(SignConfirmError::Unspecified));
     }
