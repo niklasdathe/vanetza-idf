@@ -8,6 +8,10 @@
 #include <vanetza/dcc/interface.hpp>
 #include <vanetza/dcc/mapping.hpp>
 #include <vanetza/dcc/data_request.hpp>
+#include <vanetza/geonet/cbr_aggregator.hpp>
+#include <vanetza/geonet/dcc_field_generator.hpp>
+#include <vanetza/geonet/dcc_mco_field.hpp>
+#include <vanetza/geonet/location_table.hpp>
 #include <vanetza/geonet/router.hpp>
 #include <vanetza/geonet/transport_interface.hpp>
 #include <vanetza/net/packet.hpp>
@@ -15,6 +19,7 @@
 #include <vanetza/common/byte_view.hpp>
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <stdexcept>
 #include <utility>
 
@@ -29,6 +34,61 @@ StackConfig::StackConfig() {
     mib.itsGnSecurity = true;
 }
 
+namespace {
+
+// Network-layer DCC_NET (TS 103 836-4-2 clauses 5, 6.2-6.3, 7.2; FUN-DCC-004, SYS-DCC-003).
+// Drives the vendored CbrAggregator/DccMcoField directly rather than constructing the vendored
+// DccInformationSharing convenience wrapper: that wrapper filters neighbour LocTEX_G5 entries by
+// "updated since our own last ~100 ms trigger" instead of the standard's absolute 1 000 ms
+// freshness window (EXT-ETSI-TS103836-4-2-C5-3-GCBR), which would incorrectly expire neighbours
+// whose own VAM cadence (up to T_GenVamMax = 5000 ms) is slower than our own polling interval.
+class DccNet : public gn::DccFieldGenerator {
+public:
+    // initial_delay randomises the first trigger within one interval (the standard's "randomly
+    // offset 100 ms trigger") so co-located stations built at the same instant do not all poll
+    // their location tables in lockstep.
+    DccNet(vanetza::Runtime& rt, const gn::LocationTable& lt, dcc::ChannelLoad target, UnitInterval initial_delay) :
+        runtime_(rt), location_table_(lt), target_(target),
+        next_trigger_(rt.now() + std::chrono::duration_cast<Clock::duration>(kInterval * initial_delay.value()))
+    {
+    }
+
+    gn::DccField generate_dcc_field() override {
+        gn::DccMcoField field;
+        field.local_cbr(aggregator_.get_local_cbr());
+        field.neighbour_cbr(aggregator_.get_one_hop_cbr());
+        field.output_power(tx_power_dbm_);
+        return field;
+    }
+
+    void update_local_cbr(dcc::ChannelLoad cbr) { local_cbr_ = cbr; }
+    void set_tx_power(unsigned dbm) { tx_power_dbm_ = dbm; }
+
+    // Runs the 100 ms trigger if due (cheap no-op otherwise); returns the freshly aggregated
+    // CBR_G when it ran, for DCC_CROSS delivery to the access-layer DCC algorithm (SYS-DCC-001).
+    boost::optional<dcc::ChannelLoad> tick() {
+        const auto now = runtime_.now();
+        if (now < next_trigger_) return boost::none;
+        aggregator_.aggregate(local_cbr_, location_table_, now - kLifetime, target_);
+        next_trigger_ = now + kInterval;
+        return aggregator_.get_global_cbr();
+    }
+
+private:
+    static constexpr Clock::duration kInterval = std::chrono::milliseconds(100);
+    static constexpr Clock::duration kLifetime = std::chrono::milliseconds(1000);
+
+    vanetza::Runtime& runtime_;
+    const gn::LocationTable& location_table_;
+    const dcc::ChannelLoad target_;
+    dcc::ChannelLoad local_cbr_;
+    unsigned tx_power_dbm_ = 0;
+    gn::CbrAggregator aggregator_;
+    Clock::time_point next_trigger_;
+};
+
+} // namespace
+
 class Stack::Impl : public dcc::RequestInterface, public gn::TransportInterface {
 public:
     StackConfig cfg;
@@ -37,6 +97,10 @@ public:
     vanetza::security::SecurityEntity* security;
     security::IdChangeService* id_change;
     gn::Router router;
+    // Declared after router: DccNet's constructor reads router.get_location_table(), which must
+    // already be initialised (member init order follows declaration order, not the init list).
+    DccNet dcc_net;
+    std::function<void(dcc::ChannelLoad)> dcc_net_report;
     Receive receive;
     ReceiveGn receive_gn;
     Report report;
@@ -46,9 +110,15 @@ public:
 
     Impl(StackConfig c, ManualRuntime& rt, Access& al, vanetza::security::SecurityEntity* sec,
          security::IdChangeService* ids) :
-        cfg(std::move(c)), runtime(rt), access(al), security(sec), id_change(ids), router(rt, cfg.mib) {
+        cfg(std::move(c)), runtime(rt), access(al), security(sec), id_change(ids), router(rt, cfg.mib),
+        // SYS-DCC-001/SYS-DCC-003: 0.62 is the target shared by DCC_NET and the access-layer
+        // Adaptive (LIMERIC) algorithm, per DEC-DCC-001.
+        dcc_net(rt, router.get_location_table(), dcc::ChannelLoad { 0.62 },
+                UnitInterval { static_cast<double>(std::rand()) / RAND_MAX }) {
         router.set_access_interface(this);
         router.set_security_entity(sec);
+        router.set_dcc_field_generator(&dcc_net);
+        dcc_net.set_tx_power(static_cast<unsigned>(std::lround(cfg.radio_parameters.transmit_power_dbm)));
         // MIB.itsGnLocalGnAddr is otherwise inert: Router::update_position only
         // touches timestamp/latitude/longitude/speed/heading, never the address,
         // and the router's own m_local_position_vector.gn_addr starts at
@@ -121,6 +191,7 @@ public:
         // DCC profile to IEEE 802.1D priority: upstream TS 102 687 mapping.
         // DCC enforcement belongs to the injected Access adapter; no fake CBR.
         out.priority = access::user_priority(dcc::map_profile_onto_ac(req.dcc_profile));
+        out.dcc_profile = req.dcc_profile; // preserve the profile itself for that adapter's own DCC gate
         const auto view = create_byte_view(*packet, OsiLayer::Network, max_osi_layer());
         out.data.assign(view.begin(), view.end());
         auto result = validate(out, cfg.maximum_gnpdu);
@@ -187,10 +258,17 @@ Result Stack::set_address(const gn::Address& address) {
 void Stack::on_receive(Receive receive) { impl_->receive = std::move(receive); }
 void Stack::on_receive_gn(ReceiveGn receive) { impl_->receive_gn = std::move(receive); }
 void Stack::on_access_result(Report report) { impl_->report = std::move(report); }
+void Stack::update_local_channel_load(dcc::ChannelLoad cbr) { impl_->dcc_net.update_local_cbr(cbr); }
+void Stack::on_global_channel_load(GlobalChannelLoad report) { impl_->dcc_net_report = std::move(report); }
 
 Result Stack::advance(Clock::time_point time) {
     if (time < impl_->runtime.now()) return Result::time_regression;
     impl_->runtime.trigger(time);
+    // DCC_NET's own 100 ms trigger (TS 103 836-4-2 clause 5.3): runs at most once per call, a
+    // no-op otherwise, so calling this every Station::tick() is cheap.
+    if (auto cbr_g = impl_->dcc_net.tick()) {
+        if (impl_->dcc_net_report) impl_->dcc_net_report(*cbr_g);
+    }
     return Result::accepted;
 }
 Result Stack::update_position(const PositionFix& fix) {

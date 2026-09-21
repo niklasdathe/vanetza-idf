@@ -3,6 +3,7 @@
 #include <vanetza_idf/id_change.hpp>
 #include <vanetza/common/manual_runtime.hpp>
 #include <vanetza/common/position_fix.hpp>
+#include <vanetza/dcc/channel_load.hpp>
 #include <vanetza/geonet/data_request.hpp>
 #include <vanetza/geonet/data_indication.hpp>
 #include <vanetza/geonet/data_confirm.hpp>
@@ -117,6 +118,7 @@ public:
     using Receive = std::function<void(BtpIndication)>;
     using ReceiveGn = std::function<void(GnIndication)>;
     using Report = std::function<void(Result)>;
+    using GlobalChannelLoad = std::function<void(vanetza::dcc::ChannelLoad)>;
     /** id_change may be omitted: when security is a vanetza_idf::security::SecurityEntity
      * its own identifier-change service is used. */
     Stack(StackConfig, vanetza::ManualRuntime&, Access&,
@@ -133,6 +135,14 @@ public:
     void on_receive(Receive);
     void on_receive_gn(ReceiveGn);
     void on_access_result(Report);
+    /// SYS-DCC-002/FUN-DCC-004: feed this station's own measured local channel busy ratio (LCBR)
+    /// into DCC_NET's 100 ms aggregation cycle (TS 103 836-4-2 clause 5.3). Safe to call at any
+    /// rate; DCC_NET only reads the latest value when its own trigger fires (see advance()).
+    void update_local_channel_load(vanetza::dcc::ChannelLoad);
+    /// Called once per DCC_NET trigger (~100 ms, inside advance()) with the newly aggregated
+    /// CBR_G (max of previous local/one-hop/two-hop CBR) -- the value DCC_CROSS passes on to the
+    /// access-layer Adaptive DCC algorithm (SYS-DCC-001).
+    void on_global_channel_load(GlobalChannelLoad);
     const StackConfig& config() const;
     /// the identifier-change service this stack subscribed to, nullptr without one
     security::IdChangeService* id_change();

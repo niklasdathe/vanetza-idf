@@ -1,5 +1,6 @@
 #pragma once
 #include <vanetza/common/byte_buffer.hpp>
+#include <vanetza/dcc/profile.hpp>
 #include <vanetza/net/mac_address.hpp>
 #include <cstdint>
 #include <optional>
@@ -35,6 +36,11 @@ struct AlDataRequest {
     std::uint8_t transceiver_id = 0;
     std::optional<std::uint8_t> transceiver_mode;
     std::optional<std::uint32_t> datastream_id;
+    // DCC profile assigned by GeoNetworking's dcc::RequestInterface::request() (TS 102 687).
+    // That call site performs no DCC enforcement itself (see stack.cpp); this field only carries
+    // the profile through to the Access adapter, which is where enforcement belongs. Requests
+    // built outside that path (e.g. the software lower tester's test_gn_request) keep the default.
+    vanetza::dcc::Profile dcc_profile = vanetza::dcc::Profile::DP2;
     vanetza::ByteBuffer data;
 };
 
