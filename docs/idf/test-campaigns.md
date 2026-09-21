@@ -310,5 +310,12 @@ independent receive observations; 6 stops the radio. These hooks can support an
 external access test adapter. They do not themselves produce ETSI verdicts.
 
 A matched frame establishes that particular reception. It cannot establish
-spectral mask, frequency accuracy, receiver sensitivity, EIRP, congestion
-control behavior or complete ITS-G5 compliance.
+receiver sensitivity, EIRP, congestion control behavior or complete ITS-G5
+compliance. Spectral mask and carrier frequency accuracy are covered
+separately by the SYS-RF-001 characterization campaign
+(`experiments/evidence/c5-radio-characterization` in the thesis workspace,
+HackRF One/PortaPack against ETSI EN 302 571 V2.1.1 clause 4.2.1 and Table 6):
+carrier frequency offset is generally within the +-20 ppm limit, but the
+transmitted spectral mask fails Table 6 in every tested bench configuration
+and MCS rate (0/22 captures per run across three configurations) — this is
+disclosed as a measured non-conformance, not a passing result.

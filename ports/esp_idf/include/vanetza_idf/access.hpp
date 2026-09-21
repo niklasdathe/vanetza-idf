@@ -2,7 +2,12 @@
 #include <vanetza/common/byte_buffer.hpp>
 #include <vanetza/net/mac_address.hpp>
 #include <cstdint>
+#include <memory>
 #include <optional>
+#if VIDF_NETWORK
+#include <vanetza/common/runtime.hpp>
+#include <vanetza/dcc/channel_load.hpp>
+#endif
 
 namespace vanetza_idf {
 
@@ -65,12 +70,53 @@ public:
 
 Result validate(const AlDataRequest&, std::size_t maximum_gnpdu);
 
-/** Access profile has no BTP/GN state and preserves the AL_DATA parameters. */
+/** Access profile has no BTP/GN state and preserves the AL_DATA parameters.
+ *
+ * On a VIDF_NETWORK build, optionally runs DCC_ACC (TS 102 687 V1.2.1 clause 5.4 Adaptive
+ * approach, gated by the Annex B budget/gate-keeper) in front of the backend, per
+ * SYS-DCC-001/GAP-DCC-001. Disabled by default so existing callers (host tests, other
+ * applications) are unaffected; the ESP32-C5 firmware enables it once it has a real CBR
+ * source (SYS-DCC-002). The DCC methods below do not exist on an access-only build (no
+ * VIDF_NETWORK): the Adaptive approach lives in vanetza/dcc, which that configuration does
+ * not compile, matching the documented access-only deployment (docs/idf/conformance.md).
+ */
 class AccessStack {
 public:
     explicit AccessStack(Access& access, std::size_t maximum_gnpdu = 4096);
+    ~AccessStack();
+    AccessStack(const AccessStack&) = delete;
+    AccessStack& operator=(const AccessStack&) = delete;
+
+#if VIDF_NETWORK
+    /** Enable the Adaptive DCC_ACC gate. cbr_target defaults to TS 103 836-4-2's
+     * itsGNCBRTarget = 0.62, the value the project's SYS-DCC-001/002/003 use consistently
+     * (not TS 102 687 Table 3's older, superseded 0.68 default).
+     * runtime must outlive this AccessStack and must be the same Runtime driving the caller's
+     * periodic advance()/trigger() (e.g. the Stack's ManualRuntime), since the Adaptive approach
+     * reschedules itself every 200 ms of that runtime's own clock.
+     * Call once, before the first request().
+     */
+    void enable_dcc(vanetza::Runtime& runtime, vanetza::dcc::ChannelLoad cbr_target = vanetza::dcc::ChannelLoad(0.62));
+
+    /** Feed the latest channel-busy-ratio measurement at roughly the T_Cbr cadence (100 ms):
+     * local LCBR (SYS-DCC-002), or CBR_G when a Release-2 DCC_NET has one available
+     * (SYS-DCC-001: "consume Release-2 CBR_G when available, otherwise LCBR"). No-op unless
+     * enable_dcc was called.
+     */
+    void report_channel_load(vanetza::dcc::ChannelLoad);
+
+    /** Permitted duty cycle (delta) from the last periodic Adaptive-approach update.
+     * Returns UnitInterval(1.0) (unrestricted) when DCC is not enabled.
+     */
+    vanetza::UnitInterval permitted_duty_cycle() const;
+#endif
+
     Result request(AlDataRequest);
 private:
+#if VIDF_NETWORK
+    class Dcc;
+    std::unique_ptr<Dcc> dcc_;
+#endif
     Access& access_;
     std::size_t maximum_gnpdu_;
 };

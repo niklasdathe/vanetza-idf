@@ -18,13 +18,12 @@ namespace geonet
 class LocationTable;
 
 /**
- * DccInformationSharing realises the DCC_net behaviour for ITS-G5
- * \see TS 102 636-4-2 V1.1.1
- *
- * CBR_target mentioned in TS 102 636-4-2 V1.1.1 is probably the same constant as
- * NDL_maxChannelUse mentioned in TS 102 687 V1.1.1. However, no value is given:
- * Table A.3 in TS 102 687 declares them (implicitly through NDL_tmPacketArrivalrate) "n.a.".
- * Thus, we simply assume CBR_target = NDL_maxChannelUse = NDL_maxChannelLoad.
+ * DccInformationSharing realises the DCC_NET behaviour for ITS-G5, originally specified by
+ * TS 102 636-4-2 V1.1.1 and carried forward by TS 103 836-4-2 V2.1.1 clauses 5.3-5.4
+ * (Release 2; the CBR_G algorithm and trigger cadence implemented here match the current
+ * text step-for-step). CBR_target corresponds to the Release-2 protocol constant
+ * itsGNCBRTarget (TS 103 836-4-2 V2.1.1 Annex A: 0,62), which supersedes the value this
+ * class's original author had to guess at from TS 102 687's undefined NDL_maxChannelUse.
  */
 class DccInformationSharing : public DccFieldGenerator
 {

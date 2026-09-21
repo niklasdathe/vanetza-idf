@@ -209,7 +209,7 @@ elseif(VIDF_TESTS)
     enable_testing()
     add_executable(vidf_tests tests/test_main.cpp tests/test_its_time.cpp)
     if(VIDF_NETWORK)
-        target_sources(vidf_tests PRIVATE tests/test_management.cpp)
+        target_sources(vidf_tests PRIVATE tests/test_management.cpp tests/test_dcc.cpp tests/test_dcc_net.cpp)
     endif()
     if(VIDF_SECURITY)
         target_sources(vidf_tests PRIVATE tests/test_security.cpp tests/test_backend_kat.cpp

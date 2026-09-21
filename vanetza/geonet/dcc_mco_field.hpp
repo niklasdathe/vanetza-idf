@@ -11,7 +11,11 @@ namespace geonet
 {
 
 /**
- * DCC-MCO (Multi Channel Operations) is specified in TS 102 636-4-2 V1.1.1
+ * DCC-MCO (Multi Channel Operations) was introduced by TS 102 636-4-2 V1.1.1 and is carried
+ * forward unchanged by TS 103 836-4-2 V2.1.1 clause 6.3.3 Table 3 (Release 2): Octet 40
+ * CBR_L_0_Hop = floor(CBR_L_0_Hop x 255), Octet 41 CBR_L_1_Hop likewise, Octet 42 bits 0-4 TX
+ * power [0;31] dBm, Octet 43 reserved. This field layout was cross-checked bit-for-bit against
+ * the current V2.1.1 text; only this docstring's citation was stale.
  * DccMcoField implements the SHB header field extension.
  */
 class DccMcoField

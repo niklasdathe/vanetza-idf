@@ -20,6 +20,8 @@
 void test_its_time();
 #if VIDF_NETWORK
 void test_management();
+void test_dcc();
+void test_dcc_net();
 #endif
 #if VIDF_SECURITY
 void test_crypto_backend_known_answers();
@@ -279,6 +281,8 @@ int main() {
 #endif
 #if VIDF_NETWORK
         test_management();
+        test_dcc();
+        test_dcc_net();
 #endif
         test_its_time();
 #if VIDF_SECURITY

@@ -14,7 +14,10 @@ class LocationTable;
 
 
 /**
- * CbrAggregator realises the CBR aggregration as specified by TS 102 636-4-2 V1.1.1, section 5.2.2
+ * CbrAggregator realises the CBR_G aggregation, originally specified by TS 102 636-4-2 V1.1.1
+ * section 5.2.2 and carried forward by TS 103 836-4-2 V2.1.1 clause 5.3 (Release 2; the
+ * five-step algorithm here, including using the previous cycle's local CBR in the final
+ * max(), matches the current text exactly).
  *
  * Since this algorithm relies mainly on location table entries it is placed in the geonet module.
  */

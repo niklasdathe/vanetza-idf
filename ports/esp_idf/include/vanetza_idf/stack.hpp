@@ -3,12 +3,14 @@
 #include <vanetza_idf/id_change.hpp>
 #include <vanetza/common/manual_runtime.hpp>
 #include <vanetza/common/position_fix.hpp>
+#include <vanetza/dcc/channel_load.hpp>
 #include <vanetza/geonet/data_request.hpp>
 #include <vanetza/geonet/data_indication.hpp>
 #include <vanetza/geonet/data_confirm.hpp>
 #include <vanetza/security/security_entity.hpp>
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace vanetza_idf {
 enum class BtpType { a, b };
@@ -146,6 +148,24 @@ public:
      * (MN_SAP::CORE_MMT_response_apply). Result::unsupported with Auto (10.2.1.2) or
      * Anonymous (10.2.1.4) configuration, identity_change_pending during a change. */
     Result set_address(const vanetza::geonet::Address&);
+
+    /** Release-2 DCC_NET (TS 103 836-4-2 V2.1.1 clauses 5, 6.2, 6.3.3, 7.2; SYS-DCC-003).
+     * Always active for this ITS-G5-only Stack: outgoing SHB packets carry a real DCC-MCO
+     * field (local/one-hop CBR, TX power) instead of the upstream NullDccFieldGenerator's
+     * reserved zero field, and every received SHB packet's DCC-MCO updates LocTEX-G5
+     * (already unconditional in the upstream router once itsGnIfType is ITS_G5, which this
+     * Stack requires). report_local_channel_load feeds DCC_NET's own CBR_G calculation
+     * (clause 5.3); it is independent of AccessStack::report_channel_load (DCC_ACC), which
+     * the caller should feed with global_channel_busy_ratio() when available, else the same
+     * local measurement (SYS-DCC-001: "consume Release-2 CBR_G when available, otherwise
+     * LCBR").
+     */
+    void report_local_channel_load(vanetza::dcc::ChannelLoad);
+    /// EIRP of the station's own transmissions, for the outgoing DCC-MCO field's TX-power octet.
+    void report_tx_power(unsigned dbm);
+    /** CBR_G (TS 103 836-4-2 clause 5.3), once at least one 100 ms aggregation cycle has run;
+     * std::nullopt beforehand (no neighbour data collected yet). */
+    std::optional<vanetza::dcc::ChannelLoad> global_channel_busy_ratio() const;
 private:
     class Impl;
     std::unique_ptr<Impl> impl_;

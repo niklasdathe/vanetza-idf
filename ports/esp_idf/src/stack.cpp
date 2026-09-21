@@ -8,6 +8,7 @@
 #include <vanetza/dcc/interface.hpp>
 #include <vanetza/dcc/mapping.hpp>
 #include <vanetza/dcc/data_request.hpp>
+#include <vanetza/geonet/dcc_information_sharing.hpp>
 #include <vanetza/geonet/router.hpp>
 #include <vanetza/geonet/transport_interface.hpp>
 #include <vanetza/net/packet.hpp>
@@ -37,6 +38,10 @@ public:
     vanetza::security::SecurityEntity* security;
     security::IdChangeService* id_change;
     gn::Router router;
+    // SYS-DCC-003 / GAP-DCC-001: Release-2 DCC_NET. Declared after router: it holds a
+    // reference to router's location table, which must already be constructed.
+    gn::DccInformationSharing dcc_information_sharing;
+    std::optional<dcc::ChannelLoad> global_cbr;
     Receive receive;
     ReceiveGn receive_gn;
     Report report;
@@ -46,9 +51,20 @@ public:
 
     Impl(StackConfig c, ManualRuntime& rt, Access& al, vanetza::security::SecurityEntity* sec,
          security::IdChangeService* ids) :
-        cfg(std::move(c)), runtime(rt), access(al), security(sec), id_change(ids), router(rt, cfg.mib) {
+        cfg(std::move(c)), runtime(rt), access(al), security(sec), id_change(ids), router(rt, cfg.mib),
+        // TS 103 836-4-2 clause 5.3: "all ITS-S shall start with a random time offset" so that
+        // stations do not all recompute CBR_G in lockstep. No RNG dependency (host and ESP-IDF
+        // newlib without configured hardware entropy behave differently): the station's own
+        // startup time already differs from its neighbours', so its microsecond-level position
+        // within the 100 ms trigger interval (itsGNCBRGTriggerInterval) serves as that offset.
+        dcc_information_sharing(rt, router.get_location_table(), dcc::ChannelLoad(0.62),
+            UnitInterval(double(rt.now().time_since_epoch().count() % 100000) / 100000.0)) {
         router.set_access_interface(this);
         router.set_security_entity(sec);
+        router.set_dcc_field_generator(&dcc_information_sharing);
+        dcc_information_sharing.on_global_cbr_update = [this](const gn::CbrAggregator& agg) {
+            global_cbr = agg.get_global_cbr();
+        };
         // MIB.itsGnLocalGnAddr is otherwise inert: Router::update_position only
         // touches timestamp/latitude/longitude/speed/heading, never the address,
         // and the router's own m_local_position_vector.gn_addr starts at
@@ -187,6 +203,9 @@ Result Stack::set_address(const gn::Address& address) {
 void Stack::on_receive(Receive receive) { impl_->receive = std::move(receive); }
 void Stack::on_receive_gn(ReceiveGn receive) { impl_->receive_gn = std::move(receive); }
 void Stack::on_access_result(Report report) { impl_->report = std::move(report); }
+void Stack::report_local_channel_load(dcc::ChannelLoad load) { impl_->dcc_information_sharing.update_local_cbr(load); }
+void Stack::report_tx_power(unsigned dbm) { impl_->dcc_information_sharing.set_tx_power(dbm); }
+std::optional<dcc::ChannelLoad> Stack::global_channel_busy_ratio() const { return impl_->global_cbr; }
 
 Result Stack::advance(Clock::time_point time) {
     if (time < impl_->runtime.now()) return Result::time_regression;
