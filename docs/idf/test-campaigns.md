@@ -233,6 +233,41 @@ independent consumer: with `ctl/root-<HASHEDID8>.oer` and a
 `root-<HASHEDID8>.json` naming the DC it fetches, validates and extracts the
 AA certificates (retained run: `docs/idf/evidence/trust-lists-01`).
 
+### Enrolment and authorization on localhost (EA/AA)
+
+TS 102 941 V2.2.1 clause 6.2.3: an EC from the EA, then an AT from the AA
+(which validates the EC's entitlement with the EA). `pki.hpp` builds and
+parses every message; the HTTP transport between two separate processes is
+the test tools' job, the same division of labour as the DC above:
+
+```sh
+vidf_issue root      --key root.pem --name "lab root" --id ROOT --out chain
+vidf_issue authority --issuer chain/ROOT.oer --issuer-key root.pem --name "lab EA" --id EA --out chain
+vidf_issue authority --issuer chain/ROOT.oer --issuer-key root.pem --name "lab AA" --id AA --out chain
+# authority also writes <id>.ekey: the ECIES private key needed to decrypt real requests
+
+python3 ports/esp_idf/tools/local_pki.py --issue-tool build/vidf_issue \
+    --ea chain/EA.oer --ea-key chain/EA.vkey --ea-enc-key chain/EA.ekey --canonical-key canonical.pem \
+    --aa chain/AA.oer --aa-key chain/AA.vkey --aa-enc-key chain/AA.ekey \
+    --dir issued --port 8090          # POST /ea/enrolment, POST /aa/authorization
+
+python3 ports/esp_idf/tools/pki_client.py --issue-tool build/vidf_issue --pki http://127.0.0.1:8090/ enrol \
+    --ea chain/EA.oer --canonical-key canonical.pem --its-id my-station --out EC.oer --out-key EC.vkey
+python3 ports/esp_idf/tools/pki_client.py --issue-tool build/vidf_issue --pki http://127.0.0.1:8090/ authorize \
+    --ea chain/EA.oer --aa chain/AA.oer --ec EC.oer --ec-key EC.vkey --out AT.oer --out-key AT.vkey
+
+vidf_issue verify EC.oer chain/EA.oer chain/ROOT.oer
+vidf_issue verify AT.oer chain/AA.oer chain/ROOT.oer
+```
+
+`--canonical-key` on both the client and `local_pki.py`/`ea-respond` side is
+the same private key file: a lab stand-in for the manufacturer's out-of-band
+canonical-key registry a real EA consults, not something this tool invents.
+`ea-respond`/`aa-respond` are a lab authority (decrypt, verify, issue, sign,
+encrypt with the same building blocks the ITS-S side already uses), not a
+production PKI: no replay protection, no butterfly keys, no revocation.
+Retained run: `docs/idf/evidence/enrolment-authorization-01`.
+
 ### Independent verification of signed frames
 
 `ports/esp_idf/tools/capture_pcap.py` drives `vidf_sut` with such a pool,

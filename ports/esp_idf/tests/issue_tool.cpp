@@ -5,6 +5,8 @@
 //
 //   vidf_issue root      --key KEY --name NAME --id ID --out DIR [--start T] [--years N] [--like ROOT.oer]
 //   vidf_issue authority --issuer CERT.oer --issuer-key KEY --name NAME --id ID --out DIR [--start T] [--years N]
+//                                                       also writes <id>.ekey: the private half of the ECIES
+//                                                       encryption key embedded in the certificate (clause 7.2.4)
 //   vidf_issue ticket    --issuer AA.oer --issuer-key KEY --id ID --out DIR [--start T] [--hours H]
 //                        [--permission PSID[:HEXSSP]]... [--region LAT,LON,RADIUS_M] [--root ROOT.oer]
 //   vidf_issue show      CERT.oer                       digest, validity, permissions, region
@@ -17,6 +19,29 @@
 //                                                       TS 102 941 clause 6.3.3 CertificateRevocationListMessage
 //   vidf_issue inspect   FILE --root ROOT.oer            read a CTL or CRL back as an ITS-S would (clause 6.3.6)
 //
+// TS 102 941 clause 6.2.3 enrolment/authorization, offline steps around a real HTTP
+// transport (ports/esp_idf/tools/local_pki.py / pki_client.py carry the bytes; nothing
+// here touches a network):
+//   vidf_issue enrol-request     --ea EA.oer --canonical-key KEY --its-id ID [--permission PSID[:HEXSSP]]...
+//                                --out REQUEST.bin --context CONTEXT.bin --out-key EC.vkey [--start T]
+//   vidf_issue enrol-response    --ea EA.oer --context CONTEXT.bin --response RESPONSE.bin --out EC.oer
+//   vidf_issue authorize-request --ea EA.oer --aa AA.oer --ec EC.oer --ec-key EC.vkey
+//                                [--permission PSID[:HEXSSP]]... [--hours H] [--start T]
+//                                --out REQUEST.bin --context CONTEXT.bin --out-key AT.vkey
+//   vidf_issue authorize-response --aa AA.oer --context CONTEXT.bin --response RESPONSE.bin --out AT.oer
+//   vidf_issue ea-respond  --ea EA.oer --ea-key KEY --ea-enc-key EA.ekey --request REQUEST.bin --out RESPONSE.bin
+//                          --dir DIR (--canonical-key KEY | --current-ec EC.oer) [--name NAME] [--years N] [--deny CODE]
+//                                                       issues an EC and stores it under DIR (index.lst) for aa-respond
+//   vidf_issue aa-respond  --aa AA.oer --aa-key KEY --aa-enc-key AA.ekey
+//                          --ea EA.oer --ea-key KEY --ea-enc-key EA.ekey
+//                          --ec-dir DIR --request REQUEST.bin --out RESPONSE.bin [--hours H] [--deny CODE]
+//                                                       validates entitlement (clause 6.2.3.3, "AA <-> EA")
+//                                                       against every EC ea-respond stored under --ec-dir
+// ea-respond/aa-respond are a lab authority, not a production PKI: --canonical-key is the
+// same private key file the enrolling station used (a real EA only ever sees the public
+// half, registered out of band; a lab tool run on the same machine is handed the file
+// directly), and there is no replay protection, no butterfly keys, no revocation.
+//
 // KEY is a PEM private key (OpenSSL reads it; an encrypted PEM prompts for the pass
 // phrase on the terminal, nothing is echoed or written) or a raw 32-octet .vkey file.
 // T is an ISO 8601 UTC instant (2026-09-14T12:00:00Z); the default start is one hour
@@ -27,12 +52,19 @@
 // rehearsal twin of a real root). Nothing is written when the result would not verify
 // as a consistent chain (the library's own rules).
 // Curves: NIST P-256 only. This is issuing for a lab or test environment, not a
-// certification authority: no CTL/CRL, no request/response protocol.
+// certification authority.
+#include "pki_authority.hpp"
 #include "test_trust_domain.hpp"
 #include "test_backend.hpp"
 #include <vanetza_idf/its_time.hpp>
 #include <vanetza_idf/security.hpp>
 #include <vanetza_idf/pki.hpp>
+#if VIDF_BACKEND_OPENSSL
+#include <vanetza_idf/ecies_openssl.hpp>
+#endif
+#if VIDF_BACKEND_MBEDTLS
+#include <vanetza_idf/ecies_mbedtls.hpp>
+#endif
 #include <vanetza/common/clock.hpp>
 #include <vanetza/security/v3/certificate.hpp>
 #include <openssl/bn.h>
@@ -46,6 +78,7 @@
 #include <iterator>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -292,12 +325,49 @@ std::string one(const Options& o, const char* name, const char* fallback = nullp
     if (fallback) return fallback;
     throw std::runtime_error(std::string("missing ") + name);
 }
+
+// --permission PSID[:HEXSSP]..., or a fallback set when none is given.
+vidf_test::TrustDomain::Permissions parse_permissions(const Options& options, vidf_test::TrustDomain::Permissions fallback) {
+    auto it = options.find("--permission");
+    if (it == options.end()) return fallback;
+    vidf_test::TrustDomain::Permissions permissions;
+    for (const auto& spec : it->second) {
+        const auto colon = spec.find(':');
+        permissions.emplace_back(static_cast<ItsAid>(std::stoul(spec.substr(0, colon))),
+                                 colon == std::string::npos ? ByteBuffer {} : from_hex(spec.substr(colon + 1)));
+    }
+    return permissions;
+}
+
+// The 32-octet RequestContext (clause 6.2.3.2.1/6.2.3.3.1: the AES key a response is
+// encrypted with, and the 16-octet request hash it must echo), carried between the
+// *-request and *-response steps as a small file.
+void write_context(const std::string& path, const vanetza_idf::pki::RequestContext& context) {
+    ByteBuffer bytes(context.aes_key.begin(), context.aes_key.end());
+    bytes.insert(bytes.end(), context.request_hash.begin(), context.request_hash.end());
+    write_file(path, bytes);
+}
+vanetza_idf::pki::RequestContext read_context(const std::string& path) {
+    const auto bytes = read_file(path);
+    if (bytes.size() != 32) throw std::runtime_error("a context file must hold 32 octets (16 AES key + 16 request hash)");
+    vanetza_idf::pki::RequestContext context;
+    std::copy(bytes.begin(), bytes.begin() + 16, context.aes_key.begin());
+    std::copy(bytes.begin() + 16, bytes.end(), context.request_hash.begin());
+    return context;
+}
+
+#if VIDF_BACKEND_OPENSSL
+using ToolEcies = vanetza_idf::pki::EciesOpenSsl;
+#else
+using ToolEcies = vanetza_idf::pki::EciesMbedTls;
+#endif
 } // namespace
 
 int main(int argc, char** argv) try {
     if (argc < 2) { std::fprintf(stderr, "usage: see the header of issue_tool.cpp\n"); return 2; }
     const std::string command = argv[1];
     vidf_test::TestBackend backend;
+    ToolEcies ecies;
     vidf_test::TrustDomain domain {backend, now()}; // the building blocks; its own generated chain is unused
     const Options options = parse(argc, argv, 2);
     if (command == "show") {
@@ -402,6 +472,164 @@ int main(int argc, char** argv) try {
         std::printf("%s\n", ok ? "chain verifies" : "chain does NOT verify");
         return ok ? 0 : 1;
     }
+    if (command == "enrol-request") {
+        const Certificate ea = load_certificate(one(options, "--ea"));
+        const auto canonical = load_key(one(options, "--canonical-key"), backend);
+        const std::string its_id_str = one(options, "--its-id");
+        vanetza_idf::pki::EnrolmentRequestParameters params;
+        params.its_id.assign(its_id_str.begin(), its_id_str.end());
+        const auto ec_key = ecies.generate_key(KeyType::NistP256);
+        params.verification_key = ec_key;
+        params.app_permissions = parse_permissions(options, {{aid::SCR, {0x01, 0xc0}}});
+        params.outer_signer_key = canonical.priv;
+        const Clock::time_point at = options.count("--start") ? parse_time(one(options, "--start")) : now();
+        ByteBuffer request;
+        vanetza_idf::pki::RequestContext context;
+        if (vanetza_idf::pki::build_enrolment_request(backend, ecies, at, params, ea, request, context) != vanetza_idf::Result::accepted)
+            throw std::runtime_error("EnrolmentRequest not built (missing EA encryptionKey or bad parameters)");
+        write_file(one(options, "--out"), request);
+        write_context(one(options, "--context"), context);
+        write_file(one(options, "--out-key"), ec_key.priv.key);
+        std::printf("EnrolmentRequest written: %zu octets -> %s\n", request.size(), one(options, "--out").c_str());
+        return 0;
+    }
+    if (command == "enrol-response") {
+        const Certificate ea = load_certificate(one(options, "--ea"));
+        const auto context = read_context(one(options, "--context"));
+        const ByteBuffer response = read_file(one(options, "--response"));
+        vanetza_idf::pki::EnrolmentResponse decoded;
+        if (vanetza_idf::pki::parse_enrolment_response(backend, ecies, context, ea, response, decoded) != vanetza_idf::Result::accepted)
+            throw std::runtime_error("EnrolmentResponse rejected (decrypt/signature/requestHash failure)");
+        if (decoded.response_code != 0 || !decoded.certificate)
+            throw std::runtime_error("EA declined the request, responseCode " + std::to_string(decoded.response_code));
+        write_file(one(options, "--out"), decoded.certificate->encode());
+        std::printf("EC written -> %s (HashedId8 %s)\n", one(options, "--out").c_str(), digest_hex(*decoded.certificate).c_str());
+        return 0;
+    }
+    if (command == "authorize-request") {
+        const Certificate ea = load_certificate(one(options, "--ea"));
+        const Certificate aa = load_certificate(one(options, "--aa"));
+        const Certificate ec = load_certificate(one(options, "--ec"));
+        const auto ec_key = load_key(one(options, "--ec-key"), backend).priv;
+        vanetza_idf::pki::AuthorizationRequestParameters params;
+        const auto at_key = ecies.generate_key(KeyType::NistP256);
+        params.verification_key = at_key;
+        params.app_permissions = parse_permissions(options, {{aid::CA, {0x01, 0xff, 0xfc}}, {aid::VRU, {0x01}}});
+        const unsigned hours = std::stoul(one(options, "--hours", "24"));
+        const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : default_start(&ec);
+        params.validity_period = std::make_pair(start, static_cast<std::uint16_t>(hours));
+        params.ec = &ec;
+        params.ec_key = ec_key;
+        ByteBuffer request;
+        vanetza_idf::pki::RequestContext context;
+        if (vanetza_idf::pki::build_authorization_request(backend, ecies, now(), params, ea, aa, request, context) != vanetza_idf::Result::accepted)
+            throw std::runtime_error("AuthorizationRequest not built");
+        write_file(one(options, "--out"), request);
+        write_context(one(options, "--context"), context);
+        write_file(one(options, "--out-key"), at_key.priv.key);
+        std::printf("AuthorizationRequest written: %zu octets -> %s\n", request.size(), one(options, "--out").c_str());
+        return 0;
+    }
+    if (command == "authorize-response") {
+        const Certificate aa = load_certificate(one(options, "--aa"));
+        const auto context = read_context(one(options, "--context"));
+        const ByteBuffer response = read_file(one(options, "--response"));
+        vanetza_idf::pki::AuthorizationResponse decoded;
+        if (vanetza_idf::pki::parse_authorization_response(backend, ecies, context, aa, response, decoded) != vanetza_idf::Result::accepted)
+            throw std::runtime_error("AuthorizationResponse rejected (decrypt/signature/requestHash failure)");
+        if (decoded.response_code != 0 || !decoded.certificate)
+            throw std::runtime_error("AA declined the request, responseCode " + std::to_string(decoded.response_code));
+        write_file(one(options, "--out"), decoded.certificate->encode());
+        std::printf("AT written -> %s (HashedId8 %s)\n", one(options, "--out").c_str(), digest_hex(*decoded.certificate).c_str());
+        return 0;
+    }
+    if (command == "ea-respond") {
+        vidf_test::Credential ea;
+        ea.certificate = load_certificate(one(options, "--ea"));
+        ea.key = load_key(one(options, "--ea-key"), backend).priv;
+        const auto ea_encryption_key = load_key(one(options, "--ea-enc-key"), backend).priv;
+        const bool has_canonical = options.count("--canonical-key") != 0;
+        const bool has_current_ec = options.count("--current-ec") != 0;
+        if (has_canonical == has_current_ec)
+            throw std::runtime_error("give exactly one of --canonical-key (initial enrolment) or --current-ec (re-enrolment)");
+        std::optional<PublicKey> canonical_pub;
+        std::optional<Certificate> current_ec;
+        if (has_canonical) canonical_pub = load_key(one(options, "--canonical-key"), backend).pub;
+        else current_ec = load_certificate(one(options, "--current-ec"));
+        const ByteBuffer request = read_file(one(options, "--request"));
+        std::array<std::uint8_t, 16> aes_key {};
+        auto parsed = vidf_test::parse_enrolment_request(backend, ecies, ea, ea_encryption_key, request,
+                                                          canonical_pub ? &*canonical_pub : nullptr,
+                                                          current_ec ? &*current_ec : nullptr, aes_key);
+        vidf_test::Authority authority {backend, ecies};
+        ByteBuffer response;
+        if (!parsed) {
+            std::printf("ea-respond: request did not decrypt/verify/decode; nothing was issued\n");
+            return 1;
+        }
+        if (options.count("--deny")) {
+            response = authority.enrolment_response(now(), aes_key, request,
+                                                     static_cast<std::uint8_t>(std::stoul(one(options, "--deny"))), nullptr, ea);
+        } else {
+            const std::string name = one(options, "--name", "vidf-station EC");
+            const unsigned hours = std::stoul(one(options, "--hours", "8760"));
+            const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : now() - std::chrono::hours(1);
+            const auto ec = domain.issue_credential_for(ea, parsed->verification_key, name, start, hours);
+            response = authority.enrolment_response(now(), aes_key, request, 0, &ec, ea);
+            const std::string ec_id = options.count("--id") ? one(options, "--id") : digest_hex(ec);
+            store(one(options, "--dir"), ec_id, ec, nullptr);
+        }
+        write_file(one(options, "--out"), response);
+        std::printf("EnrolmentResponse written: %zu octets -> %s\n", response.size(), one(options, "--out").c_str());
+        return 0;
+    }
+    if (command == "aa-respond") {
+        vidf_test::Credential aa;
+        aa.certificate = load_certificate(one(options, "--aa"));
+        aa.key = load_key(one(options, "--aa-key"), backend).priv;
+        const auto aa_encryption_key = load_key(one(options, "--aa-enc-key"), backend).priv;
+        vidf_test::Credential ea;
+        ea.certificate = load_certificate(one(options, "--ea"));
+        ea.key = load_key(one(options, "--ea-key"), backend).priv;
+        const auto ea_encryption_key = load_key(one(options, "--ea-enc-key"), backend).priv;
+        const ByteBuffer request = read_file(one(options, "--request"));
+        std::array<std::uint8_t, 16> aes_key {};
+        auto parsed = vidf_test::parse_authorization_request(backend, ecies, aa, aa_encryption_key, request, aes_key);
+        vidf_test::Authority authority {backend, ecies};
+        if (!parsed) {
+            std::printf("aa-respond: request did not decrypt/verify/decode; nothing was issued\n");
+            return 1;
+        }
+        std::optional<Certificate> claimant;
+        {
+            const std::string ec_dir = one(options, "--ec-dir");
+            std::ifstream index(ec_dir + "/index.lst");
+            std::string hex_id, filename;
+            while (index >> hex_id >> filename) {
+                try {
+                    Certificate candidate = load_certificate(ec_dir + "/" + filename);
+                    if (vidf_test::validate_entitlement(backend, ecies, ea, ea_encryption_key, *parsed, candidate)) {
+                        claimant = candidate;
+                        break;
+                    }
+                } catch (const std::exception&) { continue; }
+            }
+        }
+        ByteBuffer response;
+        if (options.count("--deny") || !claimant) {
+            const auto code = options.count("--deny") ? static_cast<std::uint8_t>(std::stoul(one(options, "--deny"))) : std::uint8_t(1);
+            response = authority.authorization_response(now(), aes_key, request, code, nullptr, aa);
+            if (!claimant) std::printf("aa-respond: no EC under --ec-dir signed this SharedAtRequest; entitlement not validated\n");
+        } else {
+            const unsigned hours = std::stoul(one(options, "--hours", "24"));
+            const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : now() - std::chrono::hours(1);
+            const auto at = domain.issue_ticket_for(aa, parsed->verification_key, parsed->app_permissions, start, hours);
+            response = authority.authorization_response(now(), aes_key, request, 0, &at, aa);
+        }
+        write_file(one(options, "--out"), response);
+        std::printf("AuthorizationResponse written: %zu octets -> %s\n", response.size(), one(options, "--out").c_str());
+        return 0;
+    }
     const std::string dir = one(options, "--out");
     const std::string id = one(options, "--id");
     if (command == "root") {
@@ -421,28 +649,22 @@ int main(int argc, char** argv) try {
         if (issuer.certificate.issuer_is_self() && !domain.verify_chain_signature(issuer.certificate, issuer.certificate))
             throw std::runtime_error("issuer certificate does not verify with itself");
         const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : default_start(&issuer.certificate);
-        const auto authority = domain.issue_authority(issuer, one(options, "--name"), start, std::stoul(one(options, "--years", "3")));
+        PrivateKey encryption_key;
+        const auto authority = domain.issue_authority(issuer, one(options, "--name"), start, std::stoul(one(options, "--years", "3")), &encryption_key);
         if (!authority.certificate.is_ca_certificate())
             throw std::runtime_error("the issuer has no certIssuePermissions group reaching two certificates down; nothing to delegate");
         if (!chain_ok(domain, {&authority.certificate, &issuer.certificate})) throw std::runtime_error("refusing to write an inconsistent authority certificate");
         store(dir, id, authority.certificate, &authority.key);
+        write_file(dir + "/" + id + ".ekey", encryption_key.key);
+        std::printf("%s ECIES encryption key -> %s/%s.ekey (clause 6.2.3: needed to answer real requests)\n", id.c_str(), dir.c_str(), id.c_str());
         return 0;
     }
     if (command == "ticket") {
         vidf_test::Credential issuer;
         issuer.certificate = load_certificate(one(options, "--issuer"));
         issuer.key = load_key(one(options, "--issuer-key"), backend).priv;
-        vidf_test::TrustDomain::Permissions permissions;
-        auto it = options.find("--permission");
-        if (it == options.end()) {
-            permissions = {{aid::CA, {0x01, 0xff, 0xfc}}, {aid::DEN, {0x01, 0xff, 0xff, 0xff}}, {aid::VRU, {0x01}}, {aid::GN_MGMT, {}}};
-        } else {
-            for (const auto& spec : it->second) {
-                const auto colon = spec.find(':');
-                permissions.emplace_back(static_cast<ItsAid>(std::stoul(spec.substr(0, colon))),
-                                         colon == std::string::npos ? ByteBuffer {} : from_hex(spec.substr(colon + 1)));
-            }
-        }
+        const auto permissions = parse_permissions(options,
+            {{aid::CA, {0x01, 0xff, 0xfc}}, {aid::DEN, {0x01, 0xff, 0xff, 0xff}}, {aid::VRU, {0x01}}, {aid::GN_MGMT, {}}});
         const unsigned hours = std::stoul(one(options, "--hours", "24"));
         const Clock::time_point start = options.count("--start") ? parse_time(one(options, "--start")) : default_start(&issuer.certificate);
         vidf_test::Credential ticket;

@@ -47,9 +47,12 @@ public:
     Credential issue_authority(const std::string& name, vanetza::Clock::time_point start) const;
     /// a subordinate CA (clause 7.2.4) under any issuer, e.g. an AA under an external root (vidf_issue):
     /// its certIssuePermissions are the issuer's groups that reach two certificates down (IEEE Std 1609.2
-    /// 6.4.28) with the defaults, its region the issuer's (6.4.17)
+    /// 6.4.28) with the defaults, its region the issuer's (6.4.17). A fresh ECIES encryption key pair is
+    /// generated and its public half embedded in the certificate (clause 7.2.4); when encryption_key is
+    /// given, the private half is returned through it so a caller can actually decrypt requests addressed
+    /// to this authority (TS 102 941 clause 6.2.3) instead of the key being generated and discarded.
     Credential issue_authority(const Credential& issuer, const std::string& name, vanetza::Clock::time_point start,
-                               unsigned years) const;
+                               unsigned years, vanetza::security::PrivateKey* encryption_key = nullptr) const;
     /// the ticket with an explicit GeographicRegion copied in (nullptr: none), e.g. the issuer's own region
     Credential issue_ticket(const Credential& authority, const Permissions&, vanetza::Clock::time_point start,
                             unsigned hours, const Vanetza_Security_GeographicRegion_t* region) const;
@@ -65,12 +68,22 @@ public:
                                                        const std::string& name, vanetza::Clock::time_point start,
                                                        unsigned years,
                                                        const vanetza::security::v3::Certificate& profile) const;
-    /// AT for a verification key the station generated itself (TS 102 941 authorization); no private key
+    /// AT for a verification key the station generated itself (TS 102 941 authorization); no private key.
+    /// Signed by this domain's own AA fixture.
     vanetza::security::v3::Certificate issue_ticket_for(const vanetza::security::PublicKey& verification,
                                                         const Permissions&, vanetza::Clock::time_point start,
                                                         unsigned hours) const;
-    /// enrolment credential (clause 7.2.2) issued by the EA for a station verification key
+    /// the same, signed by an explicit AA (e.g. one loaded from files, vidf_issue aa-respond)
+    vanetza::security::v3::Certificate issue_ticket_for(const Credential& authority, const vanetza::security::PublicKey& verification,
+                                                        const Permissions&, vanetza::Clock::time_point start,
+                                                        unsigned hours) const;
+    /// enrolment credential (clause 7.2.2) issued by the EA for a station verification key.
+    /// Signed by this domain's own EA fixture.
     vanetza::security::v3::Certificate issue_credential_for(const vanetza::security::PublicKey& verification,
+                                                            const std::string& name, vanetza::Clock::time_point start,
+                                                            unsigned hours) const;
+    /// the same, signed by an explicit EA (e.g. one loaded from files, vidf_issue ea-respond)
+    vanetza::security::v3::Certificate issue_credential_for(const Credential& ea, const vanetza::security::PublicKey& verification,
                                                             const std::string& name, vanetza::Clock::time_point start,
                                                             unsigned hours) const;
 

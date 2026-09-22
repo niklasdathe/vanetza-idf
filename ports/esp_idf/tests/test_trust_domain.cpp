@@ -282,11 +282,12 @@ void derive_from_issuer(Certificate& ca, const Certificate& issuer) {
 }
 
 Credential TrustDomain::issue_authority(const Credential& issuer, const std::string& name, Clock::time_point start,
-                                        unsigned years) const {
+                                        unsigned years, PrivateKey* encryption_key) const {
     Credential authority;
     auto key = fresh_key();
     auto enc = fresh_key();
     authority.key = key.priv;
+    if (encryption_key) *encryption_key = enc.priv;
     common_fields(authority.certificate, key.pub, start, years, Vanetza_Security_Duration_PR_years);
     // clause 7.2.4 fields as for the lab AA, but the issuing permissions and the region come
     // from the issuer rather than from the lab profile
@@ -351,22 +352,32 @@ Certificate TrustDomain::issue_root_like(const PrivateKey& key, const PublicKey&
 
 Certificate TrustDomain::issue_ticket_for(const PublicKey& verification, const Permissions& permissions,
                                           Clock::time_point start, unsigned hours) const {
+    return issue_ticket_for(aa, verification, permissions, start, hours);
+}
+
+Certificate TrustDomain::issue_ticket_for(const Credential& authority, const PublicKey& verification, const Permissions& permissions,
+                                          Clock::time_point start, unsigned hours) const {
     Certificate ticket;
     common_fields(ticket, verification, start, hours, Vanetza_Security_Duration_PR_hours);
     ticket->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_none; // clause 7.2.1
     for (const auto& permission : permissions) ticket.add_app_permission(permission.first, permission.second);
-    sign(ticket, &aa.certificate, aa.key);
+    sign(ticket, &authority.certificate, authority.key);
     return ticket;
 }
 
 Certificate TrustDomain::issue_credential_for(const PublicKey& verification, const std::string& name,
+                                              Clock::time_point start, unsigned hours) const {
+    return issue_credential_for(ea, verification, name, start, hours);
+}
+
+Certificate TrustDomain::issue_credential_for(const Credential& ea_issuer, const PublicKey& verification, const std::string& name,
                                               Clock::time_point start, unsigned hours) const {
     Certificate credential;
     common_fields(credential, verification, start, hours, Vanetza_Security_Duration_PR_hours);
     credential->toBeSigned.id.present = Vanetza_Security_CertificateId_PR_name; // clause 7.2.2
     OCTET_STRING_fromBuf(&credential->toBeSigned.id.choice.name, name.data(), name.size());
     credential.add_app_permission(aid::SCR, {0x01, 0xc0});
-    sign(credential, &ea.certificate, ea.key);
+    sign(credential, &ea_issuer.certificate, ea_issuer.key);
     return credential;
 }
 

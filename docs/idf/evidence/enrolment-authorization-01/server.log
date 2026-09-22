@@ -1,0 +1,6 @@
+EA/AA on http://127.0.0.1:8092/ (ea/enrolment, aa/authorization), EC store C:\bachelorthesis_micrOBU\implementation\external\vanetza-idf\build-host-sec\pki-demo\http_issued
+3666B72008FC582D HashedId8 3666B72008FC582D -> http_issued/3666B72008FC582D.oer
+EnrolmentResponse written: 314 octets -> C:\Users\nikla\AppData\Local\Temp\tmpssj1vf9b\response.bin
+127.0.0.1 "POST /ea/enrolment HTTP/1.1" 200 -
+AuthorizationResponse written: 306 octets -> C:\Users\nikla\AppData\Local\Temp\tmphrzvtqg0\response.bin
+127.0.0.1 "POST /aa/authorization HTTP/1.1" 200 -
