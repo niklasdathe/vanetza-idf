@@ -1,0 +1,81 @@
+{
+  "btp": {
+    "TC_BTP_PGA_BV_01": "pass",
+    "TC_BTP_PGB_BV_01": "pass",
+    "TC_BTP_PGB_BV_02": "pass",
+    "TC_BTP_PP_BV_01": "pass",
+    "TC_BTP_PP_BV_02": "pass"
+  },
+  "geonetworking": {
+    "TC_GEONW_FDV_SHB_BV_01": "pass",
+    "TC_GEONW_PON_FPB_BV_11_05": {
+      "verdict": "inconc",
+      "classification": "expected-scope-gap",
+      "reason": "The testcase body additionally requires PICS_GN_GUC_SRC, which is intentionally disabled while the adapter exposes only the implemented SHB source scope."
+    },
+    "TC_GEONW_PON_SHB_BV_01": {
+      "verdict": "fail",
+      "classification": "expected-scope-gap",
+      "reason": "The testcase requires a second independently addressable simulated station/PTC; the current adapter models one IUT."
+    }
+  },
+  "security-gn": {
+    "TC_SEC_ITSS_SND_GENMSG_01_BV": "pass",
+    "TC_SEC_ITSS_SND_GENMSG_02_BV": "pass",
+    "TC_SEC_ITSS_SND_GENMSG_03_BV": "pass",
+    "TC_SEC_ITSS_SND_GENMSG_04_BV": "pass",
+    "TC_SEC_ITSS_SND_GENMSG_05_BV": {
+      "verdict": "fail",
+      "classification": "expected-upstream-defect",
+      "reason": "Retained validation identifies an IUT-independent defect in this ETSI testcase. Keep executing it so an upstream change is visible."
+    },
+    "TC_SEC_ITSS_SND_GENMSG_06_BV": "pass",
+    "TC_SEC_ITSS_SND_GENMSG_07_BV": "pass",
+    "TC_SEC_ITSS_SND_GENMSG_08_BV": "pass"
+  },
+  "security-facilities": {
+    "TC_SEC_ITSS_SND_CAM_01_BV": "pass",
+    "TC_SEC_ITSS_SND_CAM_02_BV": "pass",
+    "TC_SEC_ITSS_SND_CAM_03_BV": "pass",
+    "TC_SEC_ITSS_SND_CAM_04_BV": "pass",
+    "TC_SEC_ITSS_SND_DENM_01_BV": "pass",
+    "TC_SEC_ITSS_SND_DENM_02_BV": "pass",
+    "TC_SEC_ITSS_SND_DENM_03_BV": "pass"
+  },
+  "security-receive": {
+    "TC_SEC_ITSS_RCV_MSG_01_BV": "pass",
+    "TC_SEC_ITSS_RCV_MSG_01_BO": "pass",
+    "TC_SEC_ITSS_RCV_MSG_02_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_01_BV": "pass",
+    "TC_SEC_ITSS_RCV_CAM_02_BV": "pass",
+    "TC_SEC_ITSS_RCV_CAM_03_BV": "pass",
+    "TC_SEC_ITSS_RCV_CAM_04_BV_XX": "pass",
+    "TC_SEC_ITSS_RCV_CAM_01_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_02_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_03_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_04_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_05_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_06_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_07_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_08_BO": "pass",
+    "TC_SEC_ITSS_RCV_CAM_09_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_01_BV": {
+      "verdict": "error",
+      "classification": "expected-upstream-defect",
+      "reason": "Retained validation identifies a declaration-order defect in the ETSI testcase."
+    },
+    "TC_SEC_ITSS_RCV_DENM_02_BV_XX": {
+      "verdict": "error",
+      "classification": "expected-upstream-defect",
+      "reason": "Retained validation identifies a declaration-order defect in the ETSI testcase."
+    },
+    "TC_SEC_ITSS_RCV_DENM_01_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_02_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_03_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_04_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_05_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_06_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_07_BO": "pass",
+    "TC_SEC_ITSS_RCV_DENM_09_BO": "pass"
+  }
+}
