@@ -37,13 +37,20 @@ void common_fields(Certificate& cert, const PublicKey& verification, Clock::time
     cert->toBeSigned.validityPeriod.start = v2::convert_time32(start);
     cert->toBeSigned.validityPeriod.duration.present = unit;
     cert->toBeSigned.validityPeriod.duration.choice.hours = hours; // same storage for every unit
-    ecdsa256::PublicKey legacy;
-    std::copy(verification.x.begin(), verification.x.end(), legacy.x.begin());
-    std::copy(verification.y.begin(), verification.y.end(), legacy.y.begin());
     auto& indicator = cert->toBeSigned.verifyKeyIndicator;
     indicator.present = Vanetza_Security_VerificationKeyIndicator_PR_verificationKey;
     indicator.choice.verificationKey.present = Vanetza_Security_PublicVerificationKey_PR_ecdsaNistP256;
     assign_compressed_point visitor(&indicator.choice.verificationKey.choice.ecdsaNistP256);
+    if (verification.compression == KeyCompression::Y0 || verification.compression == KeyCompression::Y1) {
+        // A key taken from a request is already compressed: y is absent and the parity is in
+        // `compression`. Re-deriving it from the (empty) y always gave compressed-y-0, so every
+        // odd-y station key was certified as its negated point.
+        boost::apply_visitor(visitor, make_ecc_point(verification));
+        return;
+    }
+    ecdsa256::PublicKey legacy;
+    std::copy(verification.x.begin(), verification.x.end(), legacy.x.begin());
+    std::copy(verification.y.begin(), verification.y.end(), legacy.y.begin());
     boost::apply_visitor(visitor, compress_public_key(legacy));
 }
 
