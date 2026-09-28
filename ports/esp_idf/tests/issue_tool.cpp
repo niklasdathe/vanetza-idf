@@ -148,15 +148,17 @@ Certificate load_certificate(const std::string& path) {
     return certificate;
 }
 
-void store(const std::string& dir, const std::string& id, const Certificate& certificate, const PrivateKey* key) {
+void store(const std::string& dir, const std::string& id, const Certificate& certificate, const PrivateKey* key,
+           const PrivateKey* encryption_key = nullptr) {
     const auto digest = certificate.calculate_digest();
     if (!digest) throw std::runtime_error("certificate has no digest");
     write_file(dir + "/" + id + ".oer", certificate.encode());
     if (key) write_file(dir + "/" + id + ".vkey", key->key);
+    if (encryption_key) write_file(dir + "/" + id + ".ekey", encryption_key->key);
     std::ofstream index(dir + "/index.lst", std::ios::app);
     index << hex(ByteBuffer(digest->begin(), digest->end())) << ' ' << id << ".oer\n";
     std::printf("%s HashedId8 %s -> %s/%s.oer%s\n", id.c_str(), hex(ByteBuffer(digest->begin(), digest->end())).c_str(),
-                dir.c_str(), id.c_str(), key ? " (+ .vkey)" : "");
+                dir.c_str(), id.c_str(), key ? (encryption_key ? " (+ .vkey, .ekey)" : " (+ .vkey)") : "");
 }
 
 void show(const Certificate& c) {
@@ -425,7 +427,7 @@ int main(int argc, char** argv) try {
         if (!authority.certificate.is_ca_certificate())
             throw std::runtime_error("the issuer has no certIssuePermissions group reaching two certificates down; nothing to delegate");
         if (!chain_ok(domain, {&authority.certificate, &issuer.certificate})) throw std::runtime_error("refusing to write an inconsistent authority certificate");
-        store(dir, id, authority.certificate, &authority.key);
+        store(dir, id, authority.certificate, &authority.key, &authority.encryption_key);
         return 0;
     }
     if (command == "ticket") {

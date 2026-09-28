@@ -24,6 +24,10 @@ namespace vidf_test {
 struct Credential {
     vanetza::security::v3::Certificate certificate;
     vanetza::security::PrivateKey key;
+    // CA certificates created by this helper also carry an ECIES encryption key.
+    // Kept separate from the signing key because TS 102 941 requests are addressed
+    // to the certificate's encryptionKey.
+    vanetza::security::PrivateKey encryption_key;
 };
 
 class TrustDomain {
@@ -69,8 +73,16 @@ public:
     vanetza::security::v3::Certificate issue_ticket_for(const vanetza::security::PublicKey& verification,
                                                         const Permissions&, vanetza::Clock::time_point start,
                                                         unsigned hours) const;
+    vanetza::security::v3::Certificate issue_ticket_for(const Credential& authority,
+                                                        const vanetza::security::PublicKey& verification,
+                                                        const Permissions&, vanetza::Clock::time_point start,
+                                                        unsigned hours) const;
     /// enrolment credential (clause 7.2.2) issued by the EA for a station verification key
     vanetza::security::v3::Certificate issue_credential_for(const vanetza::security::PublicKey& verification,
+                                                            const std::string& name, vanetza::Clock::time_point start,
+                                                            unsigned hours) const;
+    vanetza::security::v3::Certificate issue_credential_for(const Credential& authority,
+                                                            const vanetza::security::PublicKey& verification,
                                                             const std::string& name, vanetza::Clock::time_point start,
                                                             unsigned hours) const;
 
