@@ -1,0 +1,186 @@
+name: ETSI TTCN-3 regression
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: etsi-ttcn-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  software-sut:
+    name: ETSI TTCN-3 / host SUT
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            autoconf automake bison build-essential cmake default-jdk-headless \
+            expect flex git libboost-all-dev libedit-dev libjsoncpp-dev \
+            libncurses-dev libpcap-dev libsctp-dev libssl-dev libtool \
+            libxml2-dev libzip-dev ninja-build pkg-config python3 zlib1g-dev
+
+      - name: Load pinned toolchain versions
+        id: pins
+        shell: bash
+        run: |
+          source ci/etsi/versions.env
+          echo "titan_ref=${TITAN_REF}" >> "$GITHUB_OUTPUT"
+          echo "etsi_commit=${ETSI_TS_ITS_COMMIT}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache TITAN and ETSI ATS build
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/vanetza-ttcn
+          key: >-
+            etsi-ttcn-${{ runner.os }}-${{ runner.arch }}-
+            titan-${{ steps.pins.outputs.titan_ref }}-
+            etsi-${{ steps.pins.outputs.etsi_commit }}-v1
+
+      - name: Build pinned TITAN and official ETSI suites
+        shell: bash
+        run: |
+          bash ci/etsi/setup_toolchain.sh "$HOME/.cache/vanetza-ttcn"
+          source ci/etsi/versions.env
+          TTCN3_DIR="$HOME/.cache/vanetza-ttcn/titan-${TITAN_REF}/Install"
+          ETSI_TS_ITS_DIR="$HOME/.cache/vanetza-ttcn/TS.ITS-${ETSI_TS_ITS_COMMIT}"
+          echo "TTCN3_DIR=${TTCN3_DIR}" >> "$GITHUB_ENV"
+          echo "ETSI_TS_ITS_DIR=${ETSI_TS_ITS_DIR}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=${TTCN3_DIR}/lib" >> "$GITHUB_ENV"
+          echo "${TTCN3_DIR}/bin" >> "$GITHUB_PATH"
+
+      - name: Build host SUT and component tests
+        shell: bash
+        run: |
+          cmake -S ports/esp_idf -B build-host -G Ninja \
+            -DVIDF_TESTS=ON \
+            -DVIDF_SECURITY=ON \
+            -DVIDF_SECURITY_VERIFY=ON
+          cmake --build build-host
+          ctest --test-dir build-host --output-on-failure
+
+      - name: Link repository adapters to official ETSI testcase objects
+        shell: bash
+        run: |
+          rm -rf build-etsi-adapters
+          mkdir -p build-etsi-adapters
+          python3 ports/esp_idf/tools/build_etsi_btp_adapter.py \
+            --etsi "$ETSI_TS_ITS_DIR" \
+            --titan "$TTCN3_DIR" \
+            --out build-etsi-adapters/btp
+          python3 ports/esp_idf/tools/build_etsi_geonetworking_adapter.py \
+            --etsi "$ETSI_TS_ITS_DIR" \
+            --titan "$TTCN3_DIR" \
+            --out build-etsi-adapters/geonetworking
+          python3 ports/esp_idf/tools/build_etsi_security_adapter.py \
+            --etsi "$ETSI_TS_ITS_DIR" \
+            --titan "$TTCN3_DIR" \
+            --out build-etsi-adapters/security
+
+      - name: Generate isolated security test pool
+        shell: bash
+        run: |
+          rm -rf build-etsi-adapters/security-pool
+          ./build-host/vidf_test_pool "$PWD/build-etsi-adapters/security-pool"
+
+      - name: Run official ETSI TTCN-3 campaigns
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ttcn-results
+          mkdir -p ttcn-results
+          cp "$HOME/.cache/vanetza-ttcn/toolchain-manifest.txt" \
+            ttcn-results/toolchain-manifest.txt
+
+          run_campaign() {
+            local name="$1"
+            local binary="$2"
+            local config="$3"
+            local cases="$4"
+            local adapter_build="$5"
+            shift 5
+            local out="$PWD/ttcn-results/$name"
+
+            set +e
+            python3 ports/esp_idf/tools/run_etsi.py \
+              --titan "$TTCN3_DIR" \
+              --binary "$binary" \
+              --config "$config" \
+              --expected-cases "$cases" \
+              --sut "$PWD/build-host/vidf_sut" \
+              --out "$out" \
+              "$@"
+            local raw_rc=$?
+            set -e
+
+            printf '%s\n' "$raw_rc" > "$out/raw-runner-exit-code.txt"
+            cp "$adapter_build" "$out/adapter-build.json"
+            python3 ci/etsi/check_result.py \
+              --campaign "$name" \
+              --result "$out/result.json"
+          }
+
+          run_campaign \
+            btp \
+            "$PWD/build-etsi-adapters/btp/AtsBTP" \
+            "$PWD/ports/esp_idf/tests/etsi_btp.cfg" \
+            "$PWD/ports/esp_idf/tests/etsi_btp_cases.json" \
+            "$PWD/build-etsi-adapters/btp/build.json"
+
+          run_campaign \
+            geonetworking \
+            "$PWD/build-etsi-adapters/geonetworking/AtsGeoNetworking" \
+            "$PWD/ports/esp_idf/tests/etsi_geonetworking.cfg" \
+            "$PWD/ports/esp_idf/tests/etsi_geonetworking_cases.json" \
+            "$PWD/build-etsi-adapters/geonetworking/build.json"
+
+          run_campaign \
+            security-gn \
+            "$PWD/build-etsi-adapters/security/AtsSecurity" \
+            "$PWD/ports/esp_idf/tests/etsi_security_gn.cfg" \
+            "$PWD/ports/esp_idf/tests/etsi_security_gn_cases.json" \
+            "$PWD/build-etsi-adapters/security/build.json" \
+            --pool "$PWD/build-etsi-adapters/security-pool" \
+            "--sut-args=--security-pool ./certificates"
+
+          run_campaign \
+            security-facilities \
+            "$PWD/build-etsi-adapters/security/AtsSecurity" \
+            "$PWD/ports/esp_idf/tests/etsi_security_facilities.cfg" \
+            "$PWD/ports/esp_idf/tests/etsi_security_facilities_cases.json" \
+            "$PWD/build-etsi-adapters/security/build.json" \
+            --pool "$PWD/build-etsi-adapters/security-pool" \
+            "--sut-args=--security-pool ./certificates"
+
+          run_campaign \
+            security-receive \
+            "$PWD/build-etsi-adapters/security/AtsSecurity" \
+            "$PWD/ports/esp_idf/tests/etsi_security_receive.cfg" \
+            "$PWD/ports/esp_idf/tests/etsi_security_receive_cases.json" \
+            "$PWD/build-etsi-adapters/security/build.json" \
+            --pool "$PWD/build-etsi-adapters/security-pool" \
+            "--sut-args=--security-pool ./certificates"
+
+      - name: Upload TTCN-3 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: etsi-ttcn3-${{ github.sha }}
+          path: |
+            ttcn-results/
+            build-etsi-adapters/*/build.json
+          if-no-files-found: warn
+          retention-days: 30
