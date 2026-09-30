@@ -39,7 +39,7 @@ if(VANETZA_ASN1_WITH_ASN1C)
     )
 
     set(_its_r2_asn1_files
-        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102894-2v241-CDD.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102894-2v251-CDD.asn
         ${PROJECT_SOURCE_DIR}/asn1/release2/TS103831v231-DENM.asn
         ${PROJECT_SOURCE_DIR}/asn1/release2/TS103900v231-CAM.asn
         ${PROJECT_SOURCE_DIR}/asn1/release2/TS103324v211/CPM-OriginatingStationContainers.asn
@@ -89,14 +89,17 @@ if(VANETZA_ASN1_WITH_ASN1C)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         VERBATIM)
 
+    # Release 1 set, now on the newest published modules: TS 102 941 V2.2.1 (the CA-side message module;
+    # MessagesItss* define the same PDU names and would force module-qualified C names)
     set(_pki_asn1_files
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-BaseTypes.asn
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-MessagesCa.asn
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-TrustLists.asn
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-TypesAuthorization.asn
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-TypesAuthorizationValidation.asn
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-TypesCaManagement.asn
-        ${PROJECT_SOURCE_DIR}/asn1/TS102941v131-TypesEnrolment.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/BaseTypes.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/MessagesCa.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TrustLists.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TypesAuthorization.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TypesAuthorizationValidation.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TypesCaManagement.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TypesEnrolment.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TypesLinkCertificate.asn
     )
 
     set(_pki_r2_asn1_files
@@ -112,10 +115,11 @@ if(VANETZA_ASN1_WITH_ASN1C)
         ${PROJECT_SOURCE_DIR}/asn1/release2/TS102941v221/TypesLinkCertificate.asn
     )
     
+    # TS 103 097 V2.2.1 with IEEE 1609.2 (fetch_ieee_asn1_files.cmake); the extension module imports IEEE
+    # Extension under the name the IEEE fetch step renames it to (IeeeExtension)
     set(_sec_asn1_files
-        ${PROJECT_SOURCE_DIR}/asn1/TS103097v131.asn
-        ${PROJECT_SOURCE_DIR}/asn1/IEEE1609dot2.asn
-        ${PROJECT_SOURCE_DIR}/asn1/IEEE1609dot2BaseTypes.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS103097v221.asn
+        ${PROJECT_SOURCE_DIR}/asn1/release2/TS103097v221-Extension.asn
     )
 
     if(VANETZA_WITH_PQC)
@@ -246,11 +250,11 @@ if(VANETZA_ASN1_WITH_ASN1C)
         PREFIX Vanetza_ITS2_
         SOURCES ${_its_r2_asn1_files})
 
-    generate_asn1c(DESCRIPTION "Security (Release 1)"
+    generate_asn1c(DESCRIPTION "Security (TS 103 097 V2.2.1, TS 102 941 V2.2.1, IEEE 1609.2-2025)"
         OUTPUT_DIRECTORY ${_sec_asn1_dir}
         SOURCE_FILE ${_sec_asn1_source_file}
         PREFIX Vanetza_Security_
-        SOURCES ${_sec_asn1_files} ${_pki_asn1_files})
+        SOURCES ${_sec_asn1_files} ${_pki_asn1_files} ${_ieee_asn1_files})
 
     if(VANETZA_WITH_PQC)
         generate_asn1c(DESCRIPTION "Security Release 2 (experimental hybrid-PQC profile)"

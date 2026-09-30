@@ -1187,6 +1187,11 @@ bool Router::process_extended(const ExtendedPduConstRefs<GeoBroadcastHeader>& pd
     if (pdu.basic().hop_limit <= 1) {
         forwarding_stopped(ForwardingStopReason::Hop_Limit);
         return decide_pass_up(within_destination, gbc); // discard packet (step 9a)
+    } else if (area_size(dest_area) > m_mib.itsGnMaxGeoAreaSize) {
+        // TS 103 836-4-1 V2.2.1 Annex B.3: a GBC/GAC packet whose area exceeds itsGnMaxGeoAreaSize
+        // "shall not be forwarded by the forwarder" (the source side is checked in validate_data_request)
+        forwarding_stopped(ForwardingStopReason::Geo_Area_Size);
+        return decide_pass_up(within_destination, gbc);
     } else if (m_mib.itsGnMaxPacketDataRate < std::numeric_limits<decltype(m_mib.itsGnMaxPacketDataRate)>::max()) {
         // do packet data rate checks (annex B.2) if set maximum rate is not "infinity" (i.e. max unsigned value)
         if (source_entry.get_pdr() > m_mib.itsGnMaxPacketDataRate * 1000.0) {

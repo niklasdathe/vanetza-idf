@@ -111,6 +111,7 @@ its/r2/DrivingLaneStatus.c
 its/r2/EHorizonLocationSharingContainer.c
 its/r2/ETSI-ITS-CDD_DeltaPosition.c
 its/r2/ETSI-ITS-CDD_DeltaPositions.c
+its/r2/ETSI-ITS-CDD_GoodsType.c
 its/r2/ETSI-ITS-CDD_ParkingAreaArrangementType.c
 its/r2/ETSI-ITS-CDD_ParkingOccupancyInfo.c
 its/r2/ETSI-ITS-CDD_ParkingReservationType.c
@@ -148,7 +149,6 @@ its/r2/GeoPositionWAltitude.c
 its/r2/GeoPositionWoAltitude.c
 its/r2/GeoPositionsWAltitude.c
 its/r2/GeoPositionsWoAltitude.c
-its/r2/GoodsType.c
 its/r2/HardShoulderStatus.c
 its/r2/HazardousLocation-AnimalOnTheRoadSubCauseCode.c
 its/r2/HazardousLocation-DangerousCurveSubCauseCode.c
@@ -245,6 +245,7 @@ its/r2/OriginatingVehicleContainer.c
 its/r2/OtherSubClass.c
 its/r2/POIM-ParkingAvailability_DeltaPosition.c
 its/r2/POIM-ParkingAvailability_DeltaPositions.c
+its/r2/POIM-ParkingAvailability_GoodsType.c
 its/r2/POIM-ParkingAvailability_ParkingAreaArrangementType.c
 its/r2/POIM-ParkingAvailability_ParkingOccupancyInfo.c
 its/r2/POIM-ParkingAvailability_ParkingReservationType.c
@@ -335,6 +336,7 @@ its/r2/RestrictedTypes.c
 its/r2/RoadConfigurationContainer.c
 its/r2/RoadConfigurationSection.c
 its/r2/RoadConfigurationSectionList.c
+its/r2/RoadDamageClass.c
 its/r2/RoadSectionDefinition.c
 its/r2/RoadSectionId.c
 its/r2/RoadSegmentReferenceId.c

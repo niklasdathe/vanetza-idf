@@ -13,10 +13,10 @@ namespace pki
 struct HashedId8;
 class SecurityModule;
 
-class EncryptedData : public asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Encrypted_85P0_t>
+class EncryptedData : public asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Encrypted_151P0_t>
 {
 public:
-    using wrapper = asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Encrypted_85P0_t>;
+    using wrapper = asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Encrypted_151P0_t>;
 
     EncryptedData(std::shared_ptr<SecurityModule::EciesContext> ecies);
     void generate_ciphertext(const ByteBuffer& payload);

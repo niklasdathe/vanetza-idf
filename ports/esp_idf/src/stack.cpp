@@ -28,6 +28,10 @@ StackConfig::StackConfig() {
     mib.itsGnIfType = gn::InterfaceType::ITS_G5;
     mib.itsGnSnDecapResultHandling = gn::SecurityDecapHandling::Strict;
     mib.itsGnSecurity = true;
+    // A GBC received again (CBF relies on duplicates, TS 103 836-4-1 V2.2.1 clause 10.3.11.3 step 3 and Annex F.3)
+    // is handled by the forwarding algorithm and never passed up a second time; the upstream default (0) passes
+    // every copy up. Found by TC_GEONW_PON_GBC_AREA_ALL_BO_08.
+    mib.vanetzaGbcMemoryCapacity = 128;
 }
 
 class Stack::Impl : public dcc::RequestInterface, public gn::TransportInterface {
@@ -192,7 +196,9 @@ const StackConfig& Stack::config() const { return impl_->cfg; }
 security::IdChangeService* Stack::id_change() { return impl_->subscription ? impl_->id_change : nullptr; }
 vanetza::security::SecurityEntity* Stack::security_entity() { return impl_->security; }
 bool Stack::identity_change_pending() const { return impl_->change_pending; }
-const gn::Address& Stack::address() const { return impl_->cfg.mib.itsGnLocalGnAddr; }
+// The address the router uses now: DAD (clause 10.2.1.5) and identifier changes move it away from the
+// configured MIB value, and the station must report what it actually transmits.
+const gn::Address& Stack::address() const { return impl_->router.get_local_position_vector().gn_addr; }
 Result Stack::set_address(const gn::Address& address) {
     if (impl_->cfg.mib.itsGnLocalAddrConfMethod != gn::AddrConfMethod::Managed) return Result::unsupported;
     if (impl_->change_pending) return Result::identity_change_pending;

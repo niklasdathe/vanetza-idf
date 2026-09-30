@@ -103,7 +103,8 @@ public:
         Hop_Limit,
         Source_PDR,
         Sender_PDR,
-        Outside_Destination_Area
+        Outside_Destination_Area,
+        Geo_Area_Size // destination area larger than itsGnMaxGeoAreaSize (TS 103 836-4-1 Annex B.3)
     };
 
     Router(Runtime&, const MIB&);

@@ -45,7 +45,7 @@ void add_app_permissions(Vanetza_Security_CertificateSubjectAttributes_t& csa, c
 // Encrypt `plaintext` to `recipient_certificate` using a fresh ECIES context
 // and populate `dest` (an EtsiTs103097Data-Encrypted value member of a parent
 // struct) in place. Precondition: `dest` is zero-initialised.
-void encrypt_into(Vanetza_Security_EtsiTs103097Data_Encrypted_85P0_t& dest, SecurityModule& security,
+void encrypt_into(Vanetza_Security_EtsiTs103097Data_Encrypted_151P0_t& dest, SecurityModule& security,
     const ByteBuffer& plaintext, const Certificate& recipient_certificate)
 {
     boost::optional<PublicKey> enc_key = recipient_certificate.get_encryption_key();

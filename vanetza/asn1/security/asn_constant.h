@@ -9,6 +9,12 @@
 extern "C" {
 #endif
 
+#define min_val_Vanetza_Security_CertificateFormat (1)
+#define max_val_Vanetza_Security_CertificateFormat (255)
+#define min_val_Vanetza_Security_PduFunctionalType (0)
+#define max_val_Vanetza_Security_PduFunctionalType (255)
+#define min_val_Vanetza_Security_HeaderInfoContributorId (0)
+#define max_val_Vanetza_Security_HeaderInfoContributorId (255)
 #define min_val_Vanetza_Security_Uint3 (0)
 #define max_val_Vanetza_Security_Uint3 (7)
 #define min_val_Vanetza_Security_Uint8 (0)
@@ -25,8 +31,12 @@ extern "C" {
 #define max_val_Vanetza_Security_OneEightyDegreeInt (1800000001)
 #define min_val_Vanetza_Security_Psid (0)
 #define max_val_Vanetza_Security_Psid (321)
-#define min_val_Vanetza_Security_CertificateFormat (1)
-#define max_val_Vanetza_Security_CertificateFormat (255)
+#define min_val_Vanetza_Security_ExtId (0)
+#define max_val_Vanetza_Security_ExtId (255)
+#define min_val_Vanetza_Security_Ieee1609dot2dot1MsctlType (0)
+#define max_val_Vanetza_Security_Ieee1609dot2dot1MsctlType (255)
+#define min_val_Vanetza_Security_CtlSequenceNumber (0)
+#define max_val_Vanetza_Security_CtlSequenceNumber (65535)
 
 
 #ifdef __cplusplus

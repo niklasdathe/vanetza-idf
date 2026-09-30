@@ -196,6 +196,15 @@ if(ESP_PLATFORM)
     # The generated IOC table intentionally zero-initializes trailing fields.
     set_source_files_properties("${VIDF_ROOT}/vanetza/asn1/its/r2/WrappedExtensionContainer.c"
         PROPERTIES COMPILE_OPTIONS -Wno-error=missing-field-initializers)
+    # Same for the IOC tables behind HeaderInfo's contributedExtensions; some generated object sets
+    # are referenced by no constraint in this closure.
+    set_source_files_properties(
+        "${VIDF_ROOT}/vanetza/asn1/security/AppExtension.c"
+        "${VIDF_ROOT}/vanetza/asn1/security/CertIssueExtension.c"
+        "${VIDF_ROOT}/vanetza/asn1/security/CertRequestExtension.c"
+        "${VIDF_ROOT}/vanetza/asn1/security/ContributedExtensionBlock.c"
+        "${VIDF_ROOT}/vanetza/asn1/security/IeeeExtension.c"
+        PROPERTIES COMPILE_OPTIONS "-Wno-error=missing-field-initializers;-Wno-error=unused-const-variable")
     # ESP-IDF 6 uses picolibc's native timegm, without a tm_gmtoff member.
     # Do not confuse the missing struct member with timezone-mutating emulation.
     if(IDF_VERSION_MAJOR GREATER_EQUAL 6)

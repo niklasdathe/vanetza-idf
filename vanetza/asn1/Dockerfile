@@ -1,4 +1,5 @@
-FROM ubuntu:latest AS base
+# Pinned: asn1c eefc4cfc built on ubuntu:latest (26.04 in 2026-09) segfaults while generating code; 24.04 works.
+FROM ubuntu:24.04 AS base
 
 FROM base AS build
 RUN apt-get update && apt-get install -y autoconf automake bison build-essential flex git libtool

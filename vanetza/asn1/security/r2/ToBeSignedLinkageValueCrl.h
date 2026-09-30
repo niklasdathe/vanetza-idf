@@ -24,6 +24,7 @@ extern "C" {
 struct Vanetza_Security2_SequenceOfJMaxGroup;
 struct Vanetza_Security2_SequenceOfGroupCrlEntry;
 struct Vanetza_Security2_SequenceOfGroupSingleSeedCrlEntry;
+struct Vanetza_Security2_SequenceOfIPeriodInfo;
 
 /* Vanetza_Security2_ToBeSignedLinkageValueCrl */
 typedef struct Vanetza_Security2_ToBeSignedLinkageValueCrl {
@@ -36,6 +37,7 @@ typedef struct Vanetza_Security2_ToBeSignedLinkageValueCrl {
 	 * possible extensions are below.
 	 */
 	struct Vanetza_Security2_SequenceOfGroupSingleSeedCrlEntry	*groupsSingleSeed;	/* OPTIONAL */
+	struct Vanetza_Security2_SequenceOfIPeriodInfo	*iPeriodInfo;	/* OPTIONAL */
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
@@ -44,7 +46,7 @@ typedef struct Vanetza_Security2_ToBeSignedLinkageValueCrl {
 /* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_Vanetza_Security2_ToBeSignedLinkageValueCrl;
 extern asn_SEQUENCE_specifics_t asn_SPC_Vanetza_Security2_ToBeSignedLinkageValueCrl_specs_1;
-extern asn_TYPE_member_t asn_MBR_Vanetza_Security2_ToBeSignedLinkageValueCrl_1[5];
+extern asn_TYPE_member_t asn_MBR_Vanetza_Security2_ToBeSignedLinkageValueCrl_1[6];
 extern asn_oer_constraints_t asn_OER_type_Vanetza_Security2_ToBeSignedLinkageValueCrl_constr_1;
 extern asn_per_constraints_t asn_PER_type_Vanetza_Security2_ToBeSignedLinkageValueCrl_constr_1;
 
@@ -56,6 +58,7 @@ extern asn_per_constraints_t asn_PER_type_Vanetza_Security2_ToBeSignedLinkageVal
 #include "SequenceOfJMaxGroup.h"
 #include "SequenceOfGroupCrlEntry.h"
 #include "SequenceOfGroupSingleSeedCrlEntry.h"
+#include "SequenceOfIPeriodInfo.h"
 
 #endif	/* _Vanetza_Security2_ToBeSignedLinkageValueCrl_H_ */
 #include "asn_internal.h"

@@ -48,11 +48,12 @@ geonet::ShbHeader deserialize_shb(const ByteBuffer& gnpdu) {
 
 // Stack has no move constructor (a deleted copy constructor plus a user-declared destructor
 // suppress it), so a helper builds it on the heap rather than returning it by value.
-std::unique_ptr<Stack> build_ready_stack(ManualRuntime& runtime, Access& access) {
+std::unique_ptr<Stack> build_ready_stack(ManualRuntime& runtime, Access& access,
+                                         geonet::AddrConfMethod method = geonet::AddrConfMethod::Managed) {
     StackConfig cfg;
     cfg.mib.itsGnSecurity = false;
     cfg.mib.vanetzaDisableBeaconing = true;
-    cfg.mib.itsGnLocalAddrConfMethod = geonet::AddrConfMethod::Managed;
+    cfg.mib.itsGnLocalAddrConfMethod = method;
     cfg.mib.itsGnLocalGnAddr.mid({2, 0, 0, 0, 0, 1});
     auto stack = std::make_unique<Stack>(cfg, runtime, access);
     // Must be checked here: applying time/position below jumps the runtime far forward in
@@ -122,5 +123,26 @@ void test_dcc_net() {
         check(static_cast<bool>(mco), "Outgoing SHB carries a real DCC-MCO field, not NullDccFieldGenerator's reserved zero");
         check(near(mco->local_cbr().value(), 51.0 / 255.0) && mco->output_power() == 10,
               "Outgoing DCC-MCO reflects the fed local CBR and TX power");
+    }
+
+    // -- Duplicate address detection (EN 302 636-4-1 / TS 103 836-4-1 clause 10.2.1.5): a packet that
+    // carries the station's own GN_ADDR from another MAC makes an auto-configured station pick a new
+    // MID. Stack::address() must report the address the router actually uses (it used to return the
+    // MIB value, so the micrOBU STATUS kept showing the old address after DAD).
+    {
+        ManualRuntime runtime;
+        Radio radio;
+        auto stack = build_ready_stack(runtime, radio, geonet::AddrConfMethod::Auto);
+        check(stack->request(shb_request()) == Result::accepted, "DAD set-up: the station sends one SHB");
+        const geonet::Address before = stack->address();
+        AlDataIndication echo;
+        echo.source = MacAddress {0x02, 0xaa, 0xbb, 0xcc, 0xdd, 0xee};
+        echo.destination = MacAddress {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+        echo.data = radio.packets.back().data;  // our own SHB, as if another station used our address
+        stack->indicate(echo);
+        check(!(stack->address() == before), "DAD: an auto-configured station takes a new GN_ADDR after a conflict");
+        check(stack->request(shb_request()) == Result::accepted, "DAD: the station keeps sending after the change");
+        check(deserialize_shb(radio.packets.back().data).source_position.gn_addr == stack->address(),
+              "DAD: Stack::address() is the address in the next transmitted SHB");
     }
 }

@@ -35,6 +35,8 @@ public:
     bool new_cam_signer = false;
     // generic profile: per ITS-AID
     std::map<ItsAid, Clock::time_point> generic_last_certificate;
+    // the own certificate the timers above refer to
+    boost::optional<HashedId8> signer_digest;
 
     Impl(const Runtime& rt, PositionProvider& pp, CertificatePool& certificates, const TrustConfiguration& t) :
         runtime(rt), positioning(pp), pool(certificates), trust(t) {}
@@ -126,6 +128,15 @@ void Ts103097SignHeaderPolicy::prepare_header(const SignRequest& request, v3::Se
     message.set_its_aid(request.its_aid);
     message.set_generation_time(v2::convert_time64(now));
     const Certificate& at = impl_->pool.own_certificate();
+    // A different own certificate (a newly provisioned ticket, or a ticket switch outside
+    // reset_after_identifier_change) has never been sent in full: restart the inclusion timers so the
+    // first message signed with it carries the certificate. Receivers cannot resolve the digest of a
+    // certificate they have not seen (2026-09-29: 9 digest-signed VAMs after re-provisioning).
+    const auto signer = at.calculate_digest();
+    if (signer != impl_->signer_digest) {
+        reset_after_identifier_change();
+        impl_->signer_digest = signer;
+    }
     if (request.self_signed) {
         // TS 102 941 clause 6.2.3.2 inner enrolment structures are self-signed.
         message.set_signer_identifier_self();

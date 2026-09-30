@@ -20,9 +20,6 @@
 #include "NULL.h"
 #include "VerificationKeyIndicator.h"
 #include "BIT_STRING.h"
-#include "SequenceOfAppExtensions.h"
-#include "SequenceOfCertIssueExtensions.h"
-#include "SequenceOfCertRequestExtensions.h"
 #include "constr_SEQUENCE.h"
 
 #ifdef __cplusplus
@@ -62,9 +59,9 @@ typedef struct Vanetza_Security2_ToBeSignedCertificate {
 	 * possible extensions are below.
 	 */
 	BIT_STRING_t	*flags;	/* OPTIONAL */
-	struct Vanetza_Security2_SequenceOfAppExtensions	*appExtensions;
-	struct Vanetza_Security2_SequenceOfCertIssueExtensions	*certIssueExtensions;
-	struct Vanetza_Security2_SequenceOfCertRequestExtensions	*certRequestExtension;
+	struct Vanetza_Security2_SequenceOfAppExtensions	*appExtensions;	/* OPTIONAL */
+	struct Vanetza_Security2_SequenceOfCertIssueExtensions	*certIssueExtensions;	/* OPTIONAL */
+	struct Vanetza_Security2_SequenceOfCertRequestExtensions	*certRequestExtension;	/* OPTIONAL */
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
@@ -86,6 +83,9 @@ extern asn_per_constraints_t asn_PER_type_Vanetza_Security2_ToBeSignedCertificat
 #include "SequenceOfPsidSsp.h"
 #include "SequenceOfPsidGroupPermissions.h"
 #include "PublicEncryptionKey.h"
+#include "SequenceOfAppExtensions.h"
+#include "SequenceOfCertIssueExtensions.h"
+#include "SequenceOfCertRequestExtensions.h"
 
 #endif	/* _Vanetza_Security2_ToBeSignedCertificate_H_ */
 #include "asn_internal.h"

@@ -221,7 +221,7 @@ void show(const Certificate& c) {
                     if (!entry) continue;
                     if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryOnly) std::printf(" %ld", static_cast<long>(entry->choice.countryOnly));
                     else if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryAndRegions) std::printf(" %ld(regions)", static_cast<long>(entry->choice.countryAndRegions.countryOnly));
-                    else if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryAndSubregions) std::printf(" %ld(subregions)", static_cast<long>(entry->choice.countryAndSubregions.country));
+                    else if (entry->present == Vanetza_Security_IdentifiedRegion_PR_countryAndSubregions) std::printf(" %ld(subregions)", static_cast<long>(entry->choice.countryAndSubregions.countryOnly));
                     else std::printf(" ?");
                 }
                 std::printf("\n");

@@ -12,7 +12,7 @@
 #include "asn_application.h"
 
 /* Including external dependencies */
-#include "GoodsType.h"
+#include "POIM-ParkingAvailability_GoodsType.h"
 #include "DangerousGoodsBasic.h"
 #include "SpecialTransportType.h"
 #include "constr_SEQUENCE.h"
@@ -23,7 +23,7 @@ extern "C" {
 
 /* Vanetza_ITS2_LoadType */
 typedef struct Vanetza_ITS2_LoadType {
-	Vanetza_ITS2_GoodsType_t	*goodsType;	/* OPTIONAL */
+	Vanetza_ITS2_POIM_ParkingAvailability_GoodsType_t	*goodsType;	/* OPTIONAL */
 	Vanetza_ITS2_DangerousGoodsBasic_t	*dangerousGoodsType;	/* OPTIONAL */
 	Vanetza_ITS2_SpecialTransportType_t	 specialTransportType;
 	/*

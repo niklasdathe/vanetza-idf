@@ -16,6 +16,13 @@
 #endif
 #include <algorithm>
 #include <stdexcept>
+#ifdef ESP_PLATFORM
+#include <esp_log.h>
+#define VIDF_LOG_WARN(...) ESP_LOGW("vidf_security", __VA_ARGS__)
+#else
+#include <cstdio>
+#define VIDF_LOG_WARN(...) (std::fprintf(stderr, "vidf_security: " __VA_ARGS__), std::fputc(10, stderr))
+#endif
 
 namespace vanetza_idf::security {
 using namespace vanetza;
@@ -463,7 +470,7 @@ bool region_in_entry(long country, long region, const Vanetza_Security_SequenceO
             return false;
         }
         case Vanetza_Security_IdentifiedRegion_PR_countryAndSubregions: {
-            if (entry.choice.countryAndSubregions.country != country || !subregions) return false;
+            if (entry.choice.countryAndSubregions.countryOnly != country || !subregions) return false;
             const auto& entries = entry.choice.countryAndSubregions.regionAndSubregions.list;
             for (int j = 0; j < entries.count; ++j) {
                 if (entries.array[j] && entries.array[j]->region == region) return contains_all(entries.array[j]->subregions, *subregions);
@@ -498,7 +505,7 @@ bool identified_within(const Vanetza_Security_SequenceOfIdentifiedRegion_t& inne
                     const auto& entries = entry->choice.countryAndSubregions.regionAndSubregions.list;
                     covered = entries.count > 0;
                     for (int r = 0; r < entries.count && covered; ++r)
-                        covered = entries.array[r] && region_in_entry(entry->choice.countryAndSubregions.country, entries.array[r]->region,
+                        covered = entries.array[r] && region_in_entry(entry->choice.countryAndSubregions.countryOnly, entries.array[r]->region,
                                                                        &entries.array[r]->subregions, *candidate);
                     break;
                 }
@@ -515,7 +522,10 @@ bool region_within(const Vanetza_Security_EtsiTs103097Certificate_t& subject, co
     const auto* outer = issuer.toBeSigned.region;
     const auto* inner = subject.toBeSigned.region;
     if (!outer) return true;
-    if (!inner) return false;
+    // IEEE 1609.2-2025 ToBeSignedCertificate.region: omitted in a certificate that is not self-signed means "the
+    // same validity region as the certificate that issued it", so it is within the issuer's region by definition
+    // (2026-09-29: the EU laboratory ATs carry no region and every verifying receiver rejected them).
+    if (!inner) return true;
     if (outer->present != Vanetza_Security_GeographicRegion_PR_identifiedRegion)
         return v3::CertificateView(&subject).region_is_within(v3::CertificateView(&issuer)); // upstream geometry
     switch (inner->present) {
@@ -636,6 +646,7 @@ public:
     std::deque<SecurityEvent> events;
     std::size_t event_capacity = 16;
     Statistics stats;
+    unsigned long rejections_logged = 0;
     VerificationPolicy verification;
 #if VIDF_SECURITY_VERIFY
     CombinedIssuerLookup issuers;
@@ -815,6 +826,11 @@ public:
             case VerificationReport::Signer_Certificate_Not_Found: case VerificationReport::Unsupported_Signer_Identifier_Type: ++stats.rejected_signer; break;
             case VerificationReport::False_Signature: ++stats.rejected_signature; break;
             default: ++stats.rejected_certificate; break;
+        }
+        if (verified.report != VerificationReport::Success && (rejections_logged++ % 100) == 0) {
+            // why secured packets are dropped (no indication reaches the application): first one, then every 100th
+            VIDF_LOG_WARN("verification failed: report %d (ITS-AID %lu, %lu rejected so far)", static_cast<int>(verified.report),
+                          static_cast<unsigned long>(msg.its_aid()), static_cast<unsigned long>(rejections_logged));
         }
         if (cache.size() > verification.certificate_cache_limit) cache = v3::CertificateCache {}; // bounded on the device
         return DecapConfirm::from(std::move(verified), request.sec_packet);

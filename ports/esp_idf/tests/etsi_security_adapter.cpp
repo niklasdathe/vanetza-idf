@@ -166,10 +166,29 @@ public:
 };
 Process sut; // static initialisation: runs in the host controller before TITAN forks components
 
-// GN address and position baked into hil_sut.cpp's Sut::reset(); see the GeoNetworking
-// adapter for why these must match vanetza::geonet::Address's defaults exactly.
+// IUT position (1e-7 degree), utPort "params" iut_latitude/iut_longitude, applied after every
+// reset. Default: the position hil_sut.cpp's Sut::reset() sets. The Security ATS certificates
+// (itscertgen asn1certgen.xslt base-latitude/base-longitude) put their regions around the ETSI
+// test site, so the campaign configurations place the IUT there: a station outside the region
+// of a sender's certificate rightly discards its messages.
+std::int32_t iut_latitude = 520000000;
+std::int32_t iut_longitude = 130000000;
+
+// The IUT's GN_ADDR as the IUT reports it (SUT command 12, record kind 5), refreshed on every getLongPosVector,
+// as in the GeoNetworking adapter: the micrOBU board behind sut_bridge.py is a manually configured cyclist, the
+// host vidf_sut keeps vanetza::geonet::Address's defaults (the fallback below).
+Bytes reported_gn_addr;
+
 GN__Address iut_gn_address() {
     GN__Address address;
+    if (reported_gn_addr.size() == 8) {
+        const unsigned first = (reported_gn_addr[0] << 8) | reported_gn_addr[1];
+        address.typeOfAddress() = static_cast<TypeOfAddress::enum_type>((first >> 15) & 1);
+        address.stationType() = static_cast<StationType::enum_type>((first >> 10) & 0x1f);
+        address.reserved() = first & 0x3ff;
+        address.mid() = OCTETSTRING(6, reported_gn_addr.data() + 2);
+        return address;
+    }
     address.typeOfAddress() = TypeOfAddress::e__initial;
     address.stationType() = StationType::e__unknown;
     address.reserved() = 0;
@@ -181,8 +200,8 @@ LongPosVector iut_position() {
     LongPosVector position;
     position.gnAddr() = iut_gn_address();
     position.timestamp__() = 0;
-    position.latitude() = 520000000;
-    position.longitude() = 130000000;
+    position.latitude() = iut_latitude;
+    position.longitude() = iut_longitude;
     const unsigned char zero_bit = 0;
     position.pai() = BITSTRING(1, &zero_bit);
     position.speed() = 0;
@@ -200,6 +219,7 @@ bool transact(const Bytes& command) {
         offset += 3;
         if (offset + size > reply.size()) throw std::runtime_error("Truncated SUT record");
         Bytes b(reply.begin() + offset, reply.begin() + offset + size); offset += size;
+        if (kind == 5) { reported_gn_addr = std::move(b); continue; } // reply to command 12
         if (kind == 1) {
             // AL_DATA transmission observed on the lower boundary, processed the way the
             // framework's geonetworking_layer::receive_data does it: a secured packet (basic
@@ -217,8 +237,10 @@ bool transact(const Bytes& command) {
                 const int verified = security_services_its::get_instance().verify_and_extract_gn_payload(
                     secured, security_checks, secured_message, unsecured, params);
                 if (verified != 0) {
-                    TTCN_warning("Secured GN packet failed the test system's security processing (checks %s)",
-                                 security_checks ? "enforced: discarded" : "not enforced: passed up");
+                    std::string hex;
+                    for (auto octet : b) { static const char* d = "0123456789abcdef"; hex += d[octet >> 4]; hex += d[octet & 15]; }
+                    TTCN_warning("Secured GN packet failed the test system's security processing (checks %s): %s",
+                                 security_checks ? "enforced: discarded" : "not enforced: passed up", hex.c_str());
                     if (security_checks) continue;
                 }
                 data = OCTETSTRING(4, b.data()) + unsecured;
@@ -262,12 +284,27 @@ bool transact(const Bytes& command) {
     return reply[0] == 0;
 }
 
+// [command][HashedId8]: an AT named by the test system (UtGnInitialize, Ut*ChangePseudonym)
+Bytes with_digest(unsigned char command, const OCTETSTRING& digest) {
+    Bytes bytes {command};
+    const unsigned char* octets = digest;
+    if (digest.lengthof() == 8) bytes.insert(bytes.end(), octets, octets + 8);
+    return bytes;
+}
+
 // One SUT tick: advance the ITS clock to now; transmissions arrive through transact().
 void tick() {
     const std::uint64_t now = its_now_us();
     Bytes command {5};
     for (int shift = 56; shift >= 0; shift -= 8) command.push_back(static_cast<unsigned char>(now >> shift));
     transact(command);
+}
+
+Bytes position_command(std::int32_t latitude, std::int32_t longitude) {
+    Bytes command {4};
+    for (auto v : {latitude, longitude})
+        for (int shift = 24; shift >= 0; shift -= 8) command.push_back(static_cast<unsigned char>(static_cast<std::uint32_t>(v) >> shift));
+    return command;
 }
 
 // Stimulus configuration of the test application behind the GN upper tester port
@@ -290,6 +327,8 @@ void UpperTesterPort::set_parameter(const char* name, const char* value) {
     params ut_params;
     params::convert(ut_params, value);
     if (ut_params.count("cam_carrier_ms")) cam_carrier_ms = static_cast<unsigned>(std::atoi(ut_params["cam_carrier_ms"].c_str()));
+    if (ut_params.count("iut_latitude")) iut_latitude = static_cast<std::int32_t>(std::atol(ut_params["iut_latitude"].c_str()));
+    if (ut_params.count("iut_longitude")) iut_longitude = static_cast<std::int32_t>(std::atol(ut_params["iut_longitude"].c_str()));
 }
 void UpperTesterPort::Handle_Fd_Event_Error(int) {}
 void UpperTesterPort::Handle_Fd_Event_Writable(int) {}
@@ -301,12 +340,13 @@ void UpperTesterPort::user_map(const char*) {
 void UpperTesterPort::user_unmap(const char*) { upper_indication = {}; }
 void UpperTesterPort::user_start() {}
 void UpperTesterPort::user_stop() {}
-void UpperTesterPort::outgoing_send(const UtGnInitialize&) {
-    // m_secGnInitialize carries the HashedId8 of the certificate the IUT shall use; the SUT
-    // is started with that certificate (VIDF_SUT_ARGS --at ...), a mismatch shows up as a
-    // signature/digest failure in the testcase rather than being papered over here.
+void UpperTesterPort::outgoing_send(const UtGnInitialize& initialize) {
+    // m_secGnInitialize carries the HashedId8 of the certificate the IUT shall use
+    // (f_setupIutCertificate); the reset hands it to the SUT, which selects that AT from its
+    // ETSI IUT install (--etsi-iut) or fails the initialisation when it does not hold it.
     try {
-        bool ok = transact({0});
+        bool ok = transact(with_digest(0, initialize.hashedId8()));
+        if (ok) ok = transact(position_command(iut_latitude, iut_longitude));
         tick();
         // Periodic CAM carrier (test-application behaviour, TS 103 097 clause 7.1.1 profile):
         // the CAM cases wait for CAMs the IUT sends on its own.
@@ -374,8 +414,10 @@ void GeoNetworkingPort::user_map(const char*) {
     timer_fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
     if (timer_fd < 0) TTCN_error("timerfd_create failed");
     itimerspec period {};
-    period.it_interval.tv_nsec = 100 * 1000 * 1000;
-    period.it_value.tv_nsec = 100 * 1000 * 1000;
+    // 10 ms like the GeoNetworking adapter: CAM carrier, beacon and certificate timers run on
+    // these ticks, so the tick period bounds every timing the Security TPs measure
+    period.it_interval.tv_nsec = 10 * 1000 * 1000;
+    period.it_value.tv_nsec = 10 * 1000 * 1000;
     timerfd_settime(timer_fd, 0, &period, nullptr);
     Handler_Add_Fd_Read(timer_fd);
 }
@@ -413,6 +455,7 @@ void AdapterControlPort::user_start() {}
 void AdapterControlPort::user_stop() {}
 void AdapterControlPort::outgoing_send(const AcGnPrimitive& primitive) {
     if (primitive.get_selection() == AcGnPrimitive::ALT_getLongPosVector) {
+        try { transact({12}); } catch (const std::exception& e) { TTCN_error("SUT GN address: %s", e.what()); }
         AcGnResponse response; response.getLongPosVector() = iut_position();
         incoming_message(response);
     } else if (primitive.get_selection() == AcGnPrimitive::ALT_startBeaconing) {
@@ -443,7 +486,7 @@ void AdapterControlPort::outgoing_send(const LibItsCommon__TypesAndValues::AcSec
     // test-system packets (receiving-side cases are not wired), so enabling only takes
     // the enforcement flag for the verification of IUT transmissions and succeeds when
     // the named certificate exists in the loaded pool; disabling restores the port
-    // parameter default. The SUT's own profile is fixed at process start (VIDF_SUT_ARGS).
+    // parameter default. The SUT's AT is chosen by UtGnInitialize / Ut*ChangePseudonym.
     using LibItsCommon__TypesAndValues::AcSecPrimitive;
     bool ok = true;
     if (primitive.get_selection() == AcSecPrimitive::ALT_acEnableSecurity) {
@@ -479,8 +522,12 @@ void UpperTesterPort::outgoing_send(const UtCamInitialize&) {
 void UpperTesterPort::outgoing_send(const UtCamChangePosition&) {
     UtCamResults result; result.utCamChangePositionResult() = false; incoming_message(result);
 }
-void UpperTesterPort::outgoing_send(const UtCamChangePseudonym&) {
-    UtCamResults result; result.utCamChangePseudonymResult() = false; incoming_message(result); // no CA service
+void UpperTesterPort::outgoing_send(const UtCamChangePseudonym& change) {
+    try {
+        const auto command = with_digest(11, change.hashedId8());
+        UtCamResults result; result.utCamChangePseudonymResult() = command.size() == 9 && transact(command);
+        incoming_message(result);
+    } catch (const std::exception& e) { TTCN_error("SUT pseudonym change: %s", e.what()); }
 }
 void UpperTesterPort::outgoing_send(const UtCamTrigger&) {
     UtCamResults result; result.utCamTriggerResult() = false; incoming_message(result); // no CA service
@@ -534,7 +581,11 @@ void UpperTesterPort::outgoing_send(const UtDenmTermination&) {
 void UpperTesterPort::outgoing_send(const UtDenmChangePosition&) {
     UtDenmResults result; result.utDenmChangePositionResult() = false; incoming_message(result);
 }
-void UpperTesterPort::outgoing_send(const UtDenmChangePseudonym&) {
-    UtDenmResults result; result.utDenmChangePseudonymResult() = false; incoming_message(result);
+void UpperTesterPort::outgoing_send(const UtDenmChangePseudonym& change) {
+    try {
+        const auto command = with_digest(11, change.hashedId8());
+        UtDenmResults result; result.utDenmChangePseudonymResult() = command.size() == 9 && transact(command);
+        incoming_message(result);
+    } catch (const std::exception& e) { TTCN_error("SUT pseudonym change: %s", e.what()); }
 }
 } // namespace LibItsDenm__TestSystem

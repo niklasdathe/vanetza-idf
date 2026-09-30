@@ -1,11 +1,13 @@
 // Host SUT process: one hex command line in, one hex reply line out.
 //   vidf_sut [--security-pool DIR [--root NAME] [--aa NAME]... [--at NAME] [--anonymous]]
-//            [--security-bundle FILE]
+//            [--etsi-iut DIR [--at NAME] [--etsi-unknown AA]...] [--security-bundle FILE] [--beaconing] [--link-layer] [--auto-address]
 // With a pool the reset command builds the secured, beaconing profile from
 // DIR/<NAME>.oer and DIR/<at NAME>.vkey (the layout the ETSI ATS certificate
 // loader uses as well); a bundle file (credentials.hpp) provisions the same
 // through the path a device takes (diagnostic command 9); without either the
-// unsecured BTP/GN profile is used.
+// unsecured BTP/GN profile is used. --etsi-iut takes the IUT install of the official ETSI
+// certificate pool (itscertgen `make install`): all its roots, authorities and ATs, the AT to
+// sign with named by the reset command (UtGnInitialize.hashedId8), default --at.
 #include "hil_sut.hpp"
 #include <cstdio>
 #include <cstring>
@@ -20,6 +22,8 @@ int main(int argc, char** argv) {
         const std::string arg = argv[i];
         const bool has_value = i + 1 < argc;
         if (arg == "--security-pool" && has_value) profile.pool = argv[++i];
+        else if (arg == "--etsi-iut" && has_value) profile.etsi_install = argv[++i];
+        else if (arg == "--etsi-unknown" && has_value) profile.etsi_unknown.push_back(argv[++i]); // repeatable
         else if (arg == "--root" && has_value) profile.root = argv[++i];
         else if (arg == "--aa" && has_value) { // repeatable; the first use replaces the defaults
             static bool replaced = false;
@@ -28,6 +32,9 @@ int main(int argc, char** argv) {
         }
         else if (arg == "--at" && has_value) profile.ticket = argv[++i];
         else if (arg == "--anonymous") profile.anonymous_address = true;
+        else if (arg == "--beaconing") sut.beaconing(true); // unsecured profile: beacon like the firmware does
+        else if (arg == "--link-layer") sut.link_layer(true); // transmissions with their MAC addresses (kind 4)
+        else if (arg == "--auto-address") sut.auto_address(true); // AUTO address configuration (DAD applies)
         else if (arg == "--security-bundle" && has_value) {
             std::ifstream in(argv[++i], std::ios::binary);
             const vanetza::ByteBuffer bundle((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());

@@ -9,12 +9,12 @@ namespace vanetza
 namespace pki
 {
 
-class SignedData : public asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Signed_55P0_t>
+class SignedData : public asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Signed_121P0_t>
 {
 public:
-    using wrapper = asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Signed_55P0_t>;
+    using wrapper = asn1::asn1c_oer_wrapper<Vanetza_Security_EtsiTs103097Data_Signed_121P0_t>;
 
-    SignedData() : wrapper(asn_DEF_Vanetza_Security_EtsiTs103097Data_Signed_55P0)
+    SignedData() : wrapper(asn_DEF_Vanetza_Security_EtsiTs103097Data_Signed_121P0)
     {
     }
 

@@ -18,7 +18,7 @@ endmacro()
 
 macro(download_ieee1609dot2 ASN1_FILE)
     download(
-        "https://forge.etsi.org/rep/ITS/asn1/ieee1609.2/-/raw/2022-published/${ASN1_FILE}"
+        "https://forge.etsi.org/rep/ITS/asn1/ieee1609.2/-/raw/v2025/${ASN1_FILE}"
         "${OUTPUT_DIRECTORY}/${ASN1_FILE}")
 endmacro()
 

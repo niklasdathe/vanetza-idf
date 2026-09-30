@@ -4,6 +4,7 @@
 #include <vanetza_idf/security.hpp>
 #include <vanetza_idf/credentials.hpp>
 #include "test_backend.hpp"
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #endif
@@ -11,6 +12,7 @@
 #include <vanetza_idf/facilities.hpp>
 #endif
 #include <algorithm>
+#include <cmath>
 #include <chrono>
 
 namespace vidf_test {
@@ -57,6 +59,55 @@ public:
         return security::apply(credentials, trust, pool).result;
     }
 
+    // ETSI IUT install: what an IUT under the official Security ATS holds. Roots and authorities
+    // are offered to the trust configuration as they are (one it refuses, e.g. an AA of an
+    // unknown root, stays unknown: that is what the "unknown AA" cases rely on); every AT is
+    // added with the curve its key fits (the pool checks the key against the certificate).
+    // The default ticket is `profile.ticket`.
+    Result load_etsi(const SecurityProfile& profile, vanetza::security::HashedId8& fallback) {
+        namespace fs = std::filesystem;
+        std::vector<fs::path> files;
+        for (const auto& entry : fs::directory_iterator(profile.etsi_install)) files.push_back(entry.path());
+        std::sort(files.begin(), files.end());
+        const auto ends = [](const fs::path& p, const std::string& tail) {
+            const auto name = p.filename().string();
+            return name.size() >= tail.size() && name.compare(name.size() - tail.size(), tail.size(), tail) == 0;
+        };
+        const auto unknown = [&](const fs::path& p) {
+            return std::find(profile.etsi_unknown.begin(), profile.etsi_unknown.end(), p.stem().string()) != profile.etsi_unknown.end();
+        };
+        std::size_t roots = 0;
+        for (const auto& p : files)
+            if (ends(p, "_RCA.oer") && trust.add_root(read(p.string())) == Result::accepted) ++roots;
+        if (!roots) return Result::invalid_argument;
+        for (bool progress = true; progress;) { // an AA may be issued by another AA
+            progress = false;
+            for (const auto& p : files)
+                if (ends(p, "_AA.oer") && !unknown(p) && trust.add_authority(read(p.string())) == Result::accepted) progress = true;
+        }
+        bool found_default = false;
+        for (const auto& p : files) {
+            if (p.extension() != ".vkey") continue;
+            auto certificate = p; certificate.replace_extension(".oer");
+            const auto coer = read(certificate.string());
+            const auto octets = read(p.string());
+            if (coer.empty()) continue;
+            using vanetza::security::KeyType;
+            const std::vector<KeyType> curves = octets.size() == 48
+                ? std::vector<KeyType> {KeyType::BrainpoolP384r1}
+                : std::vector<KeyType> {KeyType::NistP256, KeyType::BrainpoolP256r1};
+            for (auto type : curves) {
+                vanetza::security::PrivateKey key;
+                key.type = type;
+                key.key = octets;
+                if (pool.add(coer, key) != Result::accepted) continue;
+                if (p.stem().string() == profile.ticket) { fallback = pool.tickets().back().digest; found_default = true; }
+                break;
+            }
+        }
+        return found_default ? Result::accepted : Result::invalid_argument;
+    }
+
     Result load(const SecurityProfile& profile) {
         const auto file = [&](const std::string& name, const char* ext) { return read(profile.pool + "/" + name + ext); };
         if (trust.add_root(file(profile.root, ".oer")) != Result::accepted) return Result::invalid_argument;
@@ -95,7 +146,14 @@ void Sut::record(std::uint8_t kind, ByteBuffer bytes) {
     record_bytes_ += frame.size(); records_.push_back(std::move(frame));
 }
 Result Sut::request(AlDataRequest request) {
-    record(1, std::move(request.data));
+    if (link_layer_) {
+        ByteBuffer frame(request.destination.octets.begin(), request.destination.octets.end());
+        frame.insert(frame.end(), request.source.octets.begin(), request.source.octets.end());
+        frame.insert(frame.end(), request.data.begin(), request.data.end());
+        record(4, std::move(frame));
+    } else {
+        record(1, std::move(request.data));
+    }
     return overflow_ ? Result::resource_limit : Result::accepted;
 }
 Result Sut::reset() {
@@ -105,13 +163,24 @@ Result Sut::reset() {
     StackConfig config;
     config.mib.itsGnLocalGnAddr.mid({2, 0, 0, 0, 0, 1});
     vanetza::security::SecurityEntity* entity = nullptr;
-    if (profile_.pool.empty() && bundle_.empty()) {
+    if (profile_.pool.empty() && profile_.etsi_install.empty() && bundle_.empty()) {
         config.mib.itsGnSecurity = false; // explicit unsecured BTP/GN test PICS
-        config.mib.vanetzaDisableBeaconing = true;
+        config.mib.vanetzaDisableBeaconing = !beaconing_;
+        if (auto_address_) config.mib.itsGnLocalAddrConfMethod = vanetza::geonet::AddrConfMethod::Auto;
     } else {
 #if VIDF_SECURITY
         security_ = std::make_unique<Security>();
-        const auto loaded = bundle_.empty() ? security_->load(profile_) : security_->load(bundle_);
+        Result loaded;
+        if (!bundle_.empty()) loaded = security_->load(bundle_);
+        else if (!profile_.etsi_install.empty()) {
+            // UtGnInitialize.hashedId8 selects the AT (TS.ITS f_setupIutCertificate); zero = default
+            vanetza::security::HashedId8 digest {};
+            loaded = security_->load_etsi(profile_, digest);
+            if (loaded == Result::accepted && selected_.size() == digest.size() &&
+                std::any_of(selected_.begin(), selected_.end(), [](std::uint8_t b) { return b != 0; }))
+                std::copy(selected_.begin(), selected_.end(), digest.begin());
+            if (loaded == Result::accepted) loaded = security_->pool.select(digest);
+        } else loaded = security_->load(profile_);
         if (loaded != Result::accepted) { security_.reset(); return loaded; }
         security_->entity = std::make_unique<security::SecurityEntity>(*runtime_, *security_, security_->backend,
                                                                        security_->pool, security_->trust);
@@ -162,7 +231,7 @@ Result Sut::carrier(std::uint8_t kind, std::uint16_t sequence) {
         cp.basicContainer.stationType = 5;
         cp.highFrequencyContainer.present = Vanetza_ITS2_HighFrequencyContainer_PR_rsuContainerHighFrequency;
         auto& pos = cp.basicContainer.referencePosition;
-        pos.latitude = 520000000; pos.longitude = 130000000;
+        pos.latitude = here_latitude(); pos.longitude = here_longitude(); // the station's current fix
         pos.positionConfidenceEllipse.semiMajorAxisLength = 4095;
         pos.positionConfidenceEllipse.semiMinorAxisLength = 4095;
         pos.positionConfidenceEllipse.semiMajorAxisOrientation = 3601;
@@ -180,7 +249,7 @@ Result Sut::carrier(std::uint8_t kind, std::uint16_t sequence) {
         const auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(runtime_->now().time_since_epoch()).count();
         if (asn_long2INTEGER(&dm.detectionTime, now_ms) != 0 || asn_long2INTEGER(&dm.referenceTime, now_ms) != 0)
             return Result::rejected;
-        dm.eventPosition.latitude = 520000000; dm.eventPosition.longitude = 130000000;
+        dm.eventPosition.latitude = here_latitude(); dm.eventPosition.longitude = here_longitude();
         dm.eventPosition.positionConfidenceEllipse.semiMajorConfidence = 4095;
         dm.eventPosition.positionConfidenceEllipse.semiMinorConfidence = 4095;
         dm.eventPosition.positionConfidenceEllipse.semiMajorOrientation = 3601;
@@ -194,7 +263,7 @@ Result Sut::carrier(std::uint8_t kind, std::uint16_t sequence) {
         vanetza::geonet::Circle circle;
         circle.r = 500.0 * vanetza::units::si::meter;
         area.shape = circle;
-        area.position = vanetza::geonet::GeodeticPosition(52.0 * vanetza::units::degree, 13.0 * vanetza::units::degree);
+        area.position = vanetza::geonet::GeodeticPosition(fix_.latitude, fix_.longitude); // event at the station
         area.angle = vanetza::units::Angle(0.0 * vanetza::units::degree);
         request.destination = area;
         return facilities::send(*stack_, facilities::Kind::denm, denm.encode(), std::move(request));
@@ -203,11 +272,17 @@ Result Sut::carrier(std::uint8_t kind, std::uint16_t sequence) {
     return Result::unsupported;
 }
 
+long Sut::here_latitude() const { return std::lround(fix_.latitude / vanetza::units::degree * 1e7); }
+long Sut::here_longitude() const { return std::lround(fix_.longitude / vanetza::units::degree * 1e7); }
+
 ByteBuffer Sut::execute(const ByteBuffer& input) {
     records_.clear(); record_bytes_ = 0; overflow_ = false;
     Result result = Result::invalid_argument;
     try {
-        if (input.size() == 1 && input[0] == 0) result = reset();
+        if ((input.size() == 1 || input.size() == 9) && input[0] == 0) {
+            selected_.assign(input.begin() + 1, input.end());
+            result = reset();
+        }
         else if (input.size() > 1 && input[0] == 9) {
             // credentials for the next reset: [9][credentials.hpp bundle]; allowed before any reset
             result = provision(ByteBuffer(input.begin() + 1, input.end()));
@@ -234,6 +309,37 @@ ByteBuffer Sut::execute(const ByteBuffer& input) {
             request.traffic_class = vanetza::geonet::TrafficClass(input[1]);
             request.data.assign(input.begin() + 2, input.end());
             result = stack_->request(std::move(request));
+        } else if (input.size() >= 19 && input[0] == 10) {
+            // GN-DATA.request GBC: [10][tc][shape][lat][lon][a u16][b u16][angle u16][lifetime ms u16][payload]
+            const auto i32 = [&](std::size_t at) {
+                return static_cast<std::int32_t>((std::uint32_t(input[at]) << 24) | (std::uint32_t(input[at + 1]) << 16) |
+                                                  (std::uint32_t(input[at + 2]) << 8) | input[at + 3]);
+            };
+            using vanetza::units::si::meters;
+            vanetza::geonet::Area area;
+            const double a = read16(input, 11), b = read16(input, 13);
+            if (input[2] == 0) { vanetza::geonet::Circle c; c.r = a * meters; area.shape = c; }
+            else if (input[2] == 1) { vanetza::geonet::Rectangle r; r.a = a * meters; r.b = b * meters; area.shape = r; }
+            else { vanetza::geonet::Ellipse e; e.a = a * meters; e.b = b * meters; area.shape = e; }
+            area.position = vanetza::geonet::GeodeticPosition(i32(3) / 1.0e7 * vanetza::units::degree,
+                                                               i32(7) / 1.0e7 * vanetza::units::degree);
+            area.angle = vanetza::units::Angle(read16(input, 15) * vanetza::units::degree);
+            GnRequest request;
+            request.transport = vanetza::geonet::TransportType::GBC;
+            request.destination = area;
+            request.traffic_class = vanetza::geonet::TrafficClass(input[1]);
+            if (const unsigned ms = read16(input, 17)) {
+                // smallest Lifetime base whose 6-bit multiplier holds the value (TS 103 836-4-1 clause 9.6.4)
+                using Base = vanetza::geonet::Lifetime::Base;
+                vanetza::geonet::Lifetime lifetime;
+                if (ms / 50 <= 63) lifetime.set(Base::Fifty_Milliseconds, ms / 50);
+                else if (ms / 1000 <= 63) lifetime.set(Base::One_Second, ms / 1000);
+                else if (ms / 10000 <= 63) lifetime.set(Base::Ten_Seconds, ms / 10000);
+                else lifetime.set(Base::Hundred_Seconds, std::min(63u, ms / 100000));
+                request.maximum_lifetime = lifetime;
+            }
+            request.data.assign(input.begin() + 19, input.end());
+            result = stack_->request(std::move(request));
         } else if (input.size() == 9 && input[0] == 4) {
             // UtGnChangePosition-style fix: [4][lat i32 BE][lon i32 BE], 1e-7 degree units.
             const auto i32 = [&](std::size_t at) {
@@ -252,7 +358,10 @@ ByteBuffer Sut::execute(const ByteBuffer& input) {
                     carrier_pending_[kind] = false;
                     result = carrier(kind, carrier_pending_sequence_[kind]);
                 } else if (carrier_interval_[kind] && time >= carrier_next_[kind]) {
-                    carrier_next_[kind] = time + std::chrono::milliseconds(carrier_interval_[kind]);
+                    // fixed grid, not relative to this tick: tick jitter must not stretch the period
+                    const auto period = std::chrono::milliseconds(carrier_interval_[kind]);
+                    carrier_next_[kind] += period;
+                    if (carrier_next_[kind] <= time) carrier_next_[kind] = time + period; // clock jumped
                     result = carrier(kind, kind == 1 ? ++denm_sequence_ : 0);
                 }
             }
@@ -268,7 +377,27 @@ ByteBuffer Sut::execute(const ByteBuffer& input) {
             carrier_interval_[input[1]] = read16(input, 2);
             carrier_next_[input[1]] = runtime_->now();
             result = Result::accepted;
-        } else if (!input.empty() && input[0] > 9) result = Result::unsupported;
+        } else if (input.size() == 1 && input[0] == 12) {
+            // local GN_ADDR (TS 103 836-4-1 clause 6.3, 8 octets): the test system reports the IUT's
+            // address in getLongPosVector from the IUT itself, not from assumed defaults
+            const auto address = stack_->address();
+            const unsigned first = (address.is_manually_configured() ? 0x8000u : 0u) |
+                ((static_cast<unsigned>(address.station_type()) & 0x1fu) << 10) | (address.country_code().raw() & 0x3ffu);
+            ByteBuffer octets {static_cast<std::uint8_t>(first >> 8), static_cast<std::uint8_t>(first)};
+            octets.insert(octets.end(), address.mid().octets.begin(), address.mid().octets.end());
+            record(5, std::move(octets));
+            result = Result::accepted;
+        } else if (input.size() == 9 && input[0] == 11) {
+#if VIDF_SECURITY
+            // pseudonym change to a named AT of the install (the SUT's own identifier change
+            // policy is not what the Security ATS triggers here)
+            vanetza::security::HashedId8 digest {};
+            std::copy(input.begin() + 1, input.end(), digest.begin());
+            result = security_ ? security_->pool.select(digest) : Result::rejected;
+#else
+            result = Result::unsupported;
+#endif
+        } else if (!input.empty() && input[0] > 12) result = Result::unsupported;
     } catch (const std::bad_alloc&) { result = Result::resource_limit; }
       catch (const std::exception&) { result = Result::rejected; }
     if (overflow_) result = Result::resource_limit;

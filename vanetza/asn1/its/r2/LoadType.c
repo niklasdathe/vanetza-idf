@@ -11,7 +11,7 @@ asn_TYPE_member_t asn_MBR_Vanetza_ITS2_LoadType_1[] = {
 	{ ATF_POINTER, 2, offsetof(struct Vanetza_ITS2_LoadType, goodsType),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Vanetza_ITS2_GoodsType,
+		&asn_DEF_Vanetza_ITS2_POIM_ParkingAvailability_GoodsType,
 		0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)

@@ -14,8 +14,8 @@ namespace pki
 namespace
 {
 
-const Vanetza_Security_AesCcmCiphertext_t*
-get_aes_ccm_ciphertext(const Vanetza_Security_EtsiTs103097Data_Encrypted_85P0_t& dest)
+const Vanetza_Security_One28BitCcmCiphertext_t*
+get_aes_ccm_ciphertext(const Vanetza_Security_EtsiTs103097Data_Encrypted_151P0_t& dest)
 {
     if (dest.content && dest.content->present == Vanetza_Security_Ieee1609Dot2Content_PR_encryptedData) {
         const auto& enc = dest.content->choice.encryptedData;
@@ -75,7 +75,7 @@ void EncryptedData::append_recipient_info(asn1c_type& dest, const SecurityModule
 }
 
 EncryptedData::EncryptedData(std::shared_ptr<SecurityModule::EciesContext> ecies) :
-    wrapper(asn_DEF_Vanetza_Security_EtsiTs103097Data_Encrypted_85P0), m_ecies(ecies)
+    wrapper(asn_DEF_Vanetza_Security_EtsiTs103097Data_Encrypted_151P0), m_ecies(ecies)
 {
     init(*m_struct);
 }

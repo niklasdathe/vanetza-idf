@@ -70,7 +70,8 @@ def main():
     source = Path(__file__).resolve().parents[1] / 'tests/etsi_geonetworking_adapter.cpp'
     if not (build / 'ItsGeoNetworking_TestCases.o').is_file():
         raise SystemExit('Build the official AtsGeoNetworking suite separately first')
-    includes = {build, titan / 'include', root / 'ccsrc/Ports/LibIts_ports/GN_ports'}
+    includes = {build, titan / 'include', root / 'ccsrc/Ports/LibIts_ports/GN_ports',
+                Path(__file__).resolve().parents[1] / 'include'}  # vanetza_idf/its_time.hpp (header-only)
     for parent in (root / 'ccsrc', root / 'titan-test-system-framework/ccsrc'):
         includes.update(p.parent for p in parent.rglob('*.hh'))
     compile_flags = ['g++', '-std=c++17', '-g', '-O0', '-DTITAN_RUNTIME_2', '-D_NO_SOFTLINKS_',
@@ -90,7 +91,8 @@ def main():
     evidence = {'adapter_sha256': sha(source), 'binary_sha256': sha(binary),
                 'testcase_object_sha256': sha(build / 'ItsGeoNetworking_TestCases.o'),
                 'testcase_source_sha256': sha(root / 'ttcn/AtsGeoNetworking/ItsGeoNetworking_TestCases.ttcn'),
-                'scope': 'Official GeoNetworking testcase objects; custom host/device SUT ports, SHB source only; no conformance verdict implied',
+                'scope': 'Official GeoNetworking testcase objects; custom host SUT ports: one shared SUT for all test components, '
+                         'SHB and GBC sources, receive-side GN-DATA.indication events, ITS clock ticks; no conformance verdict implied',
                 'suite_overlay': [{
                     'path': 'ccsrc/Protocols/GeoNetworking/geonetworking_codec.cc',
                     'before': codec_before_sha, 'after': codec_after_sha,

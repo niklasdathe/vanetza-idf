@@ -169,6 +169,20 @@ void test_signing_profiles() {
     check(has_digest(s.last()), "cluster VAM 400 ms after the certificate uses the digest");
     s.advance(100ms); s.send(aid::VRU, {0x01}, sec::context::vam_cluster);
     check(has_certificate(s.last()), "cluster VAM attaches the certificate after 500 ms");
+    // A ticket switch outside the identifier change (e.g. re-provisioning): the new AT was never sent, so the
+    // next VAM must carry it although the one-second timer of the old AT is still running.
+    auto second = s.domain.issue_ticket(all_permissions, t0 - 1h, 24);
+    check(s.pool.add(second.certificate, second.key) == Result::accepted, "second AT provisioned");
+    s.advance(100ms); s.send(aid::VRU, {0x01});
+    check(has_digest(s.last()), "same AT 100 ms after its certificate: digest");
+    check(s.pool.select(*second.certificate.calculate_digest()) == Result::accepted, "second AT selected");
+    s.advance(100ms); s.send(aid::VRU, {0x01});
+    m = s.last();
+    check(has_certificate(m), "first VAM after a ticket switch attaches the new certificate");
+    verify_wire(s.backend, m, second.certificate, s.runtime.now(), aid::VRU, "VAM verifies with the new AT key");
+    check(s.pool.select(*at.certificate.calculate_digest()) == Result::accepted, "first AT selected again");
+    s.advance(100ms); s.send(aid::VRU, {0x01});
+    check(has_certificate(s.last()), "switching back attaches the first certificate again");
     // CAM: TS 103 097 clause 7.1.1.
     s.advance(1s);
     s.send(aid::CA, {0x01, 0xff, 0xfc});
@@ -940,7 +954,10 @@ void test_region_consistency() {
             ASN_STRUCT_FREE(asn_DEF_Vanetza_Security_GeographicRegion, bare->toBeSigned.region);
             bare->toBeSigned.region = nullptr;
             a.domain.sign(bare, &root_eu, a.domain.root.key);
-            check(!sec::region_within(bare, root_eu, true), "an AA without region is not within a region-restricted root");
+            // IEEE 1609.2-2025 ToBeSignedCertificate.region: an omitted region is the issuer's region (TS 103 097
+            // V2.2.1 clause 7.2 profiles do not require one), so the bare AA is within the root by definition
+            check(sec::region_within(bare, root_eu, true) && sec::region_within(bare, root_eu, false),
+                  "an AA without region inherits the region-restricted root's region");
             bare_aa_coer = bare.encode();
             auto ticket = a.domain.issue_ticket({std::move(bare), aa_eu.key}, all_permissions, t0 - 1h, 24, nullptr);
             Station r;
@@ -967,7 +984,7 @@ void test_region_consistency() {
     check(b.trust.add_root(eu_root_coer) == Result::accepted && b.trust.add_authority(eu_aa_coer) == Result::accepted &&
           b.trust.add_authority(bare_aa_coer) == Result::accepted, "receiver provisioned with the EU root and both AAs");
     check(is_successful(b.decap(eu_frame).report), "ticket and AA carrying the root's identified region: verifies");
-    expect_inconsistent(bare_frame, "AA without region under a region-restricted root");
+    check(is_successful(b.decap(bare_frame).report), "AA without region under a region-restricted root: inherits it, verifies");
     auto policy = b.entity->verification_policy();
     policy.permissive_identified_region = false;
     b.entity->set_verification_policy(policy);

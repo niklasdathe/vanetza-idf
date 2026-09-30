@@ -12,7 +12,7 @@ struct Vanetza_Security_Certificate : Vanetza_Security_CertificateBase
 {
 };
 
-struct Vanetza_Security_EtsiTs103097Certificate : Vanetza_Security_ExplicitCertificate_t
+struct Vanetza_Security_EtsiTs103097Certificate : Vanetza_Security_CertificateBase_t
 {
 };
 

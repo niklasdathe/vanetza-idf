@@ -204,6 +204,7 @@ security/r2/HeaderInfo.c
 security/r2/HeaderInfoContributorId.c
 security/r2/Hostname.c
 security/r2/IMaxGroup.c
+security/r2/IPeriodInfo.c
 security/r2/IValue.c
 security/r2/IcaSsp.c
 security/r2/IdentifiedRegion.c
@@ -312,6 +313,7 @@ security/r2/SequenceOfGroupSingleSeedCrlEntry.c
 security/r2/SequenceOfHashBasedRevocationInfo.c
 security/r2/SequenceOfHashedId3.c
 security/r2/SequenceOfIMaxGroup.c
+security/r2/SequenceOfIPeriodInfo.c
 security/r2/SequenceOfIdentifiedRegion.c
 security/r2/SequenceOfIndividualRevocation.c
 security/r2/SequenceOfJMaxGroup.c
